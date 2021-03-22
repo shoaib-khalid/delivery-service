@@ -19,6 +19,8 @@ import java.util.concurrent.CountDownLatch;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 import com.google.gson.Gson;
+import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
+import com.kalsym.deliveryservice.utils.DateTimeUtil;
 
 public class SubmitOrder extends SyncDispatcher {
 
@@ -35,7 +37,7 @@ public class SubmitOrder extends SyncDispatcher {
     private String location="MrSpeedySubmitOrder";
     private final String systemTransactionId;
     
-    public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId) {
+    public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
         logprefix = systemTransactionId;
         this.systemTransactionId = systemTransactionId;
@@ -117,7 +119,7 @@ public class SubmitOrder extends SyncDispatcher {
             DeliveryOrder orderCreated = new DeliveryOrder();
             orderCreated.setSpOrderId(orderId);
             orderCreated.setSpOrderName(orderName);
-            orderCreated.setCreatedDate(created);
+            orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
             orderCreated.setVehicleType(vehicleType.toString());
             submitOrderResult.orderCreated=orderCreated;
         } catch (Exception ex) {

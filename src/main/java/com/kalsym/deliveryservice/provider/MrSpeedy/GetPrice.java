@@ -18,6 +18,7 @@ import java.util.concurrent.CountDownLatch;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 import com.google.gson.Gson;
+import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 
 public class GetPrice extends SyncDispatcher {
 
@@ -34,7 +35,8 @@ public class GetPrice extends SyncDispatcher {
     private String location="MrSpeedyGetPrice";
     private final String systemTransactionId;
     
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId ) {
+    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository ) {
+   
         super(latch);
         this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;
