@@ -44,7 +44,7 @@ public class Test {
             Delivery delivery = new Delivery();
             delivery.setDeliveryPostcode("43800");
             order.setDelivery(delivery);
-            order.setTotalWeightKg(1);
+            order.setTotalWeightKg(1.00);
             
             //SequenceNumberRepository sequenceNumberRepository =null;
             

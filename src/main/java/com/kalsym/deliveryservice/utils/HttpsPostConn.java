@@ -57,7 +57,7 @@ public class HttpsPostConn {
                 }
             };
 
-            SSLContext sc = SSLContext.getInstance("TLSv1.2");
+            SSLContext sc = SSLContext.getInstance("SSL");
             sc.init(null, trustAllCerts, new SecureRandom());
 
             LogUtil.info(refId, loglocation, "Sending Request to :" + targetUrl, "");
@@ -75,6 +75,8 @@ public class HttpsPostConn {
             LogUtil.info(refId, loglocation, "Set HTTP Header","");
             Iterator it = httpHeader.entrySet().iterator();
             while (it.hasNext()) {
+                LogUtil.info(refId, loglocation, "Header List ","");
+
                 Map.Entry pair = (Map.Entry)it.next();
                 LogUtil.info(refId, loglocation, (String)pair.getKey() + " = " + (String)pair.getValue(), "");
                 con.setRequestProperty((String)pair.getKey(), (String)pair.getValue());

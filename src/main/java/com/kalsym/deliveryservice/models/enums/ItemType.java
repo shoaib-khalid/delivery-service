@@ -10,6 +10,8 @@ package com.kalsym.deliveryservice.models.enums;
  */
  
 public enum ItemType {
-    parcel
+    parcel,
+    Food,
+    PACKAGING
 }
 

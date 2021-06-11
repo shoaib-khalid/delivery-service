@@ -28,7 +28,7 @@ public class DeliveryOrder {
     
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
     Long id;
-    Integer customerId;
+    String customerId;
     String productCode;
     String pickupAddress;
     String deliveryAddress;
@@ -46,5 +46,5 @@ public class DeliveryOrder {
     String status;
     String statusDescription;
     String updatedDate;
-    Integer totalWeightKg;
+    Double totalWeightKg;
 }

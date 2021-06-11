@@ -16,20 +16,21 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Order {
-   Integer customerId;
+   String customerId;
    Integer merchantId;
    String productCode;
    Integer deliveryProviderId;
    
    ItemType itemType;           
    
-   Integer totalWeightKg;
+   Double totalWeightKg;
    String transactionId;
    String shipmentContent;
    Integer pieces;
    boolean isInsurance;
    Double shipmentValue;
-   
+   String storeId;
+   String cartId;
    Pickup pickup;
    Delivery delivery;
 }
