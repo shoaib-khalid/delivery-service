@@ -1,7 +1,5 @@
 package com.kalsym.deliveryservice.controllers;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Delivery;
 import com.kalsym.deliveryservice.models.HttpReponse;
 import com.kalsym.deliveryservice.models.Order;
@@ -18,7 +16,6 @@ import com.kalsym.deliveryservice.service.utility.SymplifiedService;
 import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import com.kalsym.deliveryservice.utils.StringUtility;
-import org.apache.commons.codec.binary.Base64;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,10 +27,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
@@ -277,9 +271,9 @@ public class OrdersController {
     }
 
 
-    @PostMapping(path = {"/confirmDelivery/{refId}"}, name = "orders-confirm-delivery")
+    @PostMapping(path = {"/confirmDelivery/{refId}/{orderId}"}, name = "orders-confirm-delivery")
     public ResponseEntity<HttpReponse> submitOrder(HttpServletRequest request,
-                                                   @PathVariable("refId") long refId) {
+                                                   @PathVariable("refId") long refId, @PathVariable("orderId") String orderId) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -342,6 +336,7 @@ public class OrdersController {
             deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
             deliveryOrder.setSystemTransactionId(orderDetails.getTransactionId());
             deliveryOrder.setProductCode(orderDetails.getProductCode());
+            deliveryOrder.setOrderId(orderId);
 
             SubmitOrderResult submitOrderResult = (SubmitOrderResult) processResult.returnObject;
             DeliveryOrder orderCreated = submitOrderResult.orderCreated;
@@ -501,6 +496,16 @@ public class OrdersController {
             if (deliveryOrder != null) {
                 LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
                 deliveryOrder.setStatus(status);
+                String orderStatus = "";
+                if (status.equals("available")) {
+                    orderStatus = "AWAITING_PICKUP";
+                } else if (status.equals("active")) {
+                    orderStatus = "BEING_DELIVERED";
+                } else if (status.equals("completed")) {
+                    orderStatus = "DELIVERED_T0_CUSTOMER";
+                }
+                String res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                 deliveryOrdersRepository.save(deliveryOrder);
             } else {
@@ -535,109 +540,48 @@ public class OrdersController {
 
     }
 
+    
+
     @PostMapping(path = {"/lalamove/{order-id}"}, name = "get-server-time")
     public ResponseEntity<String> getHashValue(HttpServletRequest request,
-                                               @PathVariable("order-id") String orderId) throws NoSuchAlgorithmException, InvalidKeyException {
+                                               @PathVariable("order-id") String orderId) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
-        JsonObject main = new JsonObject();
-        JsonObject json = new JsonObject();
-        JsonObject json2 = new JsonObject();
 
-        JsonArray arrayStops = new JsonArray();
-        JsonObject addresses = new JsonObject();
-        JsonObject addresses2 = new JsonObject();
-        JsonObject country = new JsonObject();
-        JsonObject seconf = new JsonObject();
-
-        country.addProperty("displayString", "Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia");
-        country.addProperty("country", "MY_KUL");
-        addresses.add("ms_MY", country);
-
-        seconf.addProperty("displayString", "64000 Sepang, Selangor, Malaysia");
-        seconf.addProperty("country", "MY_KUL");
-        addresses2.add("ms_MY", seconf);
-
-
-        json.add("addresses", addresses);
-        json2.add("addresses", addresses2);
-        arrayStops.add(json);
-        arrayStops.add(json);
-        main.add("stops", arrayStops);
-        main.addProperty("serviceType", "MOTORCYCLE");
-
-        JsonArray deliveryarray = new JsonArray();
-        JsonObject delivery = new JsonObject();
-        JsonObject tocontact = new JsonObject();
-        tocontact.addProperty("name", "Shen Ong");
-        tocontact.addProperty("phone", "0376886555");
-//        delivery.addProperty("toStop", 1);
-        delivery.add("toContact", tocontact);
-        deliveryarray.add(delivery);
-        main.add("deliveries", deliveryarray);
-
-        JsonObject requestContact = new JsonObject();
-        requestContact.addProperty("name", "Chris Wong");
-        requestContact.addProperty("phone", "0376886555");
-        main.add("requesterContact", requestContact);
-        String mains = main.toString();
-        String httpMethod = "POST";
-        String secretKey = "MCwCAQACBQDA9nwlAgMBAAECBHmU/lUCAwDXgwIDAOU3AgIb+wIDAKe5AgJI";
-        String apiKey = "31a5bc5b9d044cf2928e41b7ce093e29";
+        String secretKey = "7p0CJjVxlfEpg/EJWi/y9+6pMBK9yvgYzVeOUKSYZl4/IztYSh6ZhdcdpRpB15ty";
+        String apiKey = "6e4e7adb5797632e54172dc2dd2ca748";
         String domainUrl = " https://rest.sandbox.lalamove.com/";
         String getpriceUrl = "v2/quotations";
         int connectTimeout = 30000;
         int waitTimeout = 35000;
 
-        LogUtil.info(logprefix, location, "Request body :", main.toString());
-
-//        String req = "{\"serviceType\":\"MOTORCYCLE\",\"stops\":[{\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"}}]};";
-
-        String body = String.valueOf(new Date().getTime()) + "\\r\\nPOST\\r\\n/v2/quotations\\r\\n\\r\\n" + main;
-
-        LogUtil.info(logprefix, location, "Request to hash :", body);
-
-//
-        Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
-        SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
-        sha256_HMAC.init(secret_key);
-
-        String hash = Base64.encodeBase64String(sha256_HMAC.doFinal(body.getBytes())).toLowerCase();
-//        String encodedString = Base64.getEncoder().encodeToString(sha256_HMAC.doFinal(body.getBytes())).toLowerCase();
-
-//        System.out.println(hash);
-
-        // to base64
-        System.out.println("HASH :" + hash);
-        String token = "hmac " + apiKey + ":" + new Date().getTime() + ":" + hash;
-//        String token = "hmac 31a5bc5b9d044cf2928e41b7ce093e29:1622966855133:d245b8c990bd136c222196127927872f740a8d50e96d6992cd032fbd8be61ca7";
-
-        System.out.println("token: " + token);
-        HashMap httpHeader = new HashMap();
-        httpHeader.put("X-LLM-Country", "MY_KUL");
-        httpHeader.put("Content-Type", "application/json");
-        httpHeader.put("Authorization", token);
-//        httpHeader.put("X-Request-ID", orderId);
-//
-//        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", orderId, (domainUrl + getpriceUrl), httpHeader, req, connectTimeout, waitTimeout);
-//        System.out.println("test" + httpResult.responseString);
         try {
-            //Create connection
-//            URL url = new URL(domainUrl + getpriceUrl);
-//            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-//            connection.setRequestMethod("POST");
-//            connection.setRequestProperty("Content-Type", "application/json");
-//            connection.setRequestProperty("X-LLM-Country", "MY_KUL");
-//            connection.setRequestProperty("Authorization", token);
-//            connection.setUseCaches(false);
-//            connection.setDoOutput(true);
+
+            String main = "{\"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"}]}";
+
+            String body = new Date().getTime() + "\\r\\nPOST\\r\\n/v2/quotations\\r\\n\\r\\n" + main;
+
+
+            LogUtil.info(logprefix, location, "Request body :", main);
+
+            SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
+            Mac hmac256 = Mac.getInstance("HmacSHA256");
+            hmac256.init(secret_key);
+
+            byte[] signatureRaw = hmac256.doFinal(body.getBytes("UTF-8"));
+            StringBuilder buf = new StringBuilder();
+            for (byte item : signatureRaw) {
+                buf.append(Integer.toHexString((item & 0xFF) | 0x100).substring(1, 3));
+            }
+
+            System.out.println("HASH :" + buf);
+            String token = apiKey + ":" + new Date().getTime() + ":" + buf.toString().toLowerCase();
 
             URL url = new URL(domainUrl + getpriceUrl);
             System.out.println("URL :" + url);
             HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-//            con.setSSLSocketFactory(sc.getSocketFactory());
-//            con.setHostnameVerifier(hv);
+
             con.setRequestMethod("POST");
             con.setRequestProperty("Host", "rest.sandbox.lalamove.com");
             con.setRequestProperty("X-LLM-Country", "MY_KUL");
@@ -648,7 +592,7 @@ public class OrdersController {
             OutputStream os = con.getOutputStream();
             OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
 
-            osw.write(main.toString());
+            osw.write(main);
             osw.flush();
             osw.close();
 
@@ -672,16 +616,6 @@ public class OrdersController {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
-
-//        LogUtil.info(logprefix, location, "", "");
-
-//            LogUtil.info(logprefix, location, "Server time in utc", instant.toString());
-
-//        response.setSuccessStatus(HttpStatus.OK);
-//        response.setData(instant);
-//        LogUtil.info("", location, "Response with " + HttpStatus.OK, "");
-//        return ResponseEntity.status(HttpStatus.OK).body(response.toString());
-
         }
     }
 

@@ -12,8 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
-
 
 /**
  * Used to get the store name from the product service
@@ -25,16 +23,15 @@ public class SymplifiedService {
 
     private static Logger logger = LoggerFactory.getLogger("application");
 
-    //@Autowired
     @Value("${product-service.URL:https://api.symplified.biz/product-service/v1/}")
-//    @Value("${product-service.URL:http://209.58.160.20:8001/}")
     String productServiceURL;
 
-    @Value("${product-service.URL:http://209.58.160.20:7001/}")
-    String orderCartUrl;
+    @Value("${order-service.URL:https://api.symplified.biz/order-service/v1/}")
+    String order;
 
     @Value("${product-service.token:Bearer accessToken}")
     private String productServiceToken;
+
 
     public StoreResponseData getStore(String storeId) {
         String url = productServiceURL + "stores/" + storeId;
@@ -98,7 +95,7 @@ public class SymplifiedService {
     }
 
     public ProductResponseData getProductInfo(String storeId, String productId) {
-        String url = productServiceURL + "/stores/" + storeId + "/deliverydetails";
+        String url = productServiceURL + "stores/" + storeId + "/deliverydetails";
         try {
             RestTemplate restTemplate = new RestTemplate();
 
@@ -127,38 +124,50 @@ public class SymplifiedService {
     }
 
 
-    public List<OrderItemData> getOrderItems(String orderId) {
-        String url = productServiceURL + "/orders/" + orderId + "/items";
+    public String updateOrderStatus(String orderId, String status) {
+        String url = order + "orders/" + orderId + "/completion-status-updates";
         try {
             RestTemplate restTemplate = new RestTemplate();
 
             HttpHeaders headers = new HttpHeaders();
             headers.add("Authorization", productServiceToken);
 
-            HttpEntity httpEntity = new HttpEntity(headers);
+//            HttpEntity httpEntity = new HttpEntity(headers);
 
-            logger.debug("Sending request to product-service: {} to get store group name (liveChatCsrGroupName) against storeId: {} , httpEntity: {}", url, orderId, httpEntity);
-            ResponseEntity res = restTemplate.exchange(url, HttpMethod.GET, httpEntity, StoreResponse.class);
+            OrderUpdate orders = new OrderUpdate();
+            orders.setComments(status);
+            orders.setCreated("");
+            orders.setModifiedBy("");
+            orders.setOrderId(orderId);
+            orders.setStatus(status);
+            System.out.println("payment" + orders.toString());
 
+            HttpEntity<OrderUpdate> httpEntity;
+            httpEntity = new HttpEntity(orders, headers);
+            logger.info("orderDeliveryConfirmationURL : " + url);
+            ResponseEntity<OrderStatusResponse> res = restTemplate.exchange(url, HttpMethod.PUT, httpEntity, OrderStatusResponse.class);
+            System.out.println("test" + res.getBody());
             if (res != null) {
-                OrderItem orderItem = (OrderItem) res.getBody();
-                logger.debug("Store orders group (liveChatOrdersGroupName) received: {}, against storeId: {}", orderItem.getData(), orderId);
-                return orderItem.getData();
+                OrderStatusResponse orderStatusResponse = (OrderStatusResponse) res.getBody();
+                logger.debug("Store orders group (liveChatOrdersGroupName) received: {}, against storeId: {}", orderStatusResponse.getData(), orderId);
+                return orderStatusResponse.getData().getCompletionStatus();
             } else {
                 logger.warn("Cannot get storename against storeId: {}", orderId);
             }
 
             logger.debug("Request sent to live service, responseCode: {}, responseBody: {}", res.getStatusCode(), res.getBody());
         } catch (RestClientException e) {
-            logger.error("Error getting storeName against storeId:{}, url: {}", orderId, productServiceURL, e);
+            logger.error("Error getting storeName against storeId:{}, url: {}", orderId, url, e.getMessage());
             return null;
+        } catch (Exception exception) {
+            System.err.println("Exception :" + exception.getMessage());
         }
         return null;
     }
 
 
     public Double getTotalWeight(String cartId) {
-        String url = orderCartUrl + "/carts/" + cartId + "/weight";
+        String url = order + "carts/" + cartId + "/weight";
         try {
             RestTemplate restTemplate = new RestTemplate();
 

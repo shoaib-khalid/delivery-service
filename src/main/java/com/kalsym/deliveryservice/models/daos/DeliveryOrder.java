@@ -46,5 +46,7 @@ public class DeliveryOrder {
     String status;
     String statusDescription;
     String updatedDate;
+    String orderId;
+    String storeId;
     Double totalWeightKg;
 }
