@@ -16,6 +16,8 @@ import com.kalsym.deliveryservice.service.utility.SymplifiedService;
 import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import com.kalsym.deliveryservice.utils.StringUtility;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -344,6 +346,8 @@ public class OrdersController {
             deliveryOrder.setSpOrderId(orderCreated.getSpOrderId());
             deliveryOrder.setSpOrderName(orderCreated.getSpOrderName());
             deliveryOrder.setVehicleType(orderCreated.getVehicleType());
+            deliveryOrder.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
+            deliveryOrder.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
 
 
             deliveryOrdersRepository.save(deliveryOrder);
@@ -540,7 +544,6 @@ public class OrdersController {
 
     }
 
-    
 
     @PostMapping(path = {"/lalamove/{order-id}"}, name = "get-server-time")
     public ResponseEntity<String> getHashValue(HttpServletRequest request,
@@ -558,59 +561,85 @@ public class OrdersController {
 
         try {
 
-            String main = "{\"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"}]}";
+            OkHttpClient client = new OkHttpClient();
+            MediaType mediaType = MediaType.parse("application/json");
+            com.squareup.okhttp.RequestBody body = com.squareup.okhttp.RequestBody.create(mediaType, "{\"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"}]}");
+            com.squareup.okhttp.Request test = new com.squareup.okhttp.Request.Builder()
+                    .url("https://rest.sandbox.lalamove.com/v2/quotations")
+                    .method("POST", body)
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Authorization", "hmac 6e4e7adb5797632e54172dc2dd2ca748:1623835134368:49e42f899564814252d7b29af7f74bd37dbcd564f83078f290ea10b8e94902f0")
+                    .addHeader("X-LLM-Country", "MY_KUL")
+                    .build();
+            com.squareup.okhttp.Response res = client.newCall(test).execute();
 
-            String body = new Date().getTime() + "\\r\\nPOST\\r\\n/v2/quotations\\r\\n\\r\\n" + main;
-
-
-            LogUtil.info(logprefix, location, "Request body :", main);
-
-            SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
-            Mac hmac256 = Mac.getInstance("HmacSHA256");
-            hmac256.init(secret_key);
-
-            byte[] signatureRaw = hmac256.doFinal(body.getBytes("UTF-8"));
-            StringBuilder buf = new StringBuilder();
-            for (byte item : signatureRaw) {
-                buf.append(Integer.toHexString((item & 0xFF) | 0x100).substring(1, 3));
-            }
-
-            System.out.println("HASH :" + buf);
-            String token = apiKey + ":" + new Date().getTime() + ":" + buf.toString().toLowerCase();
-
-            URL url = new URL(domainUrl + getpriceUrl);
-            System.out.println("URL :" + url);
-            HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-
-            con.setRequestMethod("POST");
-            con.setRequestProperty("Host", "rest.sandbox.lalamove.com");
-            con.setRequestProperty("X-LLM-Country", "MY_KUL");
-            con.setRequestProperty("Authorization", "hmac " + token);
-            con.setDoOutput(true);
-            con.setRequestProperty("Content-Type", "application/json");
-
-            OutputStream os = con.getOutputStream();
-            OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
-
-            osw.write(main);
-            osw.flush();
-            osw.close();
-
-            int responseCode = con.getResponseCode();
-            BufferedReader ins = new BufferedReader(new InputStreamReader(con.getInputStream()));
-
-            String inputLine;
-
-            StringBuffer resp = new StringBuffer();
-            while ((inputLine = ins.readLine()) != null) {
-                resp.append(inputLine);
-            }
-            ins.close();
-
-            System.out.println("Response :" + resp);
+            System.err.println("Response " + res);
 
 
-            JSONObject resToken;
+
+
+
+
+
+
+
+//
+//
+//            String main = "{\n \"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"\n}\n]\n}\n";
+//
+////            String body = new Date().getTime() + "\r\nPOST\r\n/v2/quotations\r\n\r\n" + main;
+//            String body = new Date().getTime() + "\\r\\nPOST\\r\\n/v2/quotations\\r\\n\\r\\n" + "{\\n \"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"\\n}\\n]\\n}\\n";
+//            LogUtil.info(logprefix, location, "RequestToHASH : ", body);
+//
+//            LogUtil.info(logprefix, location, "Request body :", main);
+//
+//            SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
+//            Mac hmac256 = Mac.getInstance("HmacSHA256");
+//            hmac256.init(secret_key);
+//
+//            byte[] signatureRaw = hmac256.doFinal(body.getBytes(StandardCharsets.UTF_8));
+//            StringBuilder buf = new StringBuilder();
+//            for (byte item : signatureRaw) {
+//                buf.append(Integer.toHexString((item & 0xFF) | 0x100).substring(1, 3));
+//            }
+//
+//            System.out.println("HASH :" + buf);
+//            String token = apiKey + ":" + new Date().getTime() + ":" + buf.toString().toLowerCase();
+//            System.out.println("token : " + token);
+//
+//            URL url = new URL(domainUrl + getpriceUrl);
+//            System.out.println("URL :" + url);
+//            HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+//
+//            con.setRequestMethod("POST");
+//            con.setRequestProperty("Host", "rest.sandbox.lalamove.com");
+//            con.setRequestProperty("X-LLM-Country", "MY_KUL");
+//            con.setRequestProperty("Authorization", "hmac " + token);
+//            con.setDoOutput(true);
+//            con.setRequestProperty("Content-Type", "application/json");
+//
+//            OutputStream os = con.getOutputStream();
+//            OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
+//
+//            osw.write(main);
+//            osw.flush();
+//            osw.close();
+//
+//            int responseCode = con.getResponseCode();
+//            BufferedReader ins = new BufferedReader(new InputStreamReader(con.getInputStream()));
+//
+//            String inputLine;
+//
+//            StringBuffer resp = new StringBuffer();
+//            while ((inputLine = ins.readLine()) != null) {
+//                resp.append(inputLine);
+//            }
+//            ins.close();
+//
+//            System.out.println("Response :" + resp);
+//
+//
+//            JSONObject resToken;
             return ResponseEntity.status(HttpStatus.OK).body(response.toString());
 
         } catch (Exception e) {

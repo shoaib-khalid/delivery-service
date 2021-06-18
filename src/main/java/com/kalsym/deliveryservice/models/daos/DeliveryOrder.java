@@ -49,4 +49,6 @@ public class DeliveryOrder {
     String orderId;
     String storeId;
     Double totalWeightKg;
+    String merchantTrackingUrl;
+    String customerTrackingUrl;
 }
