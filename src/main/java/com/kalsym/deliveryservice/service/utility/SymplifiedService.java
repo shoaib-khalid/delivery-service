@@ -1,8 +1,10 @@
 package com.kalsym.deliveryservice.service.utility;
 
 import com.kalsym.deliveryservice.service.utility.Response.*;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -32,6 +34,11 @@ public class SymplifiedService {
     @Value("${product-service.token:Bearer accessToken}")
     private String productServiceToken;
 
+    @Value("${speedy-service.auth.token}")
+    private String speedyAuthToken;
+
+    @Value("${speedy-service.base.url}")
+    private String SPEEDY_BASE_URL;
 
     public StoreResponseData getStore(String storeId) {
         String url = productServiceURL + "stores/" + storeId;
@@ -157,7 +164,7 @@ public class SymplifiedService {
 
             logger.debug("Request sent to live service, responseCode: {}, responseBody: {}", res.getStatusCode(), res.getBody());
         } catch (RestClientException e) {
-            logger.error("Error getting storeName against storeId:{}, url: {}", orderId, url, e.getMessage());
+            logger.error("Error getting storeName against storeId:{}, url: {}", orderId, url, e);
             return null;
         } catch (Exception exception) {
             System.err.println("Exception :" + exception.getMessage());
@@ -194,4 +201,23 @@ public class SymplifiedService {
         }
         return null;
     }
+
+//    public JSONObject getSpeedyStatus(String orderId){
+//
+////        String ENDPOINT_URL = SPEEDY_BASE_URL+ "courier?order_id="+orderId;
+//
+//        String ENDPOINT_URL = "http://localhost:5000/orders/confirmDelivery/34/000e0d1a-ed1a-4741-8a55-d5e598421364";
+//        RestTemplate restTemplate = new RestTemplate();
+//        HttpHeaders headers = new HttpHeaders();
+////        headers.add("X-DV-Auth-Token",speedyAuthToken);
+//        headers.add("Authorization","Bearer Bearer accessToken");
+//        HttpEntity<String> request = new HttpEntity<>(headers);
+//        ResponseEntity<JSONObject> response = restTemplate.exchange(ENDPOINT_URL, HttpMethod.POST, request, JSONObject.class);
+//        JSONObject responseBody = response.getBody();
+//
+//        return responseBody;
+//
+//    }
+
+
 }

@@ -55,8 +55,8 @@ public class OrderCallback extends SyncDispatcher {
      private SpCallbackResult extractResponseBody() {
         SpCallbackResult callbackResult = new SpCallbackResult();       
         try {
-            String status = jsonBody.get("order").getAsJsonObject().get("status").getAsString();
-            String spOrderId = jsonBody.get("order").getAsJsonObject().get("order_id").getAsString();
+            String status = jsonBody.get("delivery").getAsJsonObject().get("status").getAsString();
+            String spOrderId = jsonBody.get("delivery").getAsJsonObject().get("order_id").getAsString();
             callbackResult.spOrderId=spOrderId;
             callbackResult.status=status;
             LogUtil.info(logprefix, location, "SpOrderId:"+spOrderId+" Status:"+status, "");

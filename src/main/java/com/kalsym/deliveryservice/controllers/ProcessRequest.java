@@ -170,6 +170,16 @@ public class ProcessRequest {
             deliveryOrder.setSpOrderId(orderCreated.getSpOrderId());
             deliveryOrder.setSpOrderName(orderCreated.getSpOrderName());
             deliveryOrder.setVehicleType(orderCreated.getVehicleType());
+
+            //TODO: changes by nadeem //Start
+
+//            deliveryOrder.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
+//            deliveryOrder.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
+//
+//            System.out.println(deliveryOrder.toString());
+
+            // changes by nadeem //End
+
             response.resultCode = 0;
         } else {
             response.resultCode = -1;

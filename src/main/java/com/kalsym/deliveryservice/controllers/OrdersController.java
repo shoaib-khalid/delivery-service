@@ -1,5 +1,6 @@
 package com.kalsym.deliveryservice.controllers;
 
+import com.google.gson.Gson;
 import com.kalsym.deliveryservice.models.Delivery;
 import com.kalsym.deliveryservice.models.HttpReponse;
 import com.kalsym.deliveryservice.models.Order;
@@ -8,6 +9,8 @@ import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.daos.DeliveryQuotation;
 import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
+import com.kalsym.deliveryservice.models.lalamove.getprice.*;
+import com.kalsym.deliveryservice.models.lalamove.getprice.Location;
 import com.kalsym.deliveryservice.provider.*;
 import com.kalsym.deliveryservice.repositories.*;
 import com.kalsym.deliveryservice.service.utility.Response.StoreDeliveryResponseData;
@@ -20,15 +23,16 @@ import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -501,13 +505,18 @@ public class OrdersController {
                 LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
                 deliveryOrder.setStatus(status);
                 String orderStatus = "";
-                if (status.equals("available")) {
+
+                // change from order status codes to delivery status codes.
+                if (status.equals("planned")) {
                     orderStatus = "AWAITING_PICKUP";
                 } else if (status.equals("active")) {
                     orderStatus = "BEING_DELIVERED";
-                } else if (status.equals("completed")) {
-                    orderStatus = "DELIVERED_T0_CUSTOMER";
+                } else if (status.equals("finished")) {
+                    orderStatus = "DELIVERED_TO_CUSTOMER";
+                } else if (status.equals("canceled")) {
+                    orderStatus = "REJECTED_BY_STORE";
                 }
+
                 String res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
 
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
@@ -542,6 +551,86 @@ public class OrdersController {
         LogUtil.info("", location, "Response with " + HttpStatus.OK, "");
         return ResponseEntity.status(HttpStatus.OK).body(response);
 
+    }
+
+    @GetMapping(path = {"/test"}, name = "test-lalamove-response")
+    public ResponseEntity<String> testLalamove() throws NoSuchAlgorithmException, InvalidKeyException {
+
+        String secretKey = "7p0CJjVxlfEpg/EJWi/y9+6pMBK9yvgYzVeOUKSYZl4/IztYSh6ZhdcdpRpB15ty";
+        String apiKey = "6e4e7adb5797632e54172dc2dd2ca748";
+        String BASE_URL = "https://rest.sandbox.lalamove.com";
+        String ENDPOINT_URL = "/v2/quotations";
+        String METHOD = "POST";
+        Mac mac = Mac.getInstance("HmacSHA256");
+        SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
+        mac.init(secret_key);
+        List<Stop> stops = new ArrayList<>();
+        stops.add(new Stop(
+                        new Location("3.048593", "101.671568"),
+                        new Addresses(
+                                        new MsMY("Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia",
+                                "MY_KUL")
+                                        )));
+        stops.add(new Stop(
+                        new Location("2.754873", "101.703744"),
+                        new Addresses(
+                                        new MsMY("64000 Sepang, Selangor, Malaysia",
+                                "MY_KUL"))));
+        List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
+        deliveries.add(
+                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
+                        1,
+                        new Contact("Shen Ong", "0376886555"),
+                        "Remarks for drop-off point (#1)."
+                )
+        );
+        GetPrice requestBody = new GetPrice(
+                        "MOTORCYCLE",
+                        new ArrayList<String>(),
+                        stops,
+                        new Contact("Chris Wong", "0376886555"),
+                        deliveries
+                );
+
+        GetPrice req = new GetPrice();
+        req.serviceType = "MOTORCYCLE";
+        req.specialRequests = null;
+        Stop s1 = new Stop();
+        s1.addresses = new Addresses(
+                new MsMY("Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia",
+                        "MY_KUL")
+        );
+        Stop s2 = new Stop();
+        s2.addresses = new Addresses(
+                new MsMY("Jalan Raja, Kuala Lumpur City Centre, 50050 Kuala Lumpur, Federal Territory of Kuala Lumpur, Malaysia",
+                        "MY_KUL"));
+        List<Stop> stopList = new ArrayList<>();
+        stopList.add(s1);
+        stopList.add(s2);
+
+        req.stops = stopList;
+        req.requesterContact = new Contact("Chris Wong", "0376886555");
+        req.deliveries = deliveries;
+
+        //JSONObject bodyJson = new JSONObject("{\"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"}]}");
+        JSONObject bodyJson = new JSONObject(new Gson().toJson(req));
+        String timeStamp = String.valueOf(System.currentTimeMillis());
+        String rawSignature = timeStamp+"\r\n"+METHOD+"\r\n"+ENDPOINT_URL+"\r\n\r\n"+bodyJson.toString();
+        byte[] byteSig = mac.doFinal(rawSignature.getBytes());
+        String signature = DatatypeConverter.printHexBinary(byteSig);
+        signature = signature.toLowerCase();
+
+        String authToken = apiKey+":"+timeStamp+":"+signature;
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/json");
+        headers.set("Authorization", "hmac "+authToken);
+        headers.set("X-LLM-Country", "MY_KUL");
+        HttpEntity<String> request = new HttpEntity(bodyJson.toString(), headers);
+        ResponseEntity<String> response = restTemplate.exchange(BASE_URL+ENDPOINT_URL, HttpMethod.POST,request,String.class);
+        System.out.println(response);
+        return response;
     }
 
 
@@ -647,5 +736,8 @@ public class OrdersController {
             return null;
         }
     }
-
+//    @PostMapping(path = {"/mrspeedy/getStatus/{orderId}"}, name = "mr-speedy-get-delivery-status")
+//    public ResponseEntity<String> getSpeedyStatus(@PathVariable String orderId){
+//        RestTemplate restTemplate = new RestTemplate();
+//    }
 }
