@@ -92,6 +92,11 @@ public class OrdersController {
         StoreResponseData store = symplifiedService.getStore(orderDetails.getStoreId());
         LogUtil.info(logprefix, location, "", store.toString());
         Pickup pickup = new Pickup();
+        //TODO: this is proper delivery address
+        String deliveryAddress = orderDetails.getDelivery().getDeliveryAddress() + "," + orderDetails.getDelivery().getDeliveryPostcode() + "," + orderDetails.getDelivery().getDeliveryCity() + "," + orderDetails.getDelivery().getDeliveryState();
+        orderDetails.getDelivery().setDeliveryAddress(deliveryAddress);
+
+
         pickup.setPickupAddress(store.getAddress());
         pickup.setPickupCity(store.getCity());
         pickup.setPickupContactName(store.getName());
@@ -108,6 +113,9 @@ public class OrdersController {
         }
         LogUtil.info(logprefix, location, "Vehicle Type: ", pickup.getVehicleType().name());
         orderDetails.setPickup(pickup);
+        //TODO: pickup address is postcode, city and state combined
+        String pickupAddress = orderDetails.getPickup().getPickupAddress() + "," + orderDetails.getPickup().getPickupPostcode() + "," + orderDetails.getPickup().getPickupCity() + "," + orderDetails.getPickup().getPickupState();
+        orderDetails.getPickup().setPickupAddress(pickupAddress);
         orderDetails.setInsurance(false);
         orderDetails.setItemType(ItemType.parcel);
         orderDetails.setTotalWeightKg(weight);
@@ -138,8 +146,8 @@ public class OrdersController {
                 PriceResult result = new PriceResult();
                 DeliveryQuotation deliveryOrder = new DeliveryQuotation();
                 deliveryOrder.setCustomerId(orderDetails.getCustomerId());
-                deliveryOrder.setPickupAddress(orderDetails.getPickup().getPickupAddress() + "," + orderDetails.getPickup().getPickupPostcode() + "," + orderDetails.getPickup().getPickupCity() + "," + orderDetails.getPickup().getPickupState());
-                deliveryOrder.setDeliveryAddress(orderDetails.getDelivery().getDeliveryAddress() + "," + orderDetails.getDelivery().getDeliveryPostcode() + "," + orderDetails.getDelivery().getDeliveryCity() + "," + orderDetails.getDelivery().getDeliveryState());
+                deliveryOrder.setPickupAddress(pickupAddress);
+                deliveryOrder.setDeliveryAddress(deliveryAddress);
                 deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
                 deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
                 System.err.println("Pickup Contact Number :" + contactName + " Number " + phone);
