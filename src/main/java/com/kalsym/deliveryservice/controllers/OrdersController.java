@@ -17,6 +17,7 @@ import com.kalsym.deliveryservice.service.utility.Response.StoreDeliveryResponse
 import com.kalsym.deliveryservice.service.utility.Response.StoreResponseData;
 import com.kalsym.deliveryservice.service.utility.SymplifiedService;
 import com.kalsym.deliveryservice.utils.DateTimeUtil;
+import com.kalsym.deliveryservice.utils.LalamoveUtils;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import com.kalsym.deliveryservice.utils.StringUtility;
 import com.squareup.okhttp.MediaType;
@@ -29,13 +30,10 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -641,6 +639,93 @@ public class OrdersController {
         return response;
     }
 
+    @PostMapping(path = {"/lalamove/placeorder"}, name = "lalamove-place-order")
+    public ResponseEntity<String> placeOrder() throws NoSuchAlgorithmException, InvalidKeyException {
+        String BASE_URL = "https://rest.sandbox.lalamove.com";
+        String ENDPOINT_URL_QUOTATIONS = "/v2/quotations";
+        String ENDPOINT_URL_PLACEORDER = "/v2/orders";
+
+
+        // ######### START PREPARING GETPRICE OBJECT FOR QUOTATION REQUEST #########
+        /*
+        List<Stop> stops = new ArrayList<>();
+        stops.add(new Stop(
+                new Location("3.048593", "101.671568"),
+                new Addresses(
+                        new MsMY("Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia",
+                                "MY_KUL")
+                )));
+        stops.add(new Stop(
+                new Location("2.754873", "101.703744"),
+                new Addresses(
+                        new MsMY("64000 Sepang, Selangor, Malaysia",
+                                "MY_KUL")))); */
+        List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
+        deliveries.add(
+                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
+                        1,
+                        new Contact("Shen Ong", "0376886555"),
+                        "Remarks for drop-off point (#1)."
+                )
+        );
+        /*
+        GetPrice requestBody = new GetPrice(
+                "MOTORCYCLE",
+                new ArrayList<String>(),
+                stops,
+                new Contact("Chris Wong", "0376886555"),
+                deliveries
+        );
+            */
+
+        GetPrice req = new GetPrice();
+        req.serviceType = "MOTORCYCLE";
+        req.specialRequests = null;
+        Stop s1 = new Stop();
+        s1.addresses = new Addresses(
+                new MsMY("Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia",
+                        "MY_KUL")
+        );
+        Stop s2 = new Stop();
+        s2.addresses = new Addresses(
+                new MsMY("Jalan Raja, Kuala Lumpur City Centre, 50050 Kuala Lumpur, Federal Territory of Kuala Lumpur, Malaysia",
+                        "MY_KUL"));
+        List<Stop> stopList = new ArrayList<>();
+        stopList.add(s1);
+        stopList.add(s2);
+
+        req.stops = stopList;
+        req.requesterContact = new Contact("Chris Wong", "0376886555");
+        req.deliveries = deliveries;
+
+        JSONObject bodyJson = new JSONObject(new Gson().toJson(req));
+
+        // ######### END PREPARING GETPRICE OBJECT FOR QUOTATION REQUEST #########
+
+        // BUILD HTTP REQUEST USING REST TEMPLATE
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+
+
+        HttpEntity<String> quotationRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_QUOTATIONS,"POST", bodyJson, headers);   // ######### SEND REQUEST FOR QUOTATION #########
+        ResponseEntity<String> quotationResponse = restTemplate.exchange(BASE_URL+ENDPOINT_URL_QUOTATIONS, HttpMethod.POST,quotationRequest,String.class);  // ######### RECEIVE QUOTATION INFORMATION #########
+
+        // ######### BUILD QUOTATION OBJECT FOR PLACEORDER REQUEST #########
+        Quotation quotation = new Quotation();
+        JSONObject quotationBody = new JSONObject(quotationResponse.getBody());
+        quotation.setAmount(quotationBody.getString("totalFee"));
+        quotation.setCurrency(quotationBody.getString("totalFeeCurrency"));
+
+        // ######### BUILD PLACEORDER REQUEST USING PREVIOUSLY USED GETPRICE OBJECT AND QUOTATION OBJECT #########
+        PlaceOrder placeOrder = new PlaceOrder(req, quotation);
+        JSONObject orderBody = new JSONObject(new Gson().toJson(placeOrder));
+        HttpEntity<String> orderRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_PLACEORDER, "POST", orderBody, headers);
+
+        return restTemplate.exchange(BASE_URL+ENDPOINT_URL_PLACEORDER, HttpMethod.POST, orderRequest, String.class); // ######### RETURN ORDERREF/ORDERID #########
+
+    }
+
+
 
     @PostMapping(path = {"/lalamove/{order-id}"}, name = "get-server-time")
     public ResponseEntity<String> getHashValue(HttpServletRequest request,
@@ -744,8 +829,13 @@ public class OrdersController {
             return null;
         }
     }
-//    @PostMapping(path = {"/mrspeedy/getStatus/{orderId}"}, name = "mr-speedy-get-delivery-status")
+
+
+
+    //    @PostMapping(path = {"/mrspeedy/getStatus/{orderId}"}, name = "mr-speedy-get-delivery-status")
 //    public ResponseEntity<String> getSpeedyStatus(@PathVariable String orderId){
 //        RestTemplate restTemplate = new RestTemplate();
 //    }
+
+
 }
