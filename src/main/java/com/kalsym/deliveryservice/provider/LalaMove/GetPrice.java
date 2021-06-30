@@ -33,15 +33,15 @@ public class GetPrice extends SyncDispatcher {
     private final int connectTimeout;
     private final int waitTimeout;
     private final String systemTransactionId;
-    private Order order;
-    private HashMap productMap;
-    private String atxProductCode = "";
+    private final Order order;
+    private final HashMap productMap;
+    private final String atxProductCode = "";
     private String sessionToken;
     private String sslVersion = "SSL";
-    private String logprefix;
-    private String location = "LalaMoveGetPrice";
-    private String secretKey;
-    private String apiKey;
+    private final String logprefix;
+    private final String location = "LalaMoveGetPrice";
+    private final String secretKey;
+    private final String apiKey;
 
 
     public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
@@ -107,9 +107,14 @@ public class GetPrice extends SyncDispatcher {
 
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, (this.domainUrl + this.getprice_url), httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
         if (httpResult.resultCode == 0) {
-            LogUtil.info(logprefix, location, "Request successful", "");
-            response.resultCode = 0;
-            response.returnObject = extractResponseBody(httpResult.responseString);
+            if (httpResult.httpResponseCode == 200) {
+                LogUtil.info(logprefix, location, "Request successful", "");
+                response.resultCode = 0;
+                response.returnObject = extractResponseBody(httpResult.responseString);
+            } else {
+                LogUtil.info(logprefix, location, "Request failed", "");
+                response.resultCode = -1;
+            }
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
             response.resultCode = -1;
