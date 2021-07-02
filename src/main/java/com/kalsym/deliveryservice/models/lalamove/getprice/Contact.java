@@ -2,9 +2,11 @@ package com.kalsym.deliveryservice.models.lalamove.getprice;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
+@ToString
 public class Contact {
     public String name;
     public String phone;

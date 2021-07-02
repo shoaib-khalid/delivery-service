@@ -3,12 +3,14 @@ package com.kalsym.deliveryservice.models.lalamove.getprice;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@ToString
 public class GetPrice{
     public String serviceType;
     public List<String> specialRequests;
