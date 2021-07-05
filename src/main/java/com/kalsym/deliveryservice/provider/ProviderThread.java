@@ -93,9 +93,9 @@ public class ProviderThread extends Thread implements Runnable{
                 
                 //get the java class name from SPId->JavaClass mapping
                 String className="";
-                if (functionName.equalsIgnoreCase("GetPrice")) {
+                if (functionName.equalsIgnoreCase("GetPrices")) {
                     className=provider.getGetPriceClassname();
-                    LogUtil.info(logprefix, location, "GetPrice class name for SP ID:"+provider.getId()+" -> "+className, "");
+                    LogUtil.info(logprefix, location, "GetPrices class name for SP ID:"+provider.getId()+" -> "+className, "");
                 } else if (functionName.equalsIgnoreCase("SubmitOrder")) {
                     className=provider.getSubmitOrderClassname();
                     LogUtil.info(logprefix, location, "SubmitOrder class name for SP ID:"+provider.getId()+" -> "+className, "");               
@@ -153,7 +153,7 @@ public class ProviderThread extends Thread implements Runnable{
                 
                 LogUtil.info(logprefix, location, "ProviderThread finish", "");
                 ProcessResult response = reqFactoryObj.getProcessResult();
-                if (functionName.equalsIgnoreCase("GetPrice")) {
+                if (functionName.equalsIgnoreCase("GetPrices")) {
                     PriceResult priceResult = (PriceResult)response.returnObject;
                     priceResult.providerId=provider.getId();
                     caller.addPriceResult(priceResult);

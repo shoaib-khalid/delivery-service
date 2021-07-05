@@ -29,13 +29,10 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -301,6 +298,7 @@ public class OrdersController {
         orderDetails.setDeliveryProviderId(quotation.getDeliveryProviderId());
         orderDetails.setProductCode(quotation.getProductCode());
         orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
+        orderDetails.setShipmentValue(quotation.getAmount());
 
         Pickup pickup = new Pickup();
 //        if (quotation.getPickupContactName() != null) {
@@ -592,7 +590,7 @@ public class OrdersController {
                         "Remarks for drop-off point (#1)."
                 )
         );
-        GetPrice requestBody = new GetPrice(
+        GetPrices requestBody = new GetPrices(
                         "MOTORCYCLE",
                         new ArrayList<String>(),
                         stops,
@@ -600,7 +598,7 @@ public class OrdersController {
                         deliveries
                 );
 
-        GetPrice req = new GetPrice();
+        GetPrices req = new GetPrices();
         req.serviceType = "MOTORCYCLE";
         req.specialRequests = null;
         Stop s1 = new Stop();

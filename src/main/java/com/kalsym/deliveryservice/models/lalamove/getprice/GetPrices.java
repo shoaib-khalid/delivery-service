@@ -11,14 +11,14 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @ToString
-public class GetPrice{
+public class GetPrices {
     public String serviceType;
     public List<String> specialRequests;
     public List<Stop> stops;
     public Contact requesterContact;
     public List<Delivery> deliveries;
 
-    public GetPrice(String serviceType, List<String> specialRequests, List<Stop> stops, Contact requesterContact, List<Delivery> deliveries) {
+    public GetPrices(String serviceType, List<String> specialRequests, List<Stop> stops, Contact requesterContact, List<Delivery> deliveries) {
         this.serviceType = serviceType;
         this.specialRequests = specialRequests;
         this.stops = stops;
@@ -28,7 +28,7 @@ public class GetPrice{
 
     @Override
     public String toString() {
-        return "GetPrice{" +
+        return "GetPrices{" +
                 "serviceType='" + serviceType + '\'' +
                 ", specialRequests=" + specialRequests +
                 ", stops=" + stops +

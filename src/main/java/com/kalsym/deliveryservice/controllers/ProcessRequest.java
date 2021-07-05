@@ -98,7 +98,7 @@ public class ProcessRequest {
                 String fieldValue = providerConfigList.get(j).getConfigValue();
                 config.put(fieldName, fieldValue);
             }
-            ProviderThread dthread = new ProviderThread(this, sysTransactionId, providerRatePlanList.get(i).getProvider(), config, order, "GetPrice", sequenceNumberRepository);
+            ProviderThread dthread = new ProviderThread(this, sysTransactionId, providerRatePlanList.get(i).getProvider(), config, order, "GetPrices", sequenceNumberRepository);
             dthread.start();
         }
 
@@ -118,7 +118,7 @@ public class ProcessRequest {
         ProcessResult response = new ProcessResult();
         response.resultCode = 0;
         response.returnObject = priceResultList;
-        LogUtil.info(logprefix, location, "GetPrice finish. resultCode:" + response.resultCode, " priceResult count:" + priceResultList.size());
+        LogUtil.info(logprefix, location, "GetPrices finish. resultCode:" + response.resultCode, " priceResult count:" + priceResultList.size());
         return response;
     }
 

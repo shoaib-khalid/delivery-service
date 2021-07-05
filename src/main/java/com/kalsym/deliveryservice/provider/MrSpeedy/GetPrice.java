@@ -40,7 +40,7 @@ public class GetPrice extends SyncDispatcher {
         super(latch);
         this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;
-        LogUtil.info(logprefix, location, "MrSpeedy GetPrice class initiliazed!!", "");
+        LogUtil.info(logprefix, location, "MrSpeedy GetPrices class initiliazed!!", "");
         this.getprice_url = (String) config.get("getprice_url");
         this.getprice_token = (String) config.get("getprice_token");
         this.connectTimeout = Integer.parseInt((String) config.get("getprice_connect_timeout"));
@@ -58,6 +58,9 @@ public class GetPrice extends SyncDispatcher {
         httpHeader.put("X-DV-Auth-Token", this.getprice_token);
         httpHeader.put("Content-Type", "application/json");
         httpHeader.put("Connection", "close");
+
+
+
         String requestBody = generateRequestBody();
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.getprice_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
         if (httpResult.resultCode==0) {
