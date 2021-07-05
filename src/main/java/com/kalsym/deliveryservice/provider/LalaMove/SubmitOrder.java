@@ -75,9 +75,6 @@ public class SubmitOrder extends SyncDispatcher {
         String ENDPOINT_URL_PLACEORDER = this.endpointUrl;
         System.err.println("BASEURL :"+ BASE_URL + " ENDPOINT :" +ENDPOINT_URL_PLACEORDER);
 
-
-
-
         String METHOD = "POST";
         Mac mac = null;
         try {
@@ -99,45 +96,9 @@ public class SubmitOrder extends SyncDispatcher {
 
         String authToken = apiKey + ":" + timeStamp + ":" + signature;
 
-//
-//        RestTemplate restTemplate = new RestTemplate();
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.set("Content-Type", "application/json");
-//        headers.set("Authorization", "hmac " + authToken);
-//        headers.set("X-LLM-Country", "MY_KUL");
-//
-//
-//
-//        System.err.println("REQUEST BODY :"+bodyJson.toString());
-//
-//        HttpEntity<String> request = new HttpEntity(bodyJson.toString(), headers);
-//        ResponseEntity<String> responses = restTemplate.exchange(baseUrl + endpointUrl, HttpMethod.POST, request, String.class);
-//        System.err.println("RESPONSE : " + responses.toString());
-
-
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
 
-
-//        HttpEntity<String> quotationRequest = null;   // ######### SEND REQUEST FOR QUOTATION #########
-//        try {
-//            quotationRequest = LalamoveUtils.composeRequest(endpointUrl, "POST", bodyJson, headers);
-//        } catch (NoSuchAlgorithmException e) {
-//            e.printStackTrace();
-//        } catch (InvalidKeyException e) {
-//            e.printStackTrace();
-//        }
-//        ResponseEntity<String> quotationResponse = restTemplate.exchange(baseUrl + endpointUrl, HttpMethod.POST, quotationRequest, String.class);  // ######### RECEIVE QUOTATION INFORMATION #########
-//
-//        JSONObject orderBody = new JSONObject(new Gson().toJson(requestBody));
-//        HttpEntity<String> orderRequest = null;
-//        try {
-//            orderRequest = LalamoveUtils.composeRequest(baseUrl + endpointUrl, "POST", orderBody, headers);
-//        } catch (NoSuchAlgorithmException e) {
-//            e.printStackTrace();
-//        } catch (InvalidKeyException e) {
-//            e.printStackTrace();
-//        }
         JSONObject orderBody = new JSONObject(new Gson().toJson(requestBody));
 
         HttpEntity<String> orderRequest = null;
@@ -152,56 +113,20 @@ public class SubmitOrder extends SyncDispatcher {
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(BASE_URL + ENDPOINT_URL_PLACEORDER, HttpMethod.POST, orderRequest, String.class);        System.err.println("RESPONSE : " + responseEntity);// ######### RETURN ORDERREF/ORDERID #########
 
-
+        int statusCode = responseEntity.getStatusCode().value();
+        if (statusCode == 200){
+            response.resultCode = 0;
+            response.returnObject = extractResponseBody(responseEntity.getBody());
+        }else {
+            LogUtil.info(logprefix, location, "Request failed", "");
+            response.resultCode=-1;
+        }
 
         LogUtil.info(logprefix, location, "Process finish", "");
         return response;
     }
 
     private PlaceOrder generateRequestBody() {
-//        QuotedTotalFee quotedTotalFee = new QuotedTotalFee(
-//                order.getShipmentValue().toString(), "MYR"
-//        );
-//        List<Delivery> deliveries = new ArrayList<>();
-//
-//
-//        deliveries.add(
-//                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
-//                        1,
-//                        new Contact(order.getDelivery().getDeliveryContactName(), order.getDelivery().getDeliveryContactPhone()),
-//                        ""
-//                )
-//        );
-//
-//        GetPrices req = new GetPrices();
-//        req.serviceType = "MOTORCYCLE";
-//        req.specialRequests = null;
-//        Stop s1 = new Stop();
-//        s1.addresses = new Addresses(
-//                new MsMY(order.getPickup().getPickupAddress(),
-//                        "MY_KUL")
-//        );
-//        Stop s2 = new Stop();
-//        s2.addresses = new Addresses(
-//                new MsMY(order.getPickup().getPickupAddress(),
-//                        "MY_KUL"));
-//        List<Stop> stopList = new ArrayList<>();
-//        stopList.add(s1);
-//        stopList.add(s2);
-//
-//        PlaceOrder placeOrders = new PlaceOrder(req, quotedTotalFee);
-////        placeOrders.setPod(false);
-////        placeOrders.setSms(true);
-////        placeOrders.setFleetOption("FLEET_ALL");
-//
-//        placeOrders.serviceType = "MOTORCYCLE";
-//        placeOrders.specialRequests = null;
-//
-//        placeOrders.stops = stopList;
-//        placeOrders.requesterContact = new Contact(order.getPickup().getPickupContactName(), order.getPickup().getPickupContactPhone());
-//        placeOrders.deliveries = deliveries;
-
-
         List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
 
         deliveries.add(
@@ -233,7 +158,7 @@ public class SubmitOrder extends SyncDispatcher {
         req.deliveries = deliveries;
 
         QuotedTotalFee quotation = new QuotedTotalFee();
-//        JSONObject quotationBody = new JSONObject(req);
+
         quotation.setAmount(order.getShipmentValue().toString());
         quotation.setCurrency("MYR");
 
