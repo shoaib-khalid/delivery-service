@@ -17,6 +17,7 @@ import com.kalsym.deliveryservice.service.utility.Response.StoreDeliveryResponse
 import com.kalsym.deliveryservice.service.utility.Response.StoreResponseData;
 import com.kalsym.deliveryservice.service.utility.SymplifiedService;
 import com.kalsym.deliveryservice.utils.DateTimeUtil;
+import com.kalsym.deliveryservice.utils.LalamoveUtils;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import com.kalsym.deliveryservice.utils.StringUtility;
 import com.squareup.okhttp.MediaType;
@@ -296,6 +297,7 @@ public class OrdersController {
         orderDetails.setCustomerId(quotation.getCustomerId());
         orderDetails.setItemType(ItemType.valueOf(quotation.getItemType()));
         orderDetails.setDeliveryProviderId(quotation.getDeliveryProviderId());
+        System.err.println("PROVIDER ID :" + quotation.getDeliveryProviderId());
         orderDetails.setProductCode(quotation.getProductCode());
         orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
         orderDetails.setShipmentValue(quotation.getAmount());
@@ -742,8 +744,71 @@ public class OrdersController {
             return null;
         }
     }
-//    @PostMapping(path = {"/mrspeedy/getStatus/{orderId}"}, name = "mr-speedy-get-delivery-status")
-//    public ResponseEntity<String> getSpeedyStatus(@PathVariable String orderId){
-//        RestTemplate restTemplate = new RestTemplate();
-//    }
+
+
+    @PostMapping(path = {"/lalamove/placeorder"}, name = "lalamove-place-order")
+    public ResponseEntity<String> placeOrder() throws NoSuchAlgorithmException, InvalidKeyException {
+        String BASE_URL = "https://rest.sandbox.lalamove.com";
+        String ENDPOINT_URL_QUOTATIONS = "/v2/quotations";
+        String ENDPOINT_URL_PLACEORDER = "/v2/orders";
+
+
+        List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
+        deliveries.add(
+                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
+                        1,
+                        new Contact("Irasakumar", "601162802728"),
+                        "Remarks for drop-off point (#1)."
+                )
+        );
+
+
+        GetPrices req = new GetPrices();
+        req.serviceType = "MOTORCYCLE";
+        req.specialRequests = null;
+        Stop s1 = new Stop();
+        s1.addresses = new Addresses(
+                new MsMY("4, JALAN PRIMA 3/5, TAMAN PUCHONG PRIMA,47150,PUCHONG,Selangor",
+                        "MY_KUL")
+        );
+        Stop s2 = new Stop();
+        s2.addresses = new Addresses(
+                new MsMY("24, JALAN PRIMA 3/5, TAMAN PUCHONG PRIMA,47150,PUCHONG,Selangor",
+                        "MY_KUL"));
+        List<Stop> stopList = new ArrayList<>();
+        stopList.add(s1);
+        stopList.add(s2);
+
+        req.stops = stopList;
+        req.requesterContact = new Contact("Cinema Online", "0133309331");
+        req.deliveries = deliveries;
+
+        JSONObject bodyJson = new JSONObject(new Gson().toJson(req));
+
+        // ######### END PREPARING GETPRICE OBJECT FOR QUOTATION REQUEST #########
+
+        // BUILD HTTP REQUEST USING REST TEMPLATE
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+
+
+        HttpEntity<String> quotationRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_QUOTATIONS, "POST", bodyJson, headers);   // ######### SEND REQUEST FOR QUOTATION #########
+        ResponseEntity<String> quotationResponse = restTemplate.exchange(BASE_URL + ENDPOINT_URL_QUOTATIONS, HttpMethod.POST, quotationRequest, String.class);  // ######### RECEIVE QUOTATION INFORMATION #########
+
+        // ######### BUILD QUOTATION OBJECT FOR PLACEORDER REQUEST #########
+        QuotedTotalFee quotation = new QuotedTotalFee();
+        JSONObject quotationBody = new JSONObject(quotationResponse.getBody());
+        quotation.setAmount("7.00");
+        quotation.setCurrency("MYR");
+
+        // ######### BUILD PLACEORDER REQUEST USING PREVIOUSLY USED GETPRICE OBJECT AND QUOTATION OBJECT #########
+        PlaceOrder placeOrder = new PlaceOrder(req, quotation);
+        JSONObject orderBody = new JSONObject(new Gson().toJson(placeOrder));
+        HttpEntity<String> orderRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_PLACEORDER, "POST", orderBody, headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(BASE_URL + ENDPOINT_URL_PLACEORDER, HttpMethod.POST, orderRequest, String.class);
+        System.err.println("RESPONSE : " + responseEntity);// ######### RETURN ORDERREF/ORDERID #########
+        return responseEntity;
+    }
+
 }

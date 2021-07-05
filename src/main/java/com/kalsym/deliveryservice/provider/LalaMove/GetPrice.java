@@ -1,19 +1,14 @@
 package com.kalsym.deliveryservice.provider.LalaMove;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.lalamove.getprice.*;
-import com.kalsym.deliveryservice.provider.MrSpeedy.VehicleType;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
-import com.kalsym.deliveryservice.utils.HttpResult;
-import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
-import org.apache.tomcat.util.codec.binary.Base64;
 import org.json.JSONObject;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -22,15 +17,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -59,7 +50,7 @@ public class GetPrice extends SyncDispatcher {
         super(latch);
         this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;
-        LogUtil.info(logprefix, location, "LalaMove GetPrice class initiliazed!!", "");
+        LogUtil.info(logprefix, location, "LalaMove GetPrices class initiliazed!!", "");
         this.getprice_url = (String) config.get("getprice_url");
         this.domainUrl = (String) config.get("domainUrl");
         this.secretKey = (String) config.get("secretKey");
@@ -101,7 +92,7 @@ public class GetPrice extends SyncDispatcher {
                 )
         );
 
-        com.kalsym.deliveryservice.models.lalamove.getprice.GetPrice req = new com.kalsym.deliveryservice.models.lalamove.getprice.GetPrice();
+        com.kalsym.deliveryservice.models.lalamove.getprice.GetPrices req = new com.kalsym.deliveryservice.models.lalamove.getprice.GetPrices();
         req.serviceType = "MOTORCYCLE";
         req.specialRequests = null;
         Stop s1 = new Stop();
@@ -121,7 +112,8 @@ public class GetPrice extends SyncDispatcher {
         req.requesterContact = new Contact(order.getPickup().getPickupContactName(), order.getPickup().getPickupContactPhone());
         req.deliveries = deliveries;
         System.out.println("Request: " + req);*/
-        com.kalsym.deliveryservice.models.lalamove.getprice.GetPrice requ = generateRequestBody();
+        GetPrices requ = generateRequestBody();
+        System.err.println("REQUST BODY FOR GET PRICE : "+requ.toString() );
 
         //JSONObject bodyJson = new JSONObject("{\"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"}]}");
         JSONObject bodyJson = new JSONObject(new Gson().toJson(requ));
@@ -155,7 +147,7 @@ public class GetPrice extends SyncDispatcher {
     }
 
 
-    private com.kalsym.deliveryservice.models.lalamove.getprice.GetPrice generateRequestBody() {
+    private GetPrices generateRequestBody() {
         List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
 
         deliveries.add(
@@ -166,7 +158,7 @@ public class GetPrice extends SyncDispatcher {
                 )
         );
 
-        com.kalsym.deliveryservice.models.lalamove.getprice.GetPrice req = new com.kalsym.deliveryservice.models.lalamove.getprice.GetPrice();
+        GetPrices req = new GetPrices();
         req.serviceType = "MOTORCYCLE";
         req.specialRequests = null;
         Stop s1 = new Stop();

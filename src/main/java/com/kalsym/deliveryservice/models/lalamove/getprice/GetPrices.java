@@ -18,6 +18,7 @@ public class GetPrices {
     public Contact requesterContact;
     public List<Delivery> deliveries;
 
+
     public GetPrices(String serviceType, List<String> specialRequests, List<Stop> stops, Contact requesterContact, List<Delivery> deliveries) {
         this.serviceType = serviceType;
         this.specialRequests = specialRequests;

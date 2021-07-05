@@ -1,12 +1,14 @@
 package com.kalsym.deliveryservice.models.lalamove.getprice;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 public class QuotedTotalFee {
     public String amount;
     public String currency;
@@ -15,4 +17,6 @@ public class QuotedTotalFee {
         this.amount = amount;
         this.currency = currency;
     }
+
+
 }

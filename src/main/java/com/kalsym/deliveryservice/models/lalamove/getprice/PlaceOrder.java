@@ -1,24 +1,18 @@
 package com.kalsym.deliveryservice.models.lalamove.getprice;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import com.kalsym.deliveryservice.models.lalamove.getprice.GetPrices;
 
-@Getter
-@Setter
-@ToString
-public class PlaceOrder {
-    public QuotedTotalFee quotedTotalFees;
+
+public class PlaceOrder extends GetPrices{
+    public QuotedTotalFee quotedTotalFee;
     public boolean sms;
     public boolean pod;
     public String fleetOption;
 
-
-    public PlaceOrder(QuotedTotalFee quotedTotalFee, boolean sms, boolean pod, String fleetOption
-                      ) {
-        this.quotedTotalFees = quotedTotalFee;
-        this.sms = sms;
-        this.pod = pod;
-        this.fleetOption = fleetOption;
+    public PlaceOrder(GetPrices getPrice, QuotedTotalFee quotedTotalFee){
+        super(getPrice.serviceType, getPrice.specialRequests, getPrice.stops, getPrice.requesterContact, getPrice.deliveries);
+        this.quotedTotalFee = quotedTotalFee;
     }
 }
+
+

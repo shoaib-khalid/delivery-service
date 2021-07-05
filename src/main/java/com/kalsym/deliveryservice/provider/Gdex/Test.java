@@ -48,7 +48,7 @@ public class Test {
             
             //SequenceNumberRepository sequenceNumberRepository =null;
             
-            //GetPrice getPrice = new GetPrice(latch, configMap, order, systemTransactionId, sequenceNumberRepository);
+            //GetPrices getPrice = new GetPrices(latch, configMap, order, systemTransactionId, sequenceNumberRepository);
             //getPrice.process();
             
             configMap.put("getpickupdate_url", "https://myopenapi.gdexpress.com/test/api/MyGDex/GetPickupDateListing");

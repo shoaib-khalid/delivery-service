@@ -43,7 +43,7 @@ public class GetPrice extends SyncDispatcher {
         super(latch);
         this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;
-        LogUtil.info(logprefix, location, "Gdex GetPrice class initiliazed!!", "");
+        LogUtil.info(logprefix, location, "Gdex GetPrices class initiliazed!!", "");
         this.getprice_url = (String) config.get("getprice_url");
         this.getprice_token = (String) config.get("getprice_token");
         this.getprice_key = (String) config.get("getprice_key");
