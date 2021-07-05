@@ -174,13 +174,14 @@ public class SubmitOrder extends SyncDispatcher {
         SubmitOrderResult submitOrderResult = new SubmitOrderResult();
         try {
             JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
-            String orderRef = String.valueOf(jsonResp.get("orderRef"));
+            String orderRef = jsonResp.get("orderRef").getAsString();
+            System.err.println("order ref: " + orderRef);
             LogUtil.info(logprefix, location, "OrderNumber:" + orderRef, "");
 
             //extract order create
             DeliveryOrder orderCreated = new DeliveryOrder();
             orderCreated.setSpOrderId(orderRef);
-            orderCreated.setSpOrderName("lalamove" + orderRef);
+            orderCreated.setSpOrderName(orderRef);
             orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
 
             submitOrderResult.orderCreated = orderCreated;
