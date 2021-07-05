@@ -75,11 +75,16 @@ public class OrdersController {
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
                                                 @Valid @RequestBody Order orderDetails) {
+
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+
+
         HttpReponse response = new HttpReponse(request.getRequestURI());
+
         ProcessResult processResult = new ProcessResult();
         String systemTransactionId = StringUtility.CreateRefID("DL");
+
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
         Double weight = symplifiedService.getTotalWeight(orderDetails.getCartId());
 
@@ -90,6 +95,8 @@ public class OrdersController {
         StoreResponseData store = symplifiedService.getStore(orderDetails.getStoreId());
         LogUtil.info(logprefix, location, "", store.toString());
         Pickup pickup = new Pickup();
+
+
         //TODO: this is proper delivery address
         String deliveryAddress = orderDetails.getDelivery().getDeliveryAddress() + "," + orderDetails.getDelivery().getDeliveryPostcode() + "," + orderDetails.getDelivery().getDeliveryCity() + "," + orderDetails.getDelivery().getDeliveryState();
         orderDetails.getDelivery().setDeliveryAddress(deliveryAddress);
@@ -626,6 +633,9 @@ public class OrdersController {
         String signature = DatatypeConverter.printHexBinary(byteSig);
         signature = signature.toLowerCase();
 
+        System.out.println("##################################################");
+        System.out.println(bodyJson.toString());
+
         String authToken = apiKey+":"+timeStamp+":"+signature;
 
         RestTemplate restTemplate = new RestTemplate();
@@ -725,6 +735,14 @@ public class OrdersController {
 
     }
 
+    @GetMapping(path = {"/lalamove/{id}"}, name = "lalamove-order-details")
+    public ResponseEntity<String> orderDetails(@PathVariable String id){
+        String BASE_URL = "https://rest.sandbox.lalamove.com";
+        String ENDPOINT_URL_ORDER_DETAILS = "/v2/orders/"+id;
+        RestTemplate restTemplate = new RestTemplate();
+//        restTemplate.exchange(BASE_URL+ENDPOINT_URL_ORDER_DETAILS, HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class);
+        return restTemplate.exchange(BASE_URL+ENDPOINT_URL_ORDER_DETAILS, HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class);
+    }
 
 
     @PostMapping(path = {"/lalamove/{order-id}"}, name = "get-server-time")
