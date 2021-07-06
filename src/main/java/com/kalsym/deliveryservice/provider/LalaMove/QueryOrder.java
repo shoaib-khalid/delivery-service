@@ -11,10 +11,16 @@ import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import org.apache.tomcat.util.codec.binary.Base64;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
@@ -62,36 +68,44 @@ public class QueryOrder extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
         String transactionId = "";
-        String signature = "";
+        Mac mac = null;
+        String METHOD = "GET";
 
-        Date newDate = new Date();
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] encodedhash = digest.digest(
-                    systemTransactionId.getBytes(StandardCharsets.UTF_8));
-            String body = newDate.getTime() + "\r\n" + "GET" + "/v2/orders/" + spOrderId;
-            transactionId = encodedhash.toString();
-            signature = hmac(body, secretKey);
-
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | InvalidKeyException e) {
+            mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
+            mac.init(secret_key);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
 
         String url = this.queryOrder_url + spOrderId;
+        String timeStamp = String.valueOf(System.currentTimeMillis());
+        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v2/orders/" + spOrderId + "\r\n\r\n";
+        byte[] byteSig = mac.doFinal(rawSignature.getBytes());
+        String signature = DatatypeConverter.printHexBinary(byteSig);
+        signature = signature.toLowerCase();
 
-        String token = apiKey + ":" + newDate.getTime() + ":" + signature;
+        String token = apiKey + ":" + timeStamp + ":" + signature;
 
-        HashMap httpHeader = new HashMap();
-        httpHeader.put("X-LLM-Country", "MY_KUL");
-        httpHeader.put("Content-Type", "application/json");
-        httpHeader.put("Authorization", "hmac " + token);
-        httpHeader.put("X-Request-ID", transactionId);
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/json");
+        headers.set("Authorization", "hmac " + token);
+        headers.set("X-LLM-Country", "MY_KUL");
+        headers.set("X-Request-ID", transactionId);
+        HttpEntity<String> request = new HttpEntity(headers);
+        System.err.println("url for orderDetails" + url);
+        ResponseEntity<String> responses = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        int statusCode = responses.getStatusCode().value();
+        System.err.println("responses for order details: " + responses);
 
-        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("GET", this.systemTransactionId, url, httpHeader, "", this.connectTimeout, this.waitTimeout);
-        if (httpResult.resultCode == 0) {
+        if (statusCode == 200) {
             LogUtil.info(logprefix, location, "Request successful", "");
             response.resultCode = 0;
-            response.returnObject = extractResponseBody(httpResult.responseString);
+            response.returnObject = extractResponseBody(responses.getBody());
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
             response.resultCode = -1;
@@ -104,8 +118,9 @@ public class QueryOrder extends SyncDispatcher {
         QueryOrderResult queryOrderResult = new QueryOrderResult();
         try {
             JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
+            System.err.println("jsonResp from orderDetail: " + jsonResp);
             boolean isSuccess = true;
-            JsonArray pod = jsonResp.get("pod").getAsJsonArray();
+//            JsonArray pod = jsonResp.get("pod").getAsJsonArray();
             LogUtil.info(logprefix, location, "isSuccess:" + isSuccess, "");
             queryOrderResult.isSuccess = isSuccess;
 
@@ -115,26 +130,14 @@ public class QueryOrder extends SyncDispatcher {
 
             DeliveryOrder orderFound = new DeliveryOrder();
             orderFound.setSpOrderId(spOrderId);
-//            orderFound.setSpOrderName(orderName);
             orderFound.setStatus(status);
+            orderFound.setCustomerTrackingUrl(shareLink);
+            orderFound.setMerchantTrackingUrl(shareLink);
             queryOrderResult.orderFound = orderFound;
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
         }
         return queryOrderResult;
-    }
-
-
-    public String hmac(String body, String key) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        SecretKey secretKey;
-        Mac mac = Mac.getInstance("HMACSHA256");
-        byte[] keyBytes = key.getBytes();
-        secretKey = new SecretKeySpec(keyBytes, mac.getAlgorithm());
-        mac.init(secretKey);
-        byte[] text = body.getBytes(StandardCharsets.UTF_8);
-        byte[] encodedText = mac.doFinal(text);
-        return new String(Base64.encodeBase64(encodedText)).trim();
-
     }
 
 }

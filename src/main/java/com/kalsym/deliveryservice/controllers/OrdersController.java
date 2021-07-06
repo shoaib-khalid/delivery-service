@@ -435,7 +435,10 @@ public class OrdersController {
                 //successfully get status from provider
                 response.setSuccessStatus(HttpStatus.OK);
                 QueryOrderResult queryOrderResult = (QueryOrderResult) processResult.returnObject;
-                orderDetails.get().setStatus(queryOrderResult.orderFound.getStatus());
+                DeliveryOrder orderFound = queryOrderResult.orderFound;
+                orderDetails.get().setStatus(orderFound.getStatus());
+                orderDetails.get().setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
+                deliveryOrdersRepository.save(orderDetails.get()) ;
                 response.setData(orderDetails);
                 LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
                 return ResponseEntity.status(HttpStatus.OK).body(response);
