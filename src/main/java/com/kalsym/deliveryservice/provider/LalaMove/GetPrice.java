@@ -36,12 +36,12 @@ public class GetPrice extends SyncDispatcher {
     private final Order order;
     private final HashMap productMap;
     private final String atxProductCode = "";
-    private String sessionToken;
-    private String sslVersion = "SSL";
     private final String logprefix;
     private final String location = "LalaMoveGetPrice";
     private final String secretKey;
     private final String apiKey;
+    private String sessionToken;
+    private String sslVersion = "SSL";
 
 
     public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
@@ -82,38 +82,8 @@ public class GetPrice extends SyncDispatcher {
             e.printStackTrace();
         }
 
-/*        List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
-
-        deliveries.add(
-                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
-                        1,
-                        new Contact(order.getDelivery().getDeliveryContactName(), order.getDelivery().getDeliveryContactPhone()),
-                        ""
-                )
-        );
-
-        com.kalsym.deliveryservice.models.lalamove.getprice.GetPrices req = new com.kalsym.deliveryservice.models.lalamove.getprice.GetPrices();
-        req.serviceType = "MOTORCYCLE";
-        req.specialRequests = null;
-        Stop s1 = new Stop();
-        s1.addresses = new Addresses(
-                new MsMY(order.getPickup().getPickupAddress(),
-                        "MY_KUL")
-        );
-        Stop s2 = new Stop();
-        s2.addresses = new Addresses(
-                new MsMY(order.getPickup().getPickupAddress(),
-                        "MY_KUL"));
-        List<Stop> stopList = new ArrayList<>();
-        stopList.add(s1);
-        stopList.add(s2);
-
-        req.stops = stopList;
-        req.requesterContact = new Contact(order.getPickup().getPickupContactName(), order.getPickup().getPickupContactPhone());
-        req.deliveries = deliveries;
-        System.out.println("Request: " + req);*/
         GetPrices requ = generateRequestBody();
-        System.err.println("REQUST BODY FOR GET PRICE : "+requ.toString() );
+        System.err.println("REQUST BODY FOR GET PRICE : " + requ.toString());
 
         //JSONObject bodyJson = new JSONObject("{\"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"}]}");
         JSONObject bodyJson = new JSONObject(new Gson().toJson(requ));
@@ -131,16 +101,18 @@ public class GetPrice extends SyncDispatcher {
         headers.set("Authorization", "hmac " + authToken);
         headers.set("X-LLM-Country", "MY_KUL");
         HttpEntity<String> request = new HttpEntity(bodyJson.toString(), headers);
+        LogUtil.info(logprefix, location, "Request Body  : ", bodyJson.toString());
+
         ResponseEntity<String> responses = restTemplate.exchange(BASE_URL + ENDPOINT_URL, HttpMethod.POST, request, String.class);
         int statusCode = responses.getStatusCode().value();
 //        PriceResult res = extractResponseBody(responses.toString());
-        LogUtil.info(logprefix, location, "Process finish", "");
-        if (statusCode == 200){
+        LogUtil.info(logprefix, location, "Responses", responses.getBody());
+        if (statusCode == 200) {
             response.resultCode = 0;
             response.returnObject = extractResponseBody(responses.getBody());
-        }else {
+        } else {
             LogUtil.info(logprefix, location, "Request failed", "");
-            response.resultCode=-1;
+            response.resultCode = -1;
         }
         LogUtil.info(logprefix, location, "Process finish", "");
         return response;
@@ -168,7 +140,7 @@ public class GetPrice extends SyncDispatcher {
         );
         Stop s2 = new Stop();
         s2.addresses = new Addresses(
-                new MsMY(order.getPickup().getPickupAddress(),
+                new MsMY(order.getDelivery().getDeliveryAddress(),
                         "MY_KUL"));
         List<Stop> stopList = new ArrayList<>();
         stopList.add(s1);
