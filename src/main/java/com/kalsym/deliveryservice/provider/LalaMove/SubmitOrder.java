@@ -12,6 +12,7 @@ import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.LalamoveUtils;
 import com.kalsym.deliveryservice.utils.LogUtil;
+import org.apache.tomcat.jni.Proc;
 import org.json.JSONObject;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -34,6 +35,7 @@ public class SubmitOrder extends SyncDispatcher {
 
     private final String baseUrl;
     private final String endpointUrl;
+    private final String queryOrder_url;
     private final int connectTimeout;
     private final int waitTimeout;
     private final String systemTransactionId;
@@ -46,6 +48,10 @@ public class SubmitOrder extends SyncDispatcher {
     private String location = "LalaMoveSubmitOrder";
     private String secretKey;
     private String apiKey;
+    private String spOrderId;
+    private String driverId;
+    private String shareLink;
+    private String status;
 
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
@@ -54,6 +60,7 @@ public class SubmitOrder extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Lalamove SubmitOrder class initiliazed!!", "");
 
         this.baseUrl = (String) config.get("domainUrl");
+        this.queryOrder_url = (String) config.get("queryorder_url");
         this.secretKey = (String) config.get("secretKey");
         this.apiKey = (String) config.get("apiKey");
         this.endpointUrl = (String) config.get("place_orderUrl");
@@ -116,6 +123,11 @@ public class SubmitOrder extends SyncDispatcher {
         int statusCode = responseEntity.getStatusCode().value();
         if (statusCode == 200){
             response.resultCode = 0;
+            JsonObject jsonResp = new Gson().fromJson(responseEntity.getBody(), JsonObject.class);
+            spOrderId = jsonResp.get("orderRef").getAsString();
+            LogUtil.info(logprefix, location, "OrderNumber in process function:" + spOrderId, "");
+            getDetails(spOrderId);
+
             response.returnObject = extractResponseBody(responseEntity.getBody());
         }else {
             LogUtil.info(logprefix, location, "Request failed", "");
@@ -174,15 +186,16 @@ public class SubmitOrder extends SyncDispatcher {
         SubmitOrderResult submitOrderResult = new SubmitOrderResult();
         try {
             JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
-            String orderRef = jsonResp.get("orderRef").getAsString();
-            System.err.println("order ref: " + orderRef);
-            LogUtil.info(logprefix, location, "OrderNumber:" + orderRef, "");
+            LogUtil.info(logprefix, location, "the json resp for submitOrder " + jsonResp, "");
+            LogUtil.info(logprefix, location, "OrderNumber:" + spOrderId, "");
 
             //extract order create
             DeliveryOrder orderCreated = new DeliveryOrder();
-            orderCreated.setSpOrderId(orderRef);
-            orderCreated.setSpOrderName(orderRef);
+            orderCreated.setSpOrderId(spOrderId);
+            orderCreated.setSpOrderName(spOrderId);
             orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
+            orderCreated.setCustomerTrackingUrl(shareLink);
+            orderCreated.setStatus(status);
 
             submitOrderResult.orderCreated = orderCreated;
         } catch (Exception ex) {
@@ -191,5 +204,58 @@ public class SubmitOrder extends SyncDispatcher {
         return submitOrderResult;
     }
 
+    private ProcessResult getDetails(String orderRef){
+        LogUtil.info(logprefix, location, "Process start", "");
+        LogUtil.info(logprefix, location, "OrderNumber in getDetails function: " + orderRef, "");
+        ProcessResult response = new ProcessResult();
+        String transactionId = "";
+        Mac mac = null;
+        String METHOD = "GET";
 
+        try {
+            mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
+            mac.init(secret_key);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        }
+
+        String url = this.queryOrder_url + orderRef;
+        String timeStamp = String.valueOf(System.currentTimeMillis());
+        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v2/orders/" + orderRef + "\r\n\r\n";
+        byte[] byteSig = mac.doFinal(rawSignature.getBytes());
+        String signature = DatatypeConverter.printHexBinary(byteSig);
+        signature = signature.toLowerCase();
+
+        String token = apiKey + ":" + timeStamp + ":" + signature;
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/json");
+        headers.set("Authorization", "hmac " + token);
+        headers.set("X-LLM-Country", "MY_KUL");
+        headers.set("X-Request-ID", transactionId);
+        HttpEntity<String> request = new HttpEntity(headers);
+        LogUtil.info(logprefix,location, "orderDetails url: " + url, "");
+        ResponseEntity<String> responses = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        int statusCode = responses.getStatusCode().value();
+        LogUtil.info(logprefix, location, "orderDetails response: " + responses, "");
+
+        if (statusCode == 200) {
+            LogUtil.info(logprefix, location, "Request successful", "");
+            response.resultCode = 0;
+            response.returnObject = responses.getBody();
+            JsonObject jsonResp = new Gson().fromJson(responses.getBody(), JsonObject.class);
+            driverId = jsonResp.get("driverId").getAsString();
+            shareLink = jsonResp.get("shareLink").getAsString();
+            status = jsonResp.get("status").getAsString();
+        } else {
+            LogUtil.info(logprefix, location, "Request failed", "");
+            response.resultCode = -1;
+        }
+        LogUtil.info(logprefix, location, "Process finish", "");
+        return response;
+    }
 }

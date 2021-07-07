@@ -360,6 +360,7 @@ public class OrdersController {
             deliveryOrder.setVehicleType(orderCreated.getVehicleType());
             deliveryOrder.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
             deliveryOrder.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
+            deliveryOrder.setStatus(orderCreated.getStatus());
 
 
             deliveryOrdersRepository.save(deliveryOrder);
