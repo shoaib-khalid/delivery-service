@@ -467,22 +467,22 @@ public class OrdersController {
         LogUtil.info(systemTransactionId, location, " Find delivery order for orderId:" + orderId, "");
         Optional<DeliveryQuotation> orderDetails = deliveryQuotationRepository.findById(orderId);
         if (orderDetails.isPresent()) {
-//            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails.get(), providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-//            ProcessResult processResult = process.QueryOrder();
-//            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
-//
-//            if (processResult.resultCode == 0) {
-//                //successfully get status from provider
-//                response.setSuccessStatus(HttpStatus.OK);
-//                QueryOrderResult queryOrderResult = (QueryOrderResult) processResult.returnObject;
-//                orderDetails.get().setStatus(queryOrderResult.orderFound.getStatus());
+            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails.get(), providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+            ProcessResult processResult = process.QueryOrder();
+            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+
+            if (processResult.resultCode == 0) {
+                //successfully get status from provider
+                response.setSuccessStatus(HttpStatus.OK);
+                QueryOrderResult queryOrderResult = (QueryOrderResult) processResult.returnObject;
+                orderDetails.get().setStatus(queryOrderResult.orderFound.getStatus());
             response.setData(orderDetails);
             LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
             return ResponseEntity.status(HttpStatus.OK).body(response);
-//            } else {
-//                //fail to get status
-//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//            }
+            } else {
+                //fail to get status
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
         } else {
             LogUtil.info(systemTransactionId, location, "DeliveyOrder not found for orderId:" + orderId, "");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
@@ -564,6 +564,66 @@ public class OrdersController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
 
     }
+
+    @PostMapping(path = {"lalamove/callback"}, name = "orders-lalamove-callback")
+    public ResponseEntity<HttpReponse> lalamoveCallback(HttpServletRequest request
+                                                  ) {
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = new HttpReponse(request.getRequestURI());
+
+        LogUtil.info(logprefix, location, "", "");
+//
+//        //generate transaction id
+//        String systemTransactionId = StringUtility.CreateRefID("CB");
+//        String IP = request.getRemoteAddr();
+//        ProcessRequest process = new ProcessRequest(systemTransactionId, requestBody, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+//        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository);
+//        LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+//
+//        if (processResult.resultCode == 0) {
+//            //update order status in db
+//            SpCallbackResult spCallbackResult = (SpCallbackResult) processResult.returnObject;
+//            String spOrderId = spCallbackResult.spOrderId;
+//            String status = spCallbackResult.status;
+//            int spId = spCallbackResult.providerId;
+//            DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
+//            if (deliveryOrder != null) {
+//                LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
+//                deliveryOrder.setStatus(status);
+//                String orderStatus = "";
+//
+//                // change from order status codes to delivery status codes.
+//                if (status.equals("planned")) {
+//                    orderStatus = "AWAITING_PICKUP";
+//                } else if (status.equals("active")) {
+//                    orderStatus = "BEING_DELIVERED";
+//                } else if (status.equals("finished")) {
+//                    orderStatus = "DELIVERED_TO_CUSTOMER";
+//                } else if (status.equals("canceled")) {
+//                    orderStatus = "REJECTED_BY_STORE";
+//                }
+//
+//                String res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+//
+//                deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
+//                deliveryOrdersRepository.save(deliveryOrder);
+//            } else {
+//                LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
+//
+//            }
+//            response.setSuccessStatus(HttpStatus.OK);
+//            response.setData(processResult.returnObject);
+//            LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+//        } else {
+//            //fail to get price
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+//        }
+    }
+
+
+
 
     @GetMapping(path = {"/test"}, name = "test-lalamove-response")
     public ResponseEntity<String> testLalamove() throws NoSuchAlgorithmException, InvalidKeyException {
@@ -676,71 +736,6 @@ public class OrdersController {
 
             System.err.println("Response " + res);
 
-
-
-
-
-
-
-
-
-//
-//
-//            String main = "{\n \"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"\n}\n]\n}\n";
-//
-////            String body = new Date().getTime() + "\r\nPOST\r\n/v2/quotations\r\n\r\n" + main;
-//            String body = new Date().getTime() + "\\r\\nPOST\\r\\n/v2/quotations\\r\\n\\r\\n" + "{\\n \"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"\\n}\\n]\\n}\\n";
-//            LogUtil.info(logprefix, location, "RequestToHASH : ", body);
-//
-//            LogUtil.info(logprefix, location, "Request body :", main);
-//
-//            SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
-//            Mac hmac256 = Mac.getInstance("HmacSHA256");
-//            hmac256.init(secret_key);
-//
-//            byte[] signatureRaw = hmac256.doFinal(body.getBytes(StandardCharsets.UTF_8));
-//            StringBuilder buf = new StringBuilder();
-//            for (byte item : signatureRaw) {
-//                buf.append(Integer.toHexString((item & 0xFF) | 0x100).substring(1, 3));
-//            }
-//
-//            System.out.println("HASH :" + buf);
-//            String token = apiKey + ":" + new Date().getTime() + ":" + buf.toString().toLowerCase();
-//            System.out.println("token : " + token);
-//
-//            URL url = new URL(domainUrl + getpriceUrl);
-//            System.out.println("URL :" + url);
-//            HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-//
-//            con.setRequestMethod("POST");
-//            con.setRequestProperty("Host", "rest.sandbox.lalamove.com");
-//            con.setRequestProperty("X-LLM-Country", "MY_KUL");
-//            con.setRequestProperty("Authorization", "hmac " + token);
-//            con.setDoOutput(true);
-//            con.setRequestProperty("Content-Type", "application/json");
-//
-//            OutputStream os = con.getOutputStream();
-//            OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
-//
-//            osw.write(main);
-//            osw.flush();
-//            osw.close();
-//
-//            int responseCode = con.getResponseCode();
-//            BufferedReader ins = new BufferedReader(new InputStreamReader(con.getInputStream()));
-//
-//            String inputLine;
-//
-//            StringBuffer resp = new StringBuffer();
-//            while ((inputLine = ins.readLine()) != null) {
-//                resp.append(inputLine);
-//            }
-//            ins.close();
-//
-//            System.out.println("Response :" + resp);
-//
-//
-//            JSONObject resToken;
             return ResponseEntity.status(HttpStatus.OK).body(response.toString());
 
         } catch (Exception e) {
