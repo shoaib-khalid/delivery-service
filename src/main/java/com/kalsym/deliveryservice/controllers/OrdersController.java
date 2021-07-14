@@ -1,7 +1,6 @@
 package com.kalsym.deliveryservice.controllers;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Delivery;
 import com.kalsym.deliveryservice.models.HttpReponse;
 import com.kalsym.deliveryservice.models.Order;
@@ -156,9 +155,13 @@ public class OrdersController {
                 deliveryOrder.setItemType(orderDetails.getItemType().name());
                 deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
                 deliveryOrder.setVehicleType(pickup.getVehicleType().name());
-                deliveryOrder.setStatus("PENDING");
+                if(list.isError) {
+                    deliveryOrder.setStatus("PENDING");
+                }else{
+                    deliveryOrder.setStatus("FAILED");
+                }
+                deliveryOrder.setStatusDescription(list.message);
                 deliveryOrder.setCartId(orderDetails.getCartId());
-
                 deliveryOrder.setDeliveryProviderId(list.providerId);
                 deliveryOrder.setAmount(list.price);
                 deliveryOrder.setValidationPeriod(currentDate);
@@ -167,6 +170,9 @@ public class OrdersController {
                 result.refId = res.getId();
                 result.providerId = list.providerId;
                 result.validUpTo = currentTimeStamp;
+                result.isError = list.isError;
+
+                result.message = list.message;
                 priceResultList.add(result);
             }
 
@@ -176,6 +182,7 @@ public class OrdersController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
             //fail to get price
+            response.setError(processResult.resultString);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -361,6 +368,7 @@ public class OrdersController {
             deliveryOrder.setVehicleType(orderCreated.getVehicleType());
             deliveryOrder.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
             deliveryOrder.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
+            deliveryOrder.setStatus(orderCreated.getStatus());
 
 
             deliveryOrdersRepository.save(deliveryOrder);
@@ -497,13 +505,13 @@ public class OrdersController {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
 
-        LogUtil.info(logprefix, location, "", ""  );
+        LogUtil.info(logprefix, location, "", "");
 
         //generate transaction id
         String systemTransactionId = StringUtility.CreateRefID("CB");
         String IP = request.getRemoteAddr();
         ProcessRequest process = new ProcessRequest(systemTransactionId, requestBody, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository,1);
+        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 1);
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
         if (processResult.resultCode == 0) {
@@ -591,15 +599,15 @@ public class OrdersController {
 
 
         JSONObject bodyJson = new JSONObject(new Gson().toJson(json));
-        LogUtil.info(logprefix, location, "data: ",  bodyJson.get("data").toString());
+        LogUtil.info(logprefix, location, "data: ", bodyJson.get("data").toString());
 
         String rawSignature = bodyJson.get("timestamp") + "\r\n" + METHOD + "\r\n" + ENDPOINT_URL + "\r\n\r\n" + bodyJson.get("data");
         byte[] byteSig = mac.doFinal(rawSignature.getBytes());
         String signature = DatatypeConverter.printHexBinary(byteSig);
         signature = signature.toLowerCase();
-        String hashvalue ="";
+        String hashvalue = "";
         try {
-            hashvalue = LalamoveUtils.hash(ENDPOINT_URL, "POST",  bodyJson);
+            hashvalue = LalamoveUtils.hash(ENDPOINT_URL, "POST", bodyJson);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (InvalidKeyException e) {
@@ -618,7 +626,7 @@ public class OrdersController {
         String systemTransactionId = StringUtility.CreateRefID("CB");
         String IP = request.getRemoteAddr();
         ProcessRequest process = new ProcessRequest(systemTransactionId, bodyJson, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository,3);
+        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 3);
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
         if (processResult.resultCode == 0) {

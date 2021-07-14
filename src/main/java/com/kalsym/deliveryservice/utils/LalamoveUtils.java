@@ -13,6 +13,8 @@ import java.security.NoSuchAlgorithmException;
 public class LalamoveUtils {
 
     public static HttpEntity<String> composeRequest(String ENDPOINT_URL, String METHOD, JSONObject bodyJson, HttpHeaders headers) throws NoSuchAlgorithmException, InvalidKeyException {
+//        String secretKey = "H1vOco2bIznGUaEsOe4rH4ImAP+cFVzmROVkdw54hX1SzfFoF1klMbgFyTBceo0R";
+//        String apiKey = "5db99569ffae83621ca990e2589ca5d1";
         String secretKey = "7p0CJjVxlfEpg/EJWi/y9+6pMBK9yvgYzVeOUKSYZl4/IztYSh6ZhdcdpRpB15ty";
         String apiKey = "6e4e7adb5797632e54172dc2dd2ca748";
 
