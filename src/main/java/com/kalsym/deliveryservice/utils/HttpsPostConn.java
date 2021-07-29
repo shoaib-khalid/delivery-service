@@ -116,6 +116,7 @@ public class HttpsPostConn {
             LogUtil.info(refId, loglocation, "Response of topup :" + httpMsgResp.toString(), "");
 
             response.resultCode = 0;
+
             response.responseString = httpMsgResp.toString();
 
         } catch (SocketTimeoutException ex) {

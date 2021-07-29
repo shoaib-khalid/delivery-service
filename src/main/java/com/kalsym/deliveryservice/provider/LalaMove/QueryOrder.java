@@ -132,7 +132,7 @@ public class QueryOrder extends SyncDispatcher {
             orderFound.setSpOrderId(spOrderId);
             orderFound.setStatus(status);
             orderFound.setCustomerTrackingUrl(shareLink);
-            orderFound.setMerchantTrackingUrl(shareLink);
+//            orderFound.setMerchantTrackingUrl(shareLink);
             queryOrderResult.orderFound = orderFound;
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);

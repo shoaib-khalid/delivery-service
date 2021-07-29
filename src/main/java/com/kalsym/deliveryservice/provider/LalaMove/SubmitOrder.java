@@ -12,7 +12,6 @@ import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.LalamoveUtils;
 import com.kalsym.deliveryservice.utils.LogUtil;
-import org.apache.tomcat.jni.Proc;
 import org.json.JSONObject;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -71,7 +70,7 @@ public class SubmitOrder extends SyncDispatcher {
     }
 
     @Override
-    public ProcessResult process()  {
+    public ProcessResult process() {
         ProcessResult response = new ProcessResult();
 
         LogUtil.info(logprefix, location, "Process start", "");
@@ -80,7 +79,7 @@ public class SubmitOrder extends SyncDispatcher {
 
         String BASE_URL = this.baseUrl;
         String ENDPOINT_URL_PLACEORDER = this.endpointUrl;
-        System.err.println("BASEURL :"+ BASE_URL + " ENDPOINT :" +ENDPOINT_URL_PLACEORDER);
+        System.err.println("BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER);
 
         String METHOD = "POST";
         Mac mac = null;
@@ -116,12 +115,13 @@ public class SubmitOrder extends SyncDispatcher {
         } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
-        System.err.println("RESPONSE : " + orderRequest);// ######### RETURN ORDERREF/ORDERID #########
 
-        ResponseEntity<String> responseEntity = restTemplate.exchange(BASE_URL + ENDPOINT_URL_PLACEORDER, HttpMethod.POST, orderRequest, String.class);        System.err.println("RESPONSE : " + responseEntity);// ######### RETURN ORDERREF/ORDERID #########
+        ResponseEntity<String> responseEntity = restTemplate.exchange(BASE_URL + ENDPOINT_URL_PLACEORDER, HttpMethod.POST, orderRequest, String.class);
+        LogUtil.info(logprefix, location, "Response", responseEntity.getBody());
 
         int statusCode = responseEntity.getStatusCode().value();
-        if (statusCode == 200){
+
+        if (statusCode == 200) {
             response.resultCode = 0;
             JsonObject jsonResp = new Gson().fromJson(responseEntity.getBody(), JsonObject.class);
             spOrderId = jsonResp.get("orderRef").getAsString();
@@ -129,9 +129,10 @@ public class SubmitOrder extends SyncDispatcher {
             getDetails(spOrderId);
 
             response.returnObject = extractResponseBody(responseEntity.getBody());
-        }else {
+        } else {
+
             LogUtil.info(logprefix, location, "Request failed", "");
-            response.resultCode=-1;
+            response.resultCode = -1;
         }
 
         LogUtil.info(logprefix, location, "Process finish", "");
@@ -150,7 +151,7 @@ public class SubmitOrder extends SyncDispatcher {
         );
 
         GetPrices req = new GetPrices();
-        req.serviceType = "MOTORCYCLE";
+        req.serviceType = order.getPickup().getVehicleType().name();
         req.specialRequests = null;
         Stop s1 = new Stop();
         s1.addresses = new Addresses(
@@ -159,7 +160,7 @@ public class SubmitOrder extends SyncDispatcher {
         );
         Stop s2 = new Stop();
         s2.addresses = new Addresses(
-                new MsMY(order.getPickup().getPickupAddress(),
+                new MsMY(order.getDelivery().getDeliveryAddress(),
                         "MY_KUL"));
         List<Stop> stopList = new ArrayList<>();
         stopList.add(s1);
@@ -204,8 +205,8 @@ public class SubmitOrder extends SyncDispatcher {
         return submitOrderResult;
     }
 
-    private ProcessResult getDetails(String orderRef){
-        LogUtil.info(logprefix, location, "Process start", "");
+
+    private ProcessResult getDetails(String orderRef) {
         LogUtil.info(logprefix, location, "OrderNumber in getDetails function: " + orderRef, "");
         ProcessResult response = new ProcessResult();
         String transactionId = "";
@@ -222,14 +223,17 @@ public class SubmitOrder extends SyncDispatcher {
             e.printStackTrace();
         }
 
+
         String url = this.queryOrder_url + orderRef;
         String timeStamp = String.valueOf(System.currentTimeMillis());
         String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v2/orders/" + orderRef + "\r\n\r\n";
+
         byte[] byteSig = mac.doFinal(rawSignature.getBytes());
         String signature = DatatypeConverter.printHexBinary(byteSig);
         signature = signature.toLowerCase();
 
         String token = apiKey + ":" + timeStamp + ":" + signature;
+
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -238,7 +242,7 @@ public class SubmitOrder extends SyncDispatcher {
         headers.set("X-LLM-Country", "MY_KUL");
         headers.set("X-Request-ID", transactionId);
         HttpEntity<String> request = new HttpEntity(headers);
-        LogUtil.info(logprefix,location, "orderDetails url: " + url, "");
+        LogUtil.info(logprefix, location, "orderDetails url: " + url, "");
         ResponseEntity<String> responses = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
         int statusCode = responses.getStatusCode().value();
         LogUtil.info(logprefix, location, "orderDetails response: " + responses, "");

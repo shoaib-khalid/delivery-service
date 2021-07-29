@@ -59,6 +59,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests().antMatchers(
                         "/orders/getprice",
                         "/orders/callback",
+                        "/orders/lalamove/callback",
                         "/orders/getpickupdate/**",
                         "/orders/getpickuptime/**",
                         "/orders/getlocationid/**",

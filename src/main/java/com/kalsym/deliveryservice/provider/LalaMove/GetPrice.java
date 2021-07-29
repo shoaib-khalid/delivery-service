@@ -8,12 +8,12 @@ import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
+import com.kalsym.deliveryservice.utils.HttpResult;
+import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import org.json.JSONObject;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
@@ -29,19 +29,19 @@ import java.util.concurrent.CountDownLatch;
 public class GetPrice extends SyncDispatcher {
 
     private final String getprice_url;
-    private final String domainUrl;
+    private final String baseUrl;
     private final int connectTimeout;
     private final int waitTimeout;
     private final String systemTransactionId;
     private final Order order;
     private final HashMap productMap;
     private final String atxProductCode = "";
-    private String sessionToken;
-    private String sslVersion = "SSL";
     private final String logprefix;
     private final String location = "LalaMoveGetPrice";
     private final String secretKey;
     private final String apiKey;
+    private String sessionToken;
+    private String sslVersion = "SSL";
 
 
     public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
@@ -52,7 +52,8 @@ public class GetPrice extends SyncDispatcher {
         logprefix = systemTransactionId;
         LogUtil.info(logprefix, location, "LalaMove GetPrices class initiliazed!!", "");
         this.getprice_url = (String) config.get("getprice_url");
-        this.domainUrl = (String) config.get("domainUrl");
+        this.baseUrl = (String) config.get("domainUrl");
+
         this.secretKey = (String) config.get("secretKey");
         this.apiKey = (String) config.get("apiKey");
         this.connectTimeout = Integer.parseInt((String) config.get("getprice_connect_timeout"));
@@ -66,12 +67,16 @@ public class GetPrice extends SyncDispatcher {
     public ProcessResult process() {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
-        String secretKey = "7p0CJjVxlfEpg/EJWi/y9+6pMBK9yvgYzVeOUKSYZl4/IztYSh6ZhdcdpRpB15ty";
-        String apiKey = "6e4e7adb5797632e54172dc2dd2ca748";
-        String BASE_URL = "https://rest.sandbox.lalamove.com";
-        String ENDPOINT_URL = "/v2/quotations";
+        String secretKey = this.secretKey;
+        String apiKey = this.apiKey;
+        String ENDPOINT_URL = this.getprice_url;
         String METHOD = "POST";
         Mac mac = null;
+
+
+        String BASE_URL = this.baseUrl;
+        String ENDPOINT_URL_PLACEORDER = this.getprice_url;
+        System.err.println("BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER);
         try {
             mac = Mac.getInstance("HmacSHA256");
             SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
@@ -82,38 +87,8 @@ public class GetPrice extends SyncDispatcher {
             e.printStackTrace();
         }
 
-/*        List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
-
-        deliveries.add(
-                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
-                        1,
-                        new Contact(order.getDelivery().getDeliveryContactName(), order.getDelivery().getDeliveryContactPhone()),
-                        ""
-                )
-        );
-
-        com.kalsym.deliveryservice.models.lalamove.getprice.GetPrices req = new com.kalsym.deliveryservice.models.lalamove.getprice.GetPrices();
-        req.serviceType = "MOTORCYCLE";
-        req.specialRequests = null;
-        Stop s1 = new Stop();
-        s1.addresses = new Addresses(
-                new MsMY(order.getPickup().getPickupAddress(),
-                        "MY_KUL")
-        );
-        Stop s2 = new Stop();
-        s2.addresses = new Addresses(
-                new MsMY(order.getPickup().getPickupAddress(),
-                        "MY_KUL"));
-        List<Stop> stopList = new ArrayList<>();
-        stopList.add(s1);
-        stopList.add(s2);
-
-        req.stops = stopList;
-        req.requesterContact = new Contact(order.getPickup().getPickupContactName(), order.getPickup().getPickupContactPhone());
-        req.deliveries = deliveries;
-        System.out.println("Request: " + req);*/
         GetPrices requ = generateRequestBody();
-        System.err.println("REQUST BODY FOR GET PRICE : "+requ.toString() );
+        LogUtil.info(logprefix, location, "REQUST BODY FOR GET PRICE : ", requ.toString());
 
         //JSONObject bodyJson = new JSONObject("{\"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"}]}");
         JSONObject bodyJson = new JSONObject(new Gson().toJson(requ));
@@ -130,20 +105,57 @@ public class GetPrice extends SyncDispatcher {
         headers.set("Content-Type", "application/json");
         headers.set("Authorization", "hmac " + authToken);
         headers.set("X-LLM-Country", "MY_KUL");
+
+        HashMap httpHeader = new HashMap();
+        httpHeader.put("Content-Type", "application/json");
+        httpHeader.put("Authorization", "hmac " + authToken);
+        httpHeader.put("X-LLM-Country", "MY_KUL");
         HttpEntity<String> request = new HttpEntity(bodyJson.toString(), headers);
-        ResponseEntity<String> responses = restTemplate.exchange(BASE_URL + ENDPOINT_URL, HttpMethod.POST, request, String.class);
-        int statusCode = responses.getStatusCode().value();
+        /*LogUtil.info(logprefix, location, "Request Body  : ", bodyJson.toString());
+        try {
+            ResponseEntity<String> responses = restTemplate.exchange(BASE_URL + ENDPOINT_URL, HttpMethod.POST, request, String.class);
+            int statusCode = responses.getStatusCode().value();
 //        PriceResult res = extractResponseBody(responses.toString());
-        LogUtil.info(logprefix, location, "Process finish", "");
-        if (statusCode == 200){
+            LogUtil.info(logprefix, location, "Responses", responses.getBody());
+            if (statusCode == 200) {
+                response.resultCode = 0;
+                response.returnObject = extractResponseBody(responses.getBody());
+            } else {
+                LogUtil.info(logprefix, location, "Request failed", "");
+                response.resultCode = -1;
+            }
+            LogUtil.info(logprefix, location, "Process finish", "");
+        } catch (Exception ex) {
+            PriceResult priceResult = new PriceResult();
+            String message  = ex.getMessage();
+
+
+            priceResult.message = ex.getMessage();;
+            response.resultCode = -1;
+            response.returnObject = priceResult;
+            LogUtil.info(logprefix, location, "Exception", ex.getMessage());
+
+        }*/
+
+
+        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, BASE_URL + ENDPOINT_URL, httpHeader, bodyJson.toString(), this.connectTimeout, this.waitTimeout);
+        if (httpResult.httpResponseCode == 200) {
+            LogUtil.info(logprefix, location, "Request successful", "");
             response.resultCode = 0;
-            response.returnObject = extractResponseBody(responses.getBody());
-        }else {
-            LogUtil.info(logprefix, location, "Request failed", "");
-            response.resultCode=-1;
+            response.returnObject = extractResponseBody(httpResult.responseString);
+        } else {
+            JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
+            PriceResult result = new PriceResult();
+            LogUtil.info(logprefix, location, "Request failed", jsonResp.get("message").getAsString());
+
+            result.message = jsonResp.get("message").getAsString();
+            result.isError = true;
+            response.returnObject = result;
+            response.resultCode = -1;
         }
-        LogUtil.info(logprefix, location, "Process finish", "");
+        LogUtil.info(logprefix, location, String.valueOf(httpResult.httpResponseCode), "");
         return response;
+//        return response;
     }
 
 
@@ -159,7 +171,7 @@ public class GetPrice extends SyncDispatcher {
         );
 
         GetPrices req = new GetPrices();
-        req.serviceType = "MOTORCYCLE";
+        req.serviceType = order.getPickup().getVehicleType().name();
         req.specialRequests = null;
         Stop s1 = new Stop();
         s1.addresses = new Addresses(
@@ -168,7 +180,7 @@ public class GetPrice extends SyncDispatcher {
         );
         Stop s2 = new Stop();
         s2.addresses = new Addresses(
-                new MsMY(order.getPickup().getPickupAddress(),
+                new MsMY(order.getDelivery().getDeliveryAddress(),
                         "MY_KUL"));
         List<Stop> stopList = new ArrayList<>();
         stopList.add(s1);
@@ -181,15 +193,14 @@ public class GetPrice extends SyncDispatcher {
     }
 
     private PriceResult extractResponseBody(String respString) {
-        System.err.println("Lalamove : " + respString);
+        LogUtil.info(logprefix, location, "Response: ", respString);
         JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
         System.err.println("Lalamove jsonResp: " + jsonResp);
         String payAmount = jsonResp.get("totalFee").getAsString();
-
-
         LogUtil.info(logprefix, location, "Payment Amount:" + payAmount, "");
         PriceResult priceResult = new PriceResult();
         priceResult.price = Double.parseDouble(payAmount);
+        priceResult.isError = false;
         return priceResult;
     }
 }

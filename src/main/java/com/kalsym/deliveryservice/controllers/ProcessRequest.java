@@ -261,7 +261,7 @@ public class ProcessRequest {
         return response;
     }
 
-    public ProcessResult ProcessCallback(String spIP, ProviderIpRepository providerIpRepository) {
+    public ProcessResult ProcessCallback(String spIP, ProviderIpRepository providerIpRepository , int providerId) {
         //get provider rate plan  
         LogUtil.info(logprefix, location, "Caller IP:" + spIP, "");
         //get provider based on IP
@@ -270,7 +270,7 @@ public class ProcessRequest {
         ProcessResult response = new ProcessResult();
         //if (spId.isPresent()) {
         //int providerId = spId.get().getSpId();
-        int providerId = 1;
+//        int providerId = 1;
         LogUtil.info(logprefix, location, "Provider found. SpId:" + providerId, "");
         Optional<Provider> provider = providerRepository.findById(providerId);
         List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(providerId);
