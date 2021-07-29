@@ -19,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
+import java.math.BigDecimal;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -199,7 +200,9 @@ public class GetPrice extends SyncDispatcher {
         String payAmount = jsonResp.get("totalFee").getAsString();
         LogUtil.info(logprefix, location, "Payment Amount:" + payAmount, "");
         PriceResult priceResult = new PriceResult();
-        priceResult.price = Double.parseDouble(payAmount);
+        BigDecimal bd = new BigDecimal(Double.parseDouble(payAmount));
+        bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+        priceResult.price = bd;
         priceResult.isError = false;
         return priceResult;
     }

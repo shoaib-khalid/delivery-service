@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.xml.bind.DatatypeConverter;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.DecimalFormat;
@@ -251,7 +252,9 @@ public class OrdersController {
             PriceResult priceResult = new PriceResult();
             if (deliveryOptions == null) {
                 priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
-                priceResult.price = 0.00;
+                BigDecimal bd = new BigDecimal(0.00);
+                bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+                priceResult.price = bd;
                 priceResult.isError = true;
                 priceResult.deliveryType = deliveryType;
             } else {
@@ -283,14 +286,10 @@ public class OrdersController {
                 DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
                 priceResult.deliveryType = deliveryType;
                 priceResult.providerName = "";
-                //            SelfDelivery selfDelivery = new SelfDelivery();
-                //            SelfDeliveryResult selfDeliveryResult = new SelfDeliveryResult();
-                //            selfDelivery.refId = res.getId();
-                //            DecimalFormat decimalFormat = new DecimalFormat("#.##");
                 Double dPrice = Double.parseDouble(price);
-                //            selfDelivery.price = dPrice;
-                //            selfDeliveryResult.selfDelivery = selfDelivery;
-                priceResult.price = dPrice;
+                BigDecimal bd = new BigDecimal(dPrice);
+                bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+                priceResult.price = bd;
                 priceResult.message = "";
                 priceResult.isError = false;
                 priceResult.refId = res.getId();
@@ -337,15 +336,17 @@ public class OrdersController {
                     deliveryOrder.setCartId(orderDetails.getCartId());
 
                     deliveryOrder.setDeliveryProviderId(list.providerId);
-                    deliveryOrder.setAmount(list.price);
+                    deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
                     deliveryOrder.setValidationPeriod(currentDate);
                     DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
-                    DecimalFormat decimalFormat = new DecimalFormat("#.##");
+                    DecimalFormat decimalFormat = new DecimalFormat("##.00");
                     Double dPrice = Double.parseDouble(decimalFormat.format(list.price));
+                    BigDecimal bd = new BigDecimal(dPrice);
+                    bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
                     Integer providerId = res.getDeliveryProviderId();
                     Provider providerRes = providerRepository.findOneById(providerId);
                     String providerName = providerRes.getName();
-                    result.price = dPrice;
+                    result.price = bd;
                     result.refId = res.getId();
                     result.providerId = list.providerId;
                     result.providerName = providerName;

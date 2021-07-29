@@ -14,6 +14,7 @@ import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.LogUtil;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
@@ -106,9 +107,13 @@ public class GetPrice extends SyncDispatcher {
             JsonObject orderObject = dataArray.get(0).getAsJsonObject();
             String payAmount = orderObject.get("Rate").getAsString();
             LogUtil.info(logprefix, location, "Payment Amount:"+payAmount, "");
-            priceResult.price=Double.parseDouble(payAmount);
+            BigDecimal bd = new BigDecimal(Double.parseDouble(payAmount));
+            bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+            priceResult.price=bd;
         } else {
-            priceResult.price=0.00;
+            BigDecimal bd = new BigDecimal(0.00);
+            bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+            priceResult.price= bd;
         }
         return priceResult;
     }

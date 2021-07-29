@@ -16,6 +16,7 @@ import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
@@ -116,7 +117,9 @@ public class GetPrice extends SyncDispatcher {
         } else {
             priceResult.isError = false;
         }
-        priceResult.price = Double.parseDouble(payAmount);
+        BigDecimal bd = new BigDecimal(Double.parseDouble(payAmount));
+        bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+        priceResult.price = bd;
         return priceResult;
     }
 
