@@ -1,14 +1,15 @@
 package com.kalsym.deliveryservice.controllers;
 
 import com.google.gson.Gson;
+import com.kalsym.deliveryservice.models.*;
 import com.kalsym.deliveryservice.models.Delivery;
-import com.kalsym.deliveryservice.models.HttpReponse;
-import com.kalsym.deliveryservice.models.Order;
-import com.kalsym.deliveryservice.models.Pickup;
+import com.kalsym.deliveryservice.models.daos.DeliveryOptions;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.daos.DeliveryQuotation;
+import com.kalsym.deliveryservice.models.daos.Provider;
 import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
+//import com.kalsym.deliveryservice.models.lalamove.getprice.Delivery;
 import com.kalsym.deliveryservice.models.lalamove.getprice.Location;
 import com.kalsym.deliveryservice.models.lalamove.getprice.*;
 import com.kalsym.deliveryservice.provider.*;
@@ -36,6 +37,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
@@ -71,6 +73,124 @@ public class OrdersController {
     @Autowired
     SymplifiedService symplifiedService;
 
+    @Autowired
+    DeliveryOptionRepository deliveryOptionRepository;
+
+
+//    @PostMapping(path = {"/getprice"}, name = "orders-get-price")
+//    public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
+//                                                @Valid @RequestBody Order orderDetails) {
+//        String logprefix = request.getRequestURI() + " ";
+//        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+//        HttpReponse response = new HttpReponse(request.getRequestURI());
+//        ProcessResult processResult = new ProcessResult();
+//        String systemTransactionId = StringUtility.CreateRefID("DL");
+//        StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
+//        Double weight = symplifiedService.getTotalWeight(orderDetails.getCartId());
+//
+//        LogUtil.info(logprefix, location, "Store Details : ", stores.toString());
+//
+////        if (stores.getType().equals("AD-HOC")) {
+//        LogUtil.info(logprefix, location, "", "");
+//        StoreResponseData store = symplifiedService.getStore(orderDetails.getStoreId());
+//        LogUtil.info(logprefix, location, "", store.toString());
+//        Pickup pickup = new Pickup();
+//        //TODO: this is proper delivery address
+//        String deliveryAddress = orderDetails.getDelivery().getDeliveryAddress() + "," + orderDetails.getDelivery().getDeliveryPostcode() + "," + orderDetails.getDelivery().getDeliveryCity() + "," + orderDetails.getDelivery().getDeliveryState();
+//        orderDetails.getDelivery().setDeliveryAddress(deliveryAddress);
+//
+//
+//        pickup.setPickupAddress(store.getAddress());
+//        pickup.setPickupCity(store.getCity());
+//        pickup.setPickupContactName(store.getName());
+//        pickup.setPickupContactPhone(store.getPhoneNumber());
+//        pickup.setPickupContactEmail(store.getEmail());
+//        pickup.setPickupState(store.getRegionCountryStateId());
+//        pickup.setPickupPostcode(store.getPostcode());
+//        if (stores.getMaxOrderQuantityForBike() <= 10) {
+//            pickup.setVehicleType(VehicleType.MOTORCYCLE);
+//            LogUtil.info(logprefix, location, "Vehicle Type less than 10 : ", pickup.getVehicleType().name());
+//        } else if (stores.getMaxOrderQuantityForBike() >= 10) {
+//            pickup.setVehicleType(VehicleType.CAR);
+//            LogUtil.info(logprefix, location, "Vehicle Type more than 10 : ", pickup.getVehicleType().name());
+//        }
+//        LogUtil.info(logprefix, location, "Vehicle Type: ", pickup.getVehicleType().name());
+//        orderDetails.setPickup(pickup);
+//        //TODO: pickup address is postcode, city and state combined
+//        String pickupAddress = orderDetails.getPickup().getPickupAddress() + "," + orderDetails.getPickup().getPickupPostcode() + "," + orderDetails.getPickup().getPickupCity() + "," + orderDetails.getPickup().getPickupState();
+//        orderDetails.getPickup().setPickupAddress(pickupAddress);
+//        orderDetails.setInsurance(false);
+//        orderDetails.setItemType(ItemType.parcel);
+//        orderDetails.setTotalWeightKg(weight);
+//        if (stores.getItemType().name().equals("Food") || stores.getItemType().name().equals("PACKAGING") || stores.getItemType().name().equals("parcel")) {
+//            orderDetails.setProductCode(ItemType.parcel.name());
+//        }
+//        //generate transaction id
+//        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository);
+//        processResult = process.GetPrice();
+//        LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+//        Calendar cal = Calendar.getInstance();
+//        SimpleDateFormat df = new SimpleDateFormat("yyyy-mm-dd HH:mm");
+//        String phone = orderDetails.getPickup().getPickupContactPhone();
+//        String contactName = orderDetails.getPickup().getPickupContactName();
+////        }
+//        if (processResult.resultCode == 0) {
+//            //successfully get price from provider
+//            Set<PriceResult> priceResultList = new HashSet<>();
+//            List<PriceResult> lists = (List<PriceResult>) processResult.returnObject;
+//            for (PriceResult list : lists) {
+//                Calendar date = Calendar.getInstance();
+//                long t = date.getTimeInMillis();
+//                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+//                Date currentDate = new Date((t + (10 * 60000)));
+//                String currentTimeStamp = sdf.format(currentDate);
+//                Date afterAddingTenMins = new Date(t + (10 * 60000));
+//
+//                PriceResult result = new PriceResult();
+//                DeliveryQuotation deliveryOrder = new DeliveryQuotation();
+//                deliveryOrder.setCustomerId(orderDetails.getCustomerId());
+//                deliveryOrder.setPickupAddress(pickupAddress);
+//                deliveryOrder.setDeliveryAddress(deliveryAddress);
+//                deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
+//                deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
+//                System.err.println("Pickup Contact Number :" + contactName + " Number " + phone);
+//
+//                deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
+//                deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
+//                deliveryOrder.setItemType(orderDetails.getItemType().name());
+//                deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
+//                deliveryOrder.setVehicleType(pickup.getVehicleType().name());
+//                if(list.isError) {
+//                    deliveryOrder.setStatus("PENDING");
+//                }else{
+//                    deliveryOrder.setStatus("FAILED");
+//                }
+//                deliveryOrder.setStatusDescription(list.message);
+//                deliveryOrder.setCartId(orderDetails.getCartId());
+//                deliveryOrder.setDeliveryProviderId(list.providerId);
+//                deliveryOrder.setAmount(list.price);
+//                deliveryOrder.setValidationPeriod(currentDate);
+//                DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
+//                result.price = list.price;
+//                result.refId = res.getId();
+//                result.providerId = list.providerId;
+//                result.validUpTo = currentTimeStamp;
+//                result.isError = list.isError;
+//
+//                result.message = list.message;
+//                priceResultList.add(result);
+//            }
+//
+//            response.setSuccessStatus(HttpStatus.OK);
+//            response.setData(priceResultList);
+//            LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
+//            return ResponseEntity.status(HttpStatus.OK).body(response);
+//        } else {
+//            //fail to get price
+//            response.setError(processResult.resultString);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+//        }
+//    }
 
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
@@ -82,10 +202,10 @@ public class OrdersController {
         String systemTransactionId = StringUtility.CreateRefID("DL");
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
         Double weight = symplifiedService.getTotalWeight(orderDetails.getCartId());
-
+        System.err.println("store type: " + stores.getType());
         LogUtil.info(logprefix, location, "Store Details : ", stores.toString());
 
-//        if (stores.getType().equals("AD-HOC")) {
+    //        if (stores.getType().equals("AD-HOC")) {
         LogUtil.info(logprefix, location, "", "");
         StoreResponseData store = symplifiedService.getStore(orderDetails.getStoreId());
         LogUtil.info(logprefix, location, "", store.toString());
@@ -93,7 +213,6 @@ public class OrdersController {
         //TODO: this is proper delivery address
         String deliveryAddress = orderDetails.getDelivery().getDeliveryAddress() + "," + orderDetails.getDelivery().getDeliveryPostcode() + "," + orderDetails.getDelivery().getDeliveryCity() + "," + orderDetails.getDelivery().getDeliveryState();
         orderDetails.getDelivery().setDeliveryAddress(deliveryAddress);
-
 
         pickup.setPickupAddress(store.getAddress());
         pickup.setPickupCity(store.getCity());
@@ -120,28 +239,28 @@ public class OrdersController {
         if (stores.getItemType().name().equals("Food") || stores.getItemType().name().equals("PACKAGING") || stores.getItemType().name().equals("parcel")) {
             orderDetails.setProductCode(ItemType.parcel.name());
         }
-        //generate transaction id
-        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository);
-        processResult = process.GetPrice();
-        LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("yyyy-mm-dd HH:mm");
         String phone = orderDetails.getPickup().getPickupContactPhone();
         String contactName = orderDetails.getPickup().getPickupContactName();
-//        }
-        if (processResult.resultCode == 0) {
-            //successfully get price from provider
-            Set<PriceResult> priceResultList = new HashSet<>();
-            List<PriceResult> lists = (List<PriceResult>) processResult.returnObject;
-            for (PriceResult list : lists) {
+    //        }
+        String deliveryType = stores.getType();
+        if (stores.getType().equalsIgnoreCase("self")){
+            DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), orderDetails.getDelivery().getDeliveryState());
+            PriceResult priceResult = new PriceResult();
+            if (deliveryOptions == null) {
+                priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
+                priceResult.price = 0.00;
+                priceResult.isError = true;
+                priceResult.deliveryType = deliveryType;
+            } else {
+                String price = deliveryOptions.getDelivery_price().toString();
                 Calendar date = Calendar.getInstance();
                 long t = date.getTimeInMillis();
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
                 Date currentDate = new Date((t + (10 * 60000)));
                 String currentTimeStamp = sdf.format(currentDate);
-                Date afterAddingTenMins = new Date(t + (10 * 60000));
-
-                PriceResult result = new PriceResult();
                 DeliveryQuotation deliveryOrder = new DeliveryQuotation();
                 deliveryOrder.setCustomerId(orderDetails.getCustomerId());
                 deliveryOrder.setPickupAddress(pickupAddress);
@@ -155,37 +274,99 @@ public class OrdersController {
                 deliveryOrder.setItemType(orderDetails.getItemType().name());
                 deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
                 deliveryOrder.setVehicleType(pickup.getVehicleType().name());
-                if(list.isError) {
-                    deliveryOrder.setStatus("PENDING");
-                }else{
-                    deliveryOrder.setStatus("FAILED");
-                }
-                deliveryOrder.setStatusDescription(list.message);
+                deliveryOrder.setStatus("PENDING");
                 deliveryOrder.setCartId(orderDetails.getCartId());
-                deliveryOrder.setDeliveryProviderId(list.providerId);
-                deliveryOrder.setAmount(list.price);
+
+                deliveryOrder.setDeliveryProviderId(0);
+                deliveryOrder.setAmount(Double.parseDouble(price));
                 deliveryOrder.setValidationPeriod(currentDate);
                 DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
-                result.price = list.price;
-                result.refId = res.getId();
-                result.providerId = list.providerId;
-                result.validUpTo = currentTimeStamp;
-                result.isError = list.isError;
-
-                result.message = list.message;
-                priceResultList.add(result);
+                priceResult.deliveryType = deliveryType;
+                priceResult.providerName = "";
+                //            SelfDelivery selfDelivery = new SelfDelivery();
+                //            SelfDeliveryResult selfDeliveryResult = new SelfDeliveryResult();
+                //            selfDelivery.refId = res.getId();
+                //            DecimalFormat decimalFormat = new DecimalFormat("#.##");
+                Double dPrice = Double.parseDouble(price);
+                //            selfDelivery.price = dPrice;
+                //            selfDeliveryResult.selfDelivery = selfDelivery;
+                priceResult.price = dPrice;
+                priceResult.message = "";
+                priceResult.isError = false;
+                priceResult.refId = res.getId();
+                priceResult.validUpTo = currentTimeStamp;
             }
 
             response.setSuccessStatus(HttpStatus.OK);
-            response.setData(priceResultList);
+            response.setData(priceResult);
             LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
+
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
-            //fail to get price
-            response.setError(processResult.resultString);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            //generate transaction id
+            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository);
+            processResult = process.GetPrice();
+            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+            if (processResult.resultCode == 0) {
+                //successfully get price from provider
+                Set<PriceResult> priceResultList = new HashSet<>();
+                List<PriceResult> lists = (List<PriceResult>) processResult.returnObject;
+                for (PriceResult list : lists) {
+                    Calendar date = Calendar.getInstance();
+                    long t = date.getTimeInMillis();
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                    Date currentDate = new Date((t + (10 * 60000)));
+                    String currentTimeStamp = sdf.format(currentDate);
+                    Date afterAddingTenMins = new Date(t + (10 * 60000));
+
+                    PriceResult result = new PriceResult();
+                    DeliveryQuotation deliveryOrder = new DeliveryQuotation();
+                    deliveryOrder.setCustomerId(orderDetails.getCustomerId());
+                    deliveryOrder.setPickupAddress(pickupAddress);
+                    deliveryOrder.setDeliveryAddress(deliveryAddress);
+                    deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
+                    deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
+                    System.err.println("Pickup Contact Number :" + contactName + " Number " + phone);
+
+                    deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
+                    deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
+                    deliveryOrder.setItemType(orderDetails.getItemType().name());
+                    deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
+                    deliveryOrder.setVehicleType(pickup.getVehicleType().name());
+                    deliveryOrder.setStatus("PENDING");
+                    deliveryOrder.setCartId(orderDetails.getCartId());
+
+                    deliveryOrder.setDeliveryProviderId(list.providerId);
+                    deliveryOrder.setAmount(list.price);
+                    deliveryOrder.setValidationPeriod(currentDate);
+                    DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
+                    DecimalFormat decimalFormat = new DecimalFormat("#.##");
+                    Double dPrice = Double.parseDouble(decimalFormat.format(list.price));
+                    Integer providerId = res.getDeliveryProviderId();
+                    Provider providerRes = providerRepository.findOneById(providerId);
+                    String providerName = providerRes.getName();
+                    result.price = dPrice;
+                    result.refId = res.getId();
+                    result.providerId = list.providerId;
+                    result.providerName = providerName;
+                    result.validUpTo = currentTimeStamp;
+                    result.deliveryType = deliveryType;
+                    result.isError = list.isError;
+
+                    result.message = list.message;
+                    priceResultList.add(result);
+                }
+                response.setSuccessStatus(HttpStatus.OK);
+                response.setData(priceResultList);
+                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            } else {
+                //fail to get price
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
         }
     }
+
 
 
     @RequestMapping(method = RequestMethod.GET, value = "/getpickupdate/{spId}/{postcode}", name = "orders-get-pickupdate")
@@ -671,6 +852,30 @@ public class OrdersController {
 
     }
 
+    @PostMapping(path = "/setDeliveryPrice", name = "set-delivery-price")
+    public ResponseEntity<HttpReponse> setDeliveryPrice(HttpServletRequest request,
+                                                        @Valid @RequestBody DeliveryOption deliveryOption) {
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = new HttpReponse(request.getRequestURI());
+
+        LogUtil.info(logprefix, location, "", "");
+        String state = deliveryOption.getState();
+        String storeId = deliveryOption.getStoreId();
+        Float price = deliveryOption.getPrice();
+
+        System.err.println("State: " + state + ", storeId: " + storeId + ", Price: " + price);
+
+        DeliveryOptions newDeliveryOption = new DeliveryOptions();
+        newDeliveryOption.setStoreId(storeId);
+        newDeliveryOption.setToState(state);
+        newDeliveryOption.setDelivery_price(price);
+
+        deliveryOptionRepository.save(newDeliveryOption);
+
+        response.setSuccessStatus(HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 
     @GetMapping(path = {"/test"}, name = "test-lalamove-response")
     public ResponseEntity<String> testLalamove() throws NoSuchAlgorithmException, InvalidKeyException {
