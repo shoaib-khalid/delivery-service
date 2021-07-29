@@ -33,6 +33,4 @@ public class Order {
    String cartId;
    Pickup pickup;
    Delivery delivery;
-
-
 }

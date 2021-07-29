@@ -14,5 +14,6 @@ public class PriceResult {
     public int providerId;
     public double price;
     public String validUpTo;
-
+    public String providerName;
+    public String deliveryType;
 }
