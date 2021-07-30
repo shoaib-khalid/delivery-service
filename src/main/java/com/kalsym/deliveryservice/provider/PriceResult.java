@@ -23,4 +23,5 @@ public class PriceResult {
     public boolean isError;
     public String providerName;
     public String deliveryType;
+    public String providerImage;
 }

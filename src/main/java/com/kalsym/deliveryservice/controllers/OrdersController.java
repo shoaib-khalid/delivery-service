@@ -353,6 +353,7 @@ public class OrdersController {
                     result.validUpTo = currentTimeStamp;
                     result.deliveryType = deliveryType;
                     result.isError = list.isError;
+                    result.providerImage = providerRes.getProviderImage();
 
                     result.message = list.message;
                     priceResultList.add(result);

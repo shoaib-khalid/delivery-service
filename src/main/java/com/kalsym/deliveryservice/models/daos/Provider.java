@@ -38,4 +38,5 @@ public class Provider implements Serializable {
     String pickupDateClassname;
     String pickupTimeClassname;
     String locationIdClassname;
+    String providerImage;
 }
