@@ -919,30 +919,30 @@ public class OrdersController {
 
     }
 
-    @PostMapping(path = "/setDeliveryPrice", name = "set-delivery-price")
-    public ResponseEntity<HttpReponse> setDeliveryPrice(HttpServletRequest request,
-                                                        @Valid @RequestBody DeliveryOption deliveryOption) {
-        String logprefix = request.getRequestURI() + " ";
-        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
-        HttpReponse response = new HttpReponse(request.getRequestURI());
-
-        LogUtil.info(logprefix, location, "", "");
-        String state = deliveryOption.getState();
-        String storeId = deliveryOption.getStoreId();
-        Float price = deliveryOption.getPrice();
-
-        System.err.println("State: " + state + ", storeId: " + storeId + ", Price: " + price);
-
-        DeliveryOptions newDeliveryOption = new DeliveryOptions();
-        newDeliveryOption.setStoreId(storeId);
-        newDeliveryOption.setToState(state);
-        newDeliveryOption.setDelivery_price(price);
-
-        deliveryOptionRepository.save(newDeliveryOption);
-
-        response.setSuccessStatus(HttpStatus.OK);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
+//    @PostMapping(path = "/setDeliveryPrice", name = "set-delivery-price")
+//    public ResponseEntity<HttpReponse> setDeliveryPrice(HttpServletRequest request,
+//                                                        @Valid @RequestBody DeliveryOption deliveryOption) {
+//        String logprefix = request.getRequestURI() + " ";
+//        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+//        HttpReponse response = new HttpReponse(request.getRequestURI());
+//
+//        LogUtil.info(logprefix, location, "", "");
+//        String state = deliveryOption.getState();
+//        String storeId = deliveryOption.getStoreId();
+//        Float price = deliveryOption.getPrice();
+//
+//        System.err.println("State: " + state + ", storeId: " + storeId + ", Price: " + price);
+//
+//        DeliveryOptions newDeliveryOption = new DeliveryOptions();
+//        newDeliveryOption.setStoreId(storeId);
+//        newDeliveryOption.setToState(state);
+//        newDeliveryOption.setDelivery_price(price);
+//
+//        deliveryOptionRepository.save(newDeliveryOption);
+//
+//        response.setSuccessStatus(HttpStatus.OK);
+//        return ResponseEntity.status(HttpStatus.OK).body(response);
+//    }
 
     @GetMapping(path = {"/test"}, name = "test-lalamove-response")
     public ResponseEntity<String> testLalamove() throws NoSuchAlgorithmException, InvalidKeyException {
