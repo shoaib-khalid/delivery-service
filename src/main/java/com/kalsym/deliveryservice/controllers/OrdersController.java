@@ -247,6 +247,7 @@ public class OrdersController {
         String contactName = orderDetails.getPickup().getPickupContactName();
     //        }
         String deliveryType = stores.getType();
+        System.out.println("STRING " + deliveryType);
         if (stores.getType().equalsIgnoreCase("self")){
             DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), orderDetails.getDelivery().getDeliveryState());
             PriceResult priceResult = new PriceResult();
@@ -284,11 +285,12 @@ public class OrdersController {
                 deliveryOrder.setAmount(Double.parseDouble(price));
                 deliveryOrder.setValidationPeriod(currentDate);
                 DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
-                priceResult.deliveryType = deliveryType;
-                priceResult.providerName = "";
+
                 Double dPrice = Double.parseDouble(price);
                 BigDecimal bd = new BigDecimal(dPrice);
                 bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+                priceResult.deliveryType = deliveryType;
+                priceResult.providerName = "";
                 priceResult.price = bd;
                 priceResult.message = "";
                 priceResult.isError = false;
@@ -311,58 +313,121 @@ public class OrdersController {
                 Set<PriceResult> priceResultList = new HashSet<>();
                 List<PriceResult> lists = (List<PriceResult>) processResult.returnObject;
                 for (PriceResult list : lists) {
-                    Calendar date = Calendar.getInstance();
-                    long t = date.getTimeInMillis();
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                    Date currentDate = new Date((t + (10 * 60000)));
-                    String currentTimeStamp = sdf.format(currentDate);
-                    Date afterAddingTenMins = new Date(t + (10 * 60000));
 
-                    PriceResult result = new PriceResult();
-                    DeliveryQuotation deliveryOrder = new DeliveryQuotation();
-                    deliveryOrder.setCustomerId(orderDetails.getCustomerId());
-                    deliveryOrder.setPickupAddress(pickupAddress);
-                    deliveryOrder.setDeliveryAddress(deliveryAddress);
-                    deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
-                    deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
-                    System.err.println("Pickup Contact Number :" + contactName + " Number " + phone);
+                    if(deliveryType.equalsIgnoreCase("adhoc") && list.providerId == 3){
+                        Calendar date = Calendar.getInstance();
+                        long t = date.getTimeInMillis();
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                        Date currentDate = new Date((t + (10 * 60000)));
+                        String currentTimeStamp = sdf.format(currentDate);
+                        Date afterAddingTenMins = new Date(t + (10 * 60000));
 
-                    deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
-                    deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
-                    deliveryOrder.setItemType(orderDetails.getItemType().name());
-                    deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
-                    deliveryOrder.setVehicleType(pickup.getVehicleType().name());
-                    deliveryOrder.setStatus("PENDING");
-                    deliveryOrder.setCartId(orderDetails.getCartId());
+                        PriceResult result = new PriceResult();
+                        DeliveryQuotation deliveryOrder = new DeliveryQuotation();
+                        deliveryOrder.setCustomerId(orderDetails.getCustomerId());
+                        deliveryOrder.setPickupAddress(pickupAddress);
+                        deliveryOrder.setDeliveryAddress(deliveryAddress);
+                        deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
+                        deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
+                        System.err.println("Pickup Contact Number :" + contactName + " Number " + phone);
 
-                    deliveryOrder.setDeliveryProviderId(list.providerId);
-                    deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
-                    deliveryOrder.setValidationPeriod(currentDate);
-                    DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
-                    DecimalFormat decimalFormat = new DecimalFormat("##.00");
-                    Double dPrice = Double.parseDouble(decimalFormat.format(list.price));
-                    BigDecimal bd = new BigDecimal(dPrice);
-                    bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
-                    Integer providerId = res.getDeliveryProviderId();
-                    Provider providerRes = providerRepository.findOneById(providerId);
-                    String providerName = providerRes.getName();
-                    result.price = bd;
-                    result.refId = res.getId();
-                    result.providerId = list.providerId;
-                    result.providerName = providerName;
-                    result.validUpTo = currentTimeStamp;
-                    result.deliveryType = deliveryType;
-                    result.isError = list.isError;
-                    result.providerImage = providerRes.getProviderImage();
+                        deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
+                        deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
+                        deliveryOrder.setItemType(orderDetails.getItemType().name());
+                        deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
+                        deliveryOrder.setVehicleType(pickup.getVehicleType().name());
+                        deliveryOrder.setStatus("PENDING");
+                        deliveryOrder.setCartId(orderDetails.getCartId());
 
-                    result.message = list.message;
-                    priceResultList.add(result);
+                        deliveryOrder.setDeliveryProviderId(list.providerId);
+                        deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
+                        deliveryOrder.setValidationPeriod(currentDate);
+                        DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
+                        DecimalFormat decimalFormat = new DecimalFormat("##.00");
+                        Double dPrice = Double.parseDouble(decimalFormat.format(list.price));
+                        BigDecimal bd = new BigDecimal(dPrice);
+                        bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+                        Integer providerId = res.getDeliveryProviderId();
+                        Provider providerRes = providerRepository.findOneById(providerId);
+                        String providerName = providerRes.getName();
+
+                        result.price = bd;
+                        result.refId = res.getId();
+                        result.providerId = list.providerId;
+                        result.providerName = providerName;
+                        result.validUpTo = currentTimeStamp;
+                        result.deliveryType = deliveryType;
+                        result.isError = list.isError;
+                        result.providerImage = providerRes.getProviderImage();
+
+                        result.message = list.message;
+                        priceResultList.add(result);
+                    }
+                    else if( deliveryType.equalsIgnoreCase("scheduled")){
+                        Calendar date = Calendar.getInstance();
+                        long t = date.getTimeInMillis();
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                        Date currentDate = new Date((t + (10 * 60000)));
+                        String currentTimeStamp = sdf.format(currentDate);
+                        Date afterAddingTenMins = new Date(t + (10 * 60000));
+
+                        PriceResult result = new PriceResult();
+                        DeliveryQuotation deliveryOrder = new DeliveryQuotation();
+                        deliveryOrder.setCustomerId(orderDetails.getCustomerId());
+                        deliveryOrder.setPickupAddress(pickupAddress);
+                        deliveryOrder.setDeliveryAddress(deliveryAddress);
+                        deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
+                        deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
+                        System.err.println("Pickup Contact Number :" + contactName + " Number " + phone);
+
+                        deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
+                        deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
+                        deliveryOrder.setItemType(orderDetails.getItemType().name());
+                        deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
+                        deliveryOrder.setVehicleType(pickup.getVehicleType().name());
+                        deliveryOrder.setStatus("PENDING");
+                        deliveryOrder.setCartId(orderDetails.getCartId());
+
+                        deliveryOrder.setDeliveryProviderId(list.providerId);
+                        deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
+                        deliveryOrder.setValidationPeriod(currentDate);
+                        DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
+                        DecimalFormat decimalFormat = new DecimalFormat("##.00");
+                        Double dPrice = Double.parseDouble(decimalFormat.format(list.price));
+                        BigDecimal bd = new BigDecimal(dPrice);
+                        bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+                        Integer providerId = res.getDeliveryProviderId();
+                        Provider providerRes = providerRepository.findOneById(providerId);
+                        String providerName = providerRes.getName();
+
+                        result.price = bd;
+                        result.refId = res.getId();
+                        result.providerId = list.providerId;
+                        result.providerName = providerName;
+                        result.validUpTo = currentTimeStamp;
+                        result.deliveryType = deliveryType;
+                        result.isError = list.isError;
+                        result.providerImage = providerRes.getProviderImage();
+
+                        result.message = list.message;
+                        priceResultList.add(result);
+
+                    }
+
                 }
                 response.setSuccessStatus(HttpStatus.OK);
                 response.setData(priceResultList);
                 LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             } else {
+                PriceResult priceResult = new PriceResult();
+                priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
+                BigDecimal bd = new BigDecimal(0.00);
+                bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+                priceResult.price = bd;
+                priceResult.isError = true;
+                priceResult.deliveryType = deliveryType;
+                response.setData(priceResult);
                 //fail to get price
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
