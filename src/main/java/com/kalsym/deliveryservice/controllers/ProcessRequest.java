@@ -89,17 +89,31 @@ public class ProcessRequest {
         //get provider rate plan  
         LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
         List<ProviderRatePlan> providerRatePlanList = providerRatePlanRepository.findByIdProductCode(order.getProductCode());
-
-        for (int i = 0; i < providerRatePlanList.size(); i++) {
-            List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(providerRatePlanList.get(i).getProvider().getId());
+        if (order.getDeliveryProviderId() == null) {
+            for (int i = 0; i < providerRatePlanList.size(); i++) {
+                List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(providerRatePlanList.get(i).getProvider().getId());
+                HashMap config = new HashMap();
+                for (int j = 0; j < providerConfigList.size(); j++) {
+                    String fieldName = providerConfigList.get(j).getId().getConfigField();
+                    String fieldValue = providerConfigList.get(j).getConfigValue();
+                    config.put(fieldName, fieldValue);
+                }
+                ProviderThread dthread = new ProviderThread(this, sysTransactionId, providerRatePlanList.get(i).getProvider(), config, order, "GetPrices", sequenceNumberRepository);
+                dthread.start();
+            }
+        }
+        else{
+            List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(order.getDeliveryProviderId());
+            Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
             HashMap config = new HashMap();
             for (int j = 0; j < providerConfigList.size(); j++) {
                 String fieldName = providerConfigList.get(j).getId().getConfigField();
                 String fieldValue = providerConfigList.get(j).getConfigValue();
                 config.put(fieldName, fieldValue);
             }
-            ProviderThread dthread = new ProviderThread(this, sysTransactionId, providerRatePlanList.get(i).getProvider(), config, order, "GetPrices", sequenceNumberRepository);
+            ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetPrices", sequenceNumberRepository);
             dthread.start();
+
         }
 
         try {
@@ -261,7 +275,7 @@ public class ProcessRequest {
         return response;
     }
 
-    public ProcessResult ProcessCallback(String spIP, ProviderIpRepository providerIpRepository , int providerId) {
+    public ProcessResult ProcessCallback(String spIP, ProviderIpRepository providerIpRepository, int providerId) {
         //get provider rate plan  
         LogUtil.info(logprefix, location, "Caller IP:" + spIP, "");
         //get provider based on IP

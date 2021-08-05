@@ -18,7 +18,7 @@ import lombok.Setter;
  * @author user
  */
 @Entity
-@Table(name = "product")
+@Table(name = "delivery_product")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,7 +26,6 @@ import lombok.Setter;
 public class Product implements Serializable {
     @Id
     String product_code;
-    
     String description;
     
 }

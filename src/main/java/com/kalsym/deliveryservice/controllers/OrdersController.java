@@ -1,17 +1,13 @@
 package com.kalsym.deliveryservice.controllers;
 
 import com.google.gson.Gson;
-import com.kalsym.deliveryservice.models.*;
 import com.kalsym.deliveryservice.models.Delivery;
-import com.kalsym.deliveryservice.models.daos.DeliveryOptions;
-import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
-import com.kalsym.deliveryservice.models.daos.DeliveryQuotation;
-import com.kalsym.deliveryservice.models.daos.Provider;
+import com.kalsym.deliveryservice.models.HttpReponse;
+import com.kalsym.deliveryservice.models.Order;
+import com.kalsym.deliveryservice.models.Pickup;
+import com.kalsym.deliveryservice.models.daos.*;
 import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
-//import com.kalsym.deliveryservice.models.lalamove.getprice.Delivery;
-import com.kalsym.deliveryservice.models.lalamove.getprice.Location;
-import com.kalsym.deliveryservice.models.lalamove.getprice.*;
 import com.kalsym.deliveryservice.provider.*;
 import com.kalsym.deliveryservice.repositories.*;
 import com.kalsym.deliveryservice.service.utility.Response.StoreDeliveryResponseData;
@@ -21,20 +17,17 @@ import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.LalamoveUtils;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import com.kalsym.deliveryservice.utils.StringUtility;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.xml.bind.DatatypeConverter;
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -76,6 +69,9 @@ public class OrdersController {
 
     @Autowired
     DeliveryOptionRepository deliveryOptionRepository;
+
+    @Autowired
+    StoreDeliveryTypeRepository storeDeliveryTypeRepository;
 
 
 //    @PostMapping(path = {"/getprice"}, name = "orders-get-price")
@@ -201,12 +197,12 @@ public class OrdersController {
         HttpReponse response = new HttpReponse(request.getRequestURI());
         ProcessResult processResult = new ProcessResult();
         String systemTransactionId = StringUtility.CreateRefID("DL");
+        //TODO : CREATE CLASS TO READ TABLE
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
         Double weight = symplifiedService.getTotalWeight(orderDetails.getCartId());
-        System.err.println("store type: " + stores.getType());
+
         LogUtil.info(logprefix, location, "Store Details : ", stores.toString());
 
-    //        if (stores.getType().equals("AD-HOC")) {
         LogUtil.info(logprefix, location, "", "");
         StoreResponseData store = symplifiedService.getStore(orderDetails.getStoreId());
         LogUtil.info(logprefix, location, "", store.toString());
@@ -245,10 +241,10 @@ public class OrdersController {
         SimpleDateFormat df = new SimpleDateFormat("yyyy-mm-dd HH:mm");
         String phone = orderDetails.getPickup().getPickupContactPhone();
         String contactName = orderDetails.getPickup().getPickupContactName();
-    //        }
+        //        }
         String deliveryType = stores.getType();
         System.out.println("STRING " + deliveryType);
-        if (stores.getType().equalsIgnoreCase("self")){
+        if (stores.getType().equalsIgnoreCase("self")) {
             DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), orderDetails.getDelivery().getDeliveryState());
             PriceResult priceResult = new PriceResult();
             if (deliveryOptions == null) {
@@ -280,6 +276,8 @@ public class OrdersController {
                 deliveryOrder.setVehicleType(pickup.getVehicleType().name());
                 deliveryOrder.setStatus("PENDING");
                 deliveryOrder.setCartId(orderDetails.getCartId());
+                deliveryOrder.setCreatedDate(new Date());
+                deliveryOrder.setStoreId(store.getId());
 
                 deliveryOrder.setDeliveryProviderId(0);
                 deliveryOrder.setAmount(Double.parseDouble(price));
@@ -304,6 +302,13 @@ public class OrdersController {
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
+            try {
+                StoreDeliveryType storeDeliveryType = storeDeliveryTypeRepository.findAllByStoreIdAndDeliveryType(store.getId(), stores.getType());
+
+                orderDetails.setDeliveryProviderId(storeDeliveryType.getDeliveryId());
+
+            } catch (Exception ex) {
+            }
             //generate transaction id
             ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository);
             processResult = process.GetPrice();
@@ -313,8 +318,9 @@ public class OrdersController {
                 Set<PriceResult> priceResultList = new HashSet<>();
                 List<PriceResult> lists = (List<PriceResult>) processResult.returnObject;
                 for (PriceResult list : lists) {
+                    LogUtil.info(systemTransactionId, location, "Provider Id" + list.providerId, "");
 
-                    if(deliveryType.equalsIgnoreCase("adhoc") && list.providerId == 3){
+                    if (deliveryType.equalsIgnoreCase("adhoc")) {
                         Calendar date = Calendar.getInstance();
                         long t = date.getTimeInMillis();
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -338,6 +344,9 @@ public class OrdersController {
                         deliveryOrder.setVehicleType(pickup.getVehicleType().name());
                         deliveryOrder.setStatus("PENDING");
                         deliveryOrder.setCartId(orderDetails.getCartId());
+                        deliveryOrder.setCreatedDate(new Date());
+                        deliveryOrder.setStoreId(store.getId());
+                        deliveryOrder.setSystemTransactionId(systemTransactionId);
 
                         deliveryOrder.setDeliveryProviderId(list.providerId);
                         deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
@@ -362,8 +371,7 @@ public class OrdersController {
 
                         result.message = list.message;
                         priceResultList.add(result);
-                    }
-                    else if( deliveryType.equalsIgnoreCase("scheduled")){
+                    } else if (deliveryType.equalsIgnoreCase("scheduled")) {
                         Calendar date = Calendar.getInstance();
                         long t = date.getTimeInMillis();
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -387,6 +395,9 @@ public class OrdersController {
                         deliveryOrder.setVehicleType(pickup.getVehicleType().name());
                         deliveryOrder.setStatus("PENDING");
                         deliveryOrder.setCartId(orderDetails.getCartId());
+                        deliveryOrder.setCreatedDate(new Date());
+                        deliveryOrder.setStoreId(store.getId());
+                        deliveryOrder.setSystemTransactionId(systemTransactionId);
 
                         deliveryOrder.setDeliveryProviderId(list.providerId);
                         deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
@@ -433,7 +444,6 @@ public class OrdersController {
             }
         }
     }
-
 
 
     @RequestMapping(method = RequestMethod.GET, value = "/getpickupdate/{spId}/{postcode}", name = "orders-get-pickupdate")
@@ -545,15 +555,17 @@ public class OrdersController {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
+        String systemTransactionId = StringUtility.CreateRefID("DL");
+
 
         LogUtil.info(logprefix, location, "", "");
         DeliveryQuotation quotation = deliveryQuotationRepository.getOne(refId);
-        System.err.println(quotation);
+        LogUtil.info(systemTransactionId, location, "Quotation : ", quotation.toString());
         Order orderDetails = new Order();
         orderDetails.setCustomerId(quotation.getCustomerId());
         orderDetails.setItemType(ItemType.valueOf(quotation.getItemType()));
         orderDetails.setDeliveryProviderId(quotation.getDeliveryProviderId());
-        System.err.println("PROVIDER ID :" + quotation.getDeliveryProviderId());
+        LogUtil.info(systemTransactionId, location, "PROVIDER ID :", quotation.getDeliveryProviderId().toString());
         orderDetails.setProductCode(quotation.getProductCode());
         orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
         orderDetails.setShipmentValue(quotation.getAmount());
@@ -582,7 +594,6 @@ public class OrdersController {
 
 
         //generate transaction id
-        String systemTransactionId = StringUtility.CreateRefID("DL");
         LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " "
                 + "itemType:" + orderDetails.getItemType() + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
         ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository,
@@ -606,6 +617,9 @@ public class OrdersController {
             deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
             deliveryOrder.setSystemTransactionId(orderDetails.getTransactionId());
             deliveryOrder.setProductCode(orderDetails.getProductCode());
+            deliveryOrder.setDeliveryProviderId(orderDetails.getDeliveryProviderId());
+            deliveryOrder.setStoreId(orderDetails.getStoreId());
+            deliveryOrder.setSystemTransactionId(systemTransactionId);
             deliveryOrder.setOrderId(orderId);
 
             SubmitOrderResult submitOrderResult = (SubmitOrderResult) processResult.returnObject;
@@ -919,7 +933,10 @@ public class OrdersController {
 
     }
 
-    @PostMapping(path = "/setDeliveryPrice", name = "set-delivery-price")
+
+    //TODO: REMOVE BELOW LINE NOT USING ANYMORE. REFERENCE PURPOSE FOR LALAMOVE
+
+   /* @PostMapping(path = "/setDeliveryPrice", name = "set-delivery-price")
     public ResponseEntity<HttpReponse> setDeliveryPrice(HttpServletRequest request,
                                                         @Valid @RequestBody DeliveryOption deliveryOption) {
         String logprefix = request.getRequestURI() + " ";
@@ -1069,6 +1086,8 @@ public class OrdersController {
         String BASE_URL = "https://rest.sandbox.lalamove.com";
         String ENDPOINT_URL_QUOTATIONS = "/v2/quotations";
         String ENDPOINT_URL_PLACEORDER = "/v2/orders";
+        String secretKey ="";
+        String apiKey ="";
 
 
         List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
@@ -1110,7 +1129,7 @@ public class OrdersController {
         HttpHeaders headers = new HttpHeaders();
 
 
-        HttpEntity<String> quotationRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_QUOTATIONS, "POST", bodyJson, headers);   // ######### SEND REQUEST FOR QUOTATION #########
+        HttpEntity<String> quotationRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_QUOTATIONS, "POST", bodyJson, headers, secretKey, apiKey);   // ######### SEND REQUEST FOR QUOTATION #########
         ResponseEntity<String> quotationResponse = restTemplate.exchange(BASE_URL + ENDPOINT_URL_QUOTATIONS, HttpMethod.POST, quotationRequest, String.class);  // ######### RECEIVE QUOTATION INFORMATION #########
 
         // ######### BUILD QUOTATION OBJECT FOR PLACEORDER REQUEST #########
@@ -1122,11 +1141,11 @@ public class OrdersController {
         // ######### BUILD PLACEORDER REQUEST USING PREVIOUSLY USED GETPRICE OBJECT AND QUOTATION OBJECT #########
         PlaceOrder placeOrder = new PlaceOrder(req, quotation);
         JSONObject orderBody = new JSONObject(new Gson().toJson(placeOrder));
-        HttpEntity<String> orderRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_PLACEORDER, "POST", orderBody, headers);
+        HttpEntity<String> orderRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_PLACEORDER, "POST", orderBody, headers, secretKey, apiKey);
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(BASE_URL + ENDPOINT_URL_PLACEORDER, HttpMethod.POST, orderRequest, String.class);
         System.err.println("RESPONSE : " + responseEntity);// ######### RETURN ORDERREF/ORDERID #########
         return responseEntity;
-    }
+    }*/
 
 }
