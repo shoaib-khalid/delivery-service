@@ -44,6 +44,7 @@ public class DeliveryQuotation {
     Double totalWeightKg;
     Double amount;
     Date validationPeriod;
+    String storeId;
 
     @Override
     public String toString() {

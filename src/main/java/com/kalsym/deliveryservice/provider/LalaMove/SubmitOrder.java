@@ -79,7 +79,7 @@ public class SubmitOrder extends SyncDispatcher {
 
         String BASE_URL = this.baseUrl;
         String ENDPOINT_URL_PLACEORDER = this.endpointUrl;
-        System.err.println("BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER);
+        LogUtil.info(logprefix, location, "BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER, "");
 
         String METHOD = "POST";
         Mac mac = null;
@@ -96,10 +96,11 @@ public class SubmitOrder extends SyncDispatcher {
         JSONObject bodyJson = new JSONObject(new Gson().toJson(requestBody));
         String timeStamp = String.valueOf(System.currentTimeMillis());
         String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + endpointUrl + "\r\n\r\n" + bodyJson.toString();
+        LogUtil.info(logprefix, location, "rawSignature", rawSignature);
         byte[] byteSig = mac.doFinal(rawSignature.getBytes());
         String signature = DatatypeConverter.printHexBinary(byteSig);
         signature = signature.toLowerCase();
-
+        LogUtil.info(logprefix, location, "SIGNATURE", signature);
         String authToken = apiKey + ":" + timeStamp + ":" + signature;
 
         RestTemplate restTemplate = new RestTemplate();
@@ -109,7 +110,7 @@ public class SubmitOrder extends SyncDispatcher {
 
         HttpEntity<String> orderRequest = null;
         try {
-            orderRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_PLACEORDER, "POST", orderBody, headers);
+            orderRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_PLACEORDER, "POST", orderBody, headers,secretKey, apiKey);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (InvalidKeyException e) {
@@ -170,14 +171,18 @@ public class SubmitOrder extends SyncDispatcher {
         req.requesterContact = new Contact(order.getPickup().getPickupContactName(), order.getPickup().getPickupContactPhone());
         req.deliveries = deliveries;
 
+
         QuotedTotalFee quotation = new QuotedTotalFee();
 
         quotation.setAmount(order.getShipmentValue().toString());
         quotation.setCurrency("MYR");
 
+
         // ######### BUILD PLACEORDER REQUEST USING PREVIOUSLY USED GETPRICE OBJECT AND QUOTATION OBJECT #########
         PlaceOrder placeOrder = new PlaceOrder(req, quotation);
+        placeOrder.fleetOption = "FLEET_ALL";
 
+        LogUtil.info(logprefix, location, "Place Order Request : " + placeOrder.toString(), "");
 
         return placeOrder;
     }

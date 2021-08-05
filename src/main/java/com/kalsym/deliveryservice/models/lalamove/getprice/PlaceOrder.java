@@ -1,8 +1,9 @@
 package com.kalsym.deliveryservice.models.lalamove.getprice;
 
 import com.kalsym.deliveryservice.models.lalamove.getprice.GetPrices;
+import lombok.ToString;
 
-
+@ToString
 public class PlaceOrder extends GetPrices{
     public QuotedTotalFee quotedTotalFee;
     public boolean sms;
