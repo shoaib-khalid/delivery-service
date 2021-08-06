@@ -569,6 +569,9 @@ public class OrdersController {
         orderDetails.setProductCode(quotation.getProductCode());
         orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
         orderDetails.setShipmentValue(quotation.getAmount());
+        quotation.setSpOrderId(orderId);
+        quotation.setUpdatedDate(String.valueOf(new Date()));
+        deliveryQuotationRepository.save(quotation);
 
         Pickup pickup = new Pickup();
 //        if (quotation.getPickupContactName() != null) {
@@ -587,7 +590,7 @@ public class OrdersController {
 
         Delivery delivery = new Delivery();
         delivery.setDeliveryAddress(quotation.getDeliveryAddress());
-        delivery.setDeliveryContactName(quotation.getPickupContactName());
+        delivery.setDeliveryContactName(quotation.getDeliveryContactName());
         delivery.setDeliveryContactPhone(quotation.getDeliveryContactPhone());
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());
