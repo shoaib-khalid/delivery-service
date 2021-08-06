@@ -34,11 +34,11 @@ public class SymplifiedService {
     @Value("${product-service.token:Bearer accessToken}")
     private String productServiceToken;
 
-    @Value("${speedy-service.auth.token}")
-    private String speedyAuthToken;
-
-    @Value("${speedy-service.base.url}")
-    private String SPEEDY_BASE_URL;
+//    @Value("${speedy-service.auth.token}")
+//    private String speedyAuthToken;
+//
+//    @Value("${speedy-service.base.url}")
+//    private String SPEEDY_BASE_URL;
 
     public StoreResponseData getStore(String storeId) {
         String url = productServiceURL + "stores/" + storeId;
