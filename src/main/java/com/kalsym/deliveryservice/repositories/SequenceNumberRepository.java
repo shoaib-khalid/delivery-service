@@ -15,9 +15,9 @@ import org.springframework.data.repository.query.Param;
 @Repository
 public interface SequenceNumberRepository extends JpaRepository<SequenceNumber, String> {
     
-    @Query(value ="SELECT getNextSeqNo(?1)", nativeQuery = true)
+    @Query(value ="SELECT sequence FROM sequence_number WHERE sp = :serviceProvider", nativeQuery = true)
     public Integer getSequenceNumber(
-            @Param("serviceProvider") String serviceProvider        
+            @Param("serviceProvider") String serviceProvider
     );
 
 }

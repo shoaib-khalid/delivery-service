@@ -200,6 +200,7 @@ public class OrdersController {
         //TODO : CREATE CLASS TO READ TABLE
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
         Double weight = symplifiedService.getTotalWeight(orderDetails.getCartId());
+        LogUtil.info(logprefix, location, "Weight : " + weight, "");
 
         LogUtil.info(logprefix, location, "Store Details : ", stores.toString());
 

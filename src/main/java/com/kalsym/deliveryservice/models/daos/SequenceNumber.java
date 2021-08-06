@@ -18,7 +18,7 @@ import org.hibernate.annotations.GenericGenerator;
  * @author Sarosh
  */
 @Entity
-@Table(name = "customers")
+@Table(name = "sequence_number")
 @Getter
 @Setter
 @NoArgsConstructor

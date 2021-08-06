@@ -68,6 +68,7 @@ public class GetPrice extends SyncDispatcher {
             httpHeader.put("Connection", "close");
             String requestBody = generateRequestBody();
             HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.getprice_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
+            LogUtil.info(logprefix, location, "response: " + httpResult.responseString, "");
             if (httpResult.resultCode==0) {
                 LogUtil.info(logprefix, location, "Request successful", "");
                 response.resultCode=0;            
@@ -94,6 +95,7 @@ public class GetPrice extends SyncDispatcher {
         jsonReq.addProperty("Weight", order.getTotalWeightKg());
         jsonReq.addProperty("Country", "MYS"); 
         jsonArray.add(jsonReq);
+        LogUtil.info(logprefix, location, "requestbody:"+jsonArray, "");
         return jsonArray.toString();
     }
     
