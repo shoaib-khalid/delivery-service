@@ -25,10 +25,10 @@ public class SymplifiedService {
 
     private static Logger logger = LoggerFactory.getLogger("application");
 
-    @Value("${product-service.URL:https://api.symplified.biz/product-service/v1/}")
+    @Value("${orderUrl}")
     String productServiceURL;
 
-    @Value("${order-service.URL:https://api.symplified.biz/order-service/v1/}")
+    @Value("${storeUrl}")
     String order;
 
     @Value("${product-service.token:Bearer accessToken}")
