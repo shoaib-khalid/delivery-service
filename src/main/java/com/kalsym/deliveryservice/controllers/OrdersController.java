@@ -569,9 +569,7 @@ public class OrdersController {
         orderDetails.setProductCode(quotation.getProductCode());
         orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
         orderDetails.setShipmentValue(quotation.getAmount());
-        quotation.setSpOrderId(orderId);
-        quotation.setUpdatedDate(new Date());
-        deliveryQuotationRepository.save(quotation);
+
 
         Pickup pickup = new Pickup();
 //        if (quotation.getPickupContactName() != null) {
@@ -637,6 +635,10 @@ public class OrdersController {
 
 
             deliveryOrdersRepository.save(deliveryOrder);
+            quotation.setSpOrderId(orderCreated.getSpOrderId());
+            quotation.setOrderId(orderId);
+            quotation.setUpdatedDate(new Date());
+            deliveryQuotationRepository.save(quotation);
             //assign back to orderCreated to get deliveryOrder Id
             submitOrderResult.orderCreated = deliveryOrder;
             submitOrderResult.isSuccess = true;
@@ -645,6 +647,9 @@ public class OrdersController {
             LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
+            quotation.setOrderId(orderId);
+            quotation.setUpdatedDate(new Date());
+            deliveryQuotationRepository.save(quotation);
             //fail to get price
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
@@ -764,60 +769,63 @@ public class OrdersController {
 
 
     @PostMapping(path = {"/callback"}, name = "orders-sp-callback")
-    public ResponseEntity<HttpReponse> spCallback(HttpServletRequest request,
-                                                  @Valid @RequestBody Object requestBody) {
-        String logprefix = request.getRequestURI() + " ";
-        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+    public ResponseEntity<HttpReponse> spCallback(HttpServletRequest request) {
+//                                                  @Valid @RequestBody Object requestBody) {
+//        String logprefix = request.getRequestURI() + " ";
+//        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
+//
+//        LogUtil.info(logprefix, location, "", "");
+//
+//        //generate transaction id
+//        String systemTransactionId = StringUtility.CreateRefID("CB");
+//        String IP = request.getRemoteAddr();
+//        ProcessRequest process = new ProcessRequest(systemTransactionId, requestBody, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+//        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 1);
+//        LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+//
+//        if (processResult.resultCode == 0) {
+//            //update order status in db
+//            SpCallbackResult spCallbackResult = (SpCallbackResult) processResult.returnObject;
+//            String spOrderId = spCallbackResult.spOrderId;
+//            String status = spCallbackResult.status;
+//            int spId = spCallbackResult.providerId;
+//            DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
+//            if (deliveryOrder != null) {
+//                LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
+//                deliveryOrder.setStatus(status);
+//                String orderStatus = "";
+//
+//                // change from order status codes to delivery status codes.
+//                if (status.equals("planned")) {
+//                    orderStatus = "AWAITING_PICKUP";
+//                } else if (status.equals("active")) {
+//                    orderStatus = "BEING_DELIVERED";
+//                } else if (status.equals("finished")) {
+//                    orderStatus = "DELIVERED_TO_CUSTOMER";
+//                } else if (status.equals("canceled")) {
+//                    orderStatus = "REJECTED_BY_STORE";
+//                }
+//
+//                String res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+//
+//                deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
+//                deliveryOrdersRepository.save(deliveryOrder);
+//            } else {
+//                LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
+//
+//            }
+//            response.setSuccessStatus(HttpStatus.OK);
+//            response.setData(processResult.returnObject);
+//            LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
+//            return ResponseEntity.status(HttpStatus.OK).body(response);
+//        } else {
+//            //fail to get price
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+//        }
+        response.setSuccessStatus(HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
 
-        LogUtil.info(logprefix, location, "", "");
-
-        //generate transaction id
-        String systemTransactionId = StringUtility.CreateRefID("CB");
-        String IP = request.getRemoteAddr();
-        ProcessRequest process = new ProcessRequest(systemTransactionId, requestBody, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 1);
-        LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
-
-        if (processResult.resultCode == 0) {
-            //update order status in db
-            SpCallbackResult spCallbackResult = (SpCallbackResult) processResult.returnObject;
-            String spOrderId = spCallbackResult.spOrderId;
-            String status = spCallbackResult.status;
-            int spId = spCallbackResult.providerId;
-            DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
-            if (deliveryOrder != null) {
-                LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
-                deliveryOrder.setStatus(status);
-                String orderStatus = "";
-
-                // change from order status codes to delivery status codes.
-                if (status.equals("planned")) {
-                    orderStatus = "AWAITING_PICKUP";
-                } else if (status.equals("active")) {
-                    orderStatus = "BEING_DELIVERED";
-                } else if (status.equals("finished")) {
-                    orderStatus = "DELIVERED_TO_CUSTOMER";
-                } else if (status.equals("canceled")) {
-                    orderStatus = "REJECTED_BY_STORE";
-                }
-
-                String res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
-
-                deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
-                deliveryOrdersRepository.save(deliveryOrder);
-            } else {
-                LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
-
-            }
-            response.setSuccessStatus(HttpStatus.OK);
-            response.setData(processResult.returnObject);
-            LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } else {
-            //fail to get price
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
     }
 
     @GetMapping(path = {"/getServerTime"}, name = "get-server-time")

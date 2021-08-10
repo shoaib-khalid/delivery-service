@@ -45,6 +45,7 @@ public class DeliveryQuotation {
     Double amount;
     Date validationPeriod;
     String storeId;
+    String orderId;
 
     @Override
     public String toString() {
