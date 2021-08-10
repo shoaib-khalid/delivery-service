@@ -1,5 +1,6 @@
 package com.kalsym.deliveryservice.controllers;
 
+import com.google.gson.Gson;
 import com.kalsym.deliveryservice.models.Delivery;
 import com.kalsym.deliveryservice.models.HttpReponse;
 import com.kalsym.deliveryservice.models.Order;
@@ -15,6 +16,7 @@ import com.kalsym.deliveryservice.service.utility.SymplifiedService;
 import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import com.kalsym.deliveryservice.utils.StringUtility;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -838,67 +840,62 @@ public class OrdersController {
     }
 
     @PostMapping(path = {"lalamove/callback"}, name = "orders-lalamove-callback")
-    public ResponseEntity<HttpReponse> lalamoveCallback(HttpServletRequest request){
-//    ) {
-//        String logprefix = request.getRequestURI() + " ";
-//        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+    public ResponseEntity<HttpReponse> lalamoveCallback(HttpServletRequest request,
+                                                        @RequestBody Map<String, Object> json){
+
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
-//
-//        JSONObject bodyJson = new JSONObject(new Gson().toJson(json));
-//        LogUtil.info(logprefix, location, "data: ", bodyJson.get("data").toString());
-//
-//
-//        String systemTransactionId = StringUtility.CreateRefID("CB");
-//        String IP = request.getRemoteAddr();
-//        ProcessRequest process = new ProcessRequest(systemTransactionId, bodyJson, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-//        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 3);
-//        LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
-//
-//        if (processResult.resultCode == 0) {
-//            //update order status in db
-//            SpCallbackResult spCallbackResult = (SpCallbackResult) processResult.returnObject;
-//            String spOrderId = spCallbackResult.spOrderId;
-//            String status = spCallbackResult.status;
-//            int spId = spCallbackResult.providerId;
-//            DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
-//            if (deliveryOrder != null) {
-//                LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
-//                deliveryOrder.setStatus(status);
-//                String orderStatus = "";
-//
-//                // change from order status codes to delivery status codes.
-//                if (status.equals("ASSIGNING_DRIVER")) {
-//                    orderStatus = "AWAITING_PICKUP";
-//                } else if (status.equals("PICKED_UP")) {
-//                    orderStatus = "BEING_DELIVERED";
-//                } else if (status.equals("COMPLETED")) {
-//                    orderStatus = "DELIVERED_TO_CUSTOMER";
-//                } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
-//                    orderStatus = "REJECTED_BY_STORE";
-//                }
-//
-//                String res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
-//
-//                deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
-//                deliveryOrdersRepository.save(deliveryOrder);
-//            } else {
-//                LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
-//
-//            }
-//            response.setSuccessStatus(HttpStatus.OK);
-//            response.setData(processResult.returnObject);
-//            LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
-//            return ResponseEntity.status(HttpStatus.OK).body(response);
-//        } else {
-//            //fail to get price
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//        }
 
-        response.setSuccessStatus(HttpStatus.OK);
-//        response.setData(processResult.returnObject);
-//            LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        JSONObject bodyJson = new JSONObject(new Gson().toJson(json));
+        LogUtil.info(logprefix, location, "data: ", bodyJson.get("data").toString());
 
+
+        String systemTransactionId = StringUtility.CreateRefID("CB");
+        String IP = request.getRemoteAddr();
+        ProcessRequest process = new ProcessRequest(systemTransactionId, bodyJson, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 3);
+        LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+
+        if (processResult.resultCode == 0) {
+            //update order status in db
+            SpCallbackResult spCallbackResult = (SpCallbackResult) processResult.returnObject;
+            String spOrderId = spCallbackResult.spOrderId;
+            String status = spCallbackResult.status;
+            int spId = spCallbackResult.providerId;
+            DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
+            if (deliveryOrder != null) {
+                LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
+                deliveryOrder.setStatus(status);
+                String orderStatus = "";
+
+                // change from order status codes to delivery status codes.
+                if (status.equals("ASSIGNING_DRIVER")) {
+                    orderStatus = "AWAITING_PICKUP";
+                } else if (status.equals("PICKED_UP")) {
+                    orderStatus = "BEING_DELIVERED";
+                } else if (status.equals("COMPLETED")) {
+                    orderStatus = "DELIVERED_TO_CUSTOMER";
+                } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
+                    orderStatus = "REJECTED_BY_STORE";
+                }
+
+                String res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+
+                deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
+                deliveryOrdersRepository.save(deliveryOrder);
+            } else {
+                LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
+
+            }
+            response.setSuccessStatus(HttpStatus.OK);
+            response.setData(processResult.returnObject);
+            LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } else {
+            //fail to get price
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
 
