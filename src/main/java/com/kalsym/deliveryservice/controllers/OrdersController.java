@@ -838,9 +838,7 @@ public class OrdersController {
     }
 
     @PostMapping(path = {"lalamove/callback"}, name = "orders-lalamove-callback")
-    public ResponseEntity<HttpReponse> lalamoveCallback(HttpServletRequest request,
-
-                                                        @RequestBody Map<String, Object> json){
+    public ResponseEntity<HttpReponse> lalamoveCallback(HttpServletRequest request){
 //    ) {
 //        String logprefix = request.getRequestURI() + " ";
 //        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
