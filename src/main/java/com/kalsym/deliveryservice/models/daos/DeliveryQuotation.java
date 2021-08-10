@@ -40,7 +40,7 @@ public class DeliveryQuotation {
     String status;
     String cartId;
     String statusDescription;
-    String updatedDate;
+    Date updatedDate;
     Double totalWeightKg;
     Double amount;
     Date validationPeriod;

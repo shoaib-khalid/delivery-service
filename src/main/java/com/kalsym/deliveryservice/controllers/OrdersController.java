@@ -570,7 +570,7 @@ public class OrdersController {
         orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
         orderDetails.setShipmentValue(quotation.getAmount());
         quotation.setSpOrderId(orderId);
-        quotation.setUpdatedDate(String.valueOf(new Date()));
+        quotation.setUpdatedDate(new Date());
         deliveryQuotationRepository.save(quotation);
 
         Pickup pickup = new Pickup();
