@@ -255,7 +255,7 @@ public class OrdersController {
                 priceResult.isError = true;
                 priceResult.deliveryType = deliveryType;
             } else {
-                String price = deliveryOptions.getDelivery_price().toString();
+                String price = deliveryOptions.getDeliveryPrice().toString();
                 Calendar date = Calendar.getInstance();
                 long t = date.getTimeInMillis();
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");

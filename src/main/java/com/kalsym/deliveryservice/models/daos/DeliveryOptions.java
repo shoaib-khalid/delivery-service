@@ -10,7 +10,7 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "delivery_option")
+@Table(name = "state_delivery_charges")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,9 +20,9 @@ public class DeliveryOptions {
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
     private String id;
-    @Column(name = "store_id")
     String storeId;
-    @Column(name = "to_state")
+    @Column(name = "region_country_state_id")
     String toState;
-    Float delivery_price;
+    @Column(name = "delivery_charges")
+    Float deliveryPrice;
 }
