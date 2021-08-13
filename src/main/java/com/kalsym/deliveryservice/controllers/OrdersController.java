@@ -239,9 +239,9 @@ public class OrdersController {
         String deliveryType = stores.getType();
         if (stores.getType().equalsIgnoreCase("self")) {
             RegionCountryState regionCountryState = regionCountryStateRepository.findByNameAndRegionCountryId(orderDetails.getDelivery().getDeliveryState(), store.getRegionCountryId());
-            System.out.println("Test"+regionCountryState.toString());
+//            System.out.println("Test"+regionCountryState.toString());
             DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), regionCountryState.getId());
-            System.out.println("Delviery Options "+deliveryOptions.toString());
+//            System.out.println("Delviery Options "+deliveryOptions.toString());
 
             PriceResult priceResult = new PriceResult();
             if (deliveryOptions == null) {
