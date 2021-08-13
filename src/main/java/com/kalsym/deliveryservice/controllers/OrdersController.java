@@ -67,6 +67,9 @@ public class OrdersController {
     @Autowired
     StoreDeliveryTypeRepository storeDeliveryTypeRepository;
 
+    @Autowired
+    RegionCountryStateRepository regionCountryStateRepository;
+
 
 //    @PostMapping(path = {"/getprice"}, name = "orders-get-price")
 //    public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
@@ -231,15 +234,15 @@ public class OrdersController {
             orderDetails.setProductCode(ItemType.parcel.name());
         }
 
-        Calendar cal = Calendar.getInstance();
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-mm-dd HH:mm");
         String phone = orderDetails.getPickup().getPickupContactPhone();
         String contactName = orderDetails.getPickup().getPickupContactName();
-        //        }
         String deliveryType = stores.getType();
-        System.out.println("STRING " + deliveryType);
         if (stores.getType().equalsIgnoreCase("self")) {
-            DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), orderDetails.getDelivery().getDeliveryState());
+            RegionCountryState regionCountryState = regionCountryStateRepository.findByNameAndRegionCountryId(orderDetails.getDelivery().getDeliveryState(), store.getRegionCountryId());
+            System.out.println("Test"+regionCountryState.toString());
+            DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), regionCountryState.getId());
+            System.out.println("Delviery Options "+deliveryOptions.toString());
+
             PriceResult priceResult = new PriceResult();
             if (deliveryOptions == null) {
                 priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
@@ -767,7 +770,7 @@ public class OrdersController {
                                                   @Valid @RequestBody Object requestBody) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
- HttpReponse response = new HttpReponse(request.getRequestURI());
+        HttpReponse response = new HttpReponse(request.getRequestURI());
 
         LogUtil.info(logprefix, location, "", "");
 
@@ -841,7 +844,7 @@ public class OrdersController {
 
     @PostMapping(path = {"lalamove/callback"}, name = "orders-lalamove-callback")
     public ResponseEntity<HttpReponse> lalamoveCallback(HttpServletRequest request,
-                                                        @RequestBody Map<String, Object> json){
+                                                        @RequestBody Map<String, Object> json) {
 
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
