@@ -4,6 +4,7 @@
  */
 package com.kalsym.deliveryservice.models.daos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;
 import javax.persistence.Entity;
@@ -30,13 +31,21 @@ public class Provider implements Serializable {
     String address;
     String contactNo;
     String contactPerson;
+    @JsonIgnore
     String getPriceClassname;
+    @JsonIgnore
     String submitOrderClassname;
+    @JsonIgnore
     String cancelOrderClassname;
+    @JsonIgnore
     String queryOrderClassname;
+    @JsonIgnore
     String spCallbackClassname;
+    @JsonIgnore
     String pickupDateClassname;
+    @JsonIgnore
     String pickupTimeClassname;
+    @JsonIgnore
     String locationIdClassname;
     String providerImage;
 }

@@ -239,9 +239,9 @@ public class OrdersController {
         String deliveryType = stores.getType();
         if (stores.getType().equalsIgnoreCase("self")) {
             RegionCountryState regionCountryState = regionCountryStateRepository.findByNameAndRegionCountryId(orderDetails.getDelivery().getDeliveryState(), store.getRegionCountryId());
-//            System.out.println("Test"+regionCountryState.toString());
+            System.out.println("Test" + regionCountryState);
             DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), regionCountryState.getId());
-//            System.out.println("Delviery Options "+deliveryOptions.toString());
+            System.out.println("Delviery Options " + deliveryOptions);
 
             PriceResult priceResult = new PriceResult();
             if (deliveryOptions == null) {
@@ -302,7 +302,7 @@ public class OrdersController {
             try {
                 StoreDeliveryType storeDeliveryType = storeDeliveryTypeRepository.findAllByStoreIdAndDeliveryType(store.getId(), stores.getType());
 
-                orderDetails.setDeliveryProviderId(storeDeliveryType.getDeliveryId());
+                orderDetails.setDeliveryProviderId(storeDeliveryType.getProvider().getId());
 
             } catch (Exception ex) {
             }
@@ -897,6 +897,28 @@ public class OrdersController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
             //fail to get price
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+    @GetMapping(path = {"/getDeliveryProvider/{type}/{storeId}"}, name = "orders-confirm-delivery")
+    public ResponseEntity<HttpReponse> getDeliveryProvider(HttpServletRequest request,
+                                                           @PathVariable("type") String type, @PathVariable("storeId") String storeId) {
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = new HttpReponse(request.getRequestURI());
+        String systemTransactionId = StringUtility.CreateRefID("DL");
+
+
+        LogUtil.info(logprefix, location, "", "");
+        StoreDeliveryType deliveryType = storeDeliveryTypeRepository.findAllByStoreIdAndDeliveryType(storeId, type);
+        if (deliveryType != null) {
+            response.setSuccessStatus(HttpStatus.OK);
+            response.setData(deliveryType);
+            LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
