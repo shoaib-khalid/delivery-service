@@ -918,8 +918,8 @@ public class OrdersController {
 
 
         LogUtil.info(logprefix, location, "", "");
-        RegionCountry regionCountry = regionCountryRepository.findByName(country);
-        List<DeliverySpType> deliverySpType = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountry(type,regionCountry.getId());
+//        RegionCountry regionCountry = regionCountryRepository.findByName(country);
+        List<DeliverySpType> deliverySpType = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountry(type,country);
         if (deliverySpType != null) {
             response.setSuccessStatus(HttpStatus.OK);
             response.setData(deliverySpType);
