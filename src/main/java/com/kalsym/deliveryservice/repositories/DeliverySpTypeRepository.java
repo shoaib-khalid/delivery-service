@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface DeliverySpTypeRepository extends JpaRepository<DeliverySpType, String> {
-    List<DeliverySpType> findAllByDeliveryType(String deliveryType);
+    List<DeliverySpType> findAllByDeliveryTypeAndRegionCountry(String deliveryType,String countryId);
 }

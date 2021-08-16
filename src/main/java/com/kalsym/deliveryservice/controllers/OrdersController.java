@@ -73,6 +73,9 @@ public class OrdersController {
     @Autowired
     DeliverySpTypeRepository deliverySpTypeRepository;
 
+    @Autowired
+    RegionCountryRepository regionCountryRepository;
+
 
 //    @PostMapping(path = {"/getprice"}, name = "orders-get-price")
 //    public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
@@ -905,9 +908,9 @@ public class OrdersController {
     }
 
 
-    @GetMapping(path = {"/getDeliveryProvider/{type}"}, name = "orders-confirm-delivery")
+    @GetMapping(path = {"/getDeliveryProvider/{type}/{country}"}, name = "orders-confirm-delivery")
     public ResponseEntity<HttpReponse> getDeliveryProvider(HttpServletRequest request,
-                                                           @PathVariable("type") String type) {
+                                                           @PathVariable("type") String type,  @PathVariable("country") String country) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -915,7 +918,8 @@ public class OrdersController {
 
 
         LogUtil.info(logprefix, location, "", "");
-        List<DeliverySpType> deliverySpType = deliverySpTypeRepository.findAllByDeliveryType(type);
+        RegionCountry regionCountry = regionCountryRepository.findByName(country);
+        List<DeliverySpType> deliverySpType = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountry(type,regionCountry.getId());
         if (deliverySpType != null) {
             response.setSuccessStatus(HttpStatus.OK);
             response.setData(deliverySpType);

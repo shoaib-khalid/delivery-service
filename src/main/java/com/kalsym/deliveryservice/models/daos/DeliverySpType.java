@@ -25,5 +25,5 @@ public class DeliverySpType {
     @Fetch(FetchMode.JOIN)
     private Provider provider;
     String deliveryType;
-
+    String regionCountry;
 }
