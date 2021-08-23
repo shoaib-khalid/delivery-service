@@ -15,8 +15,10 @@ import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
@@ -69,10 +71,17 @@ public class SubmitOrder extends SyncDispatcher {
         httpHeader.put("Content-Type", "application/json-patch+json");
         httpHeader.put("Connection", "close");
         String requestBody = generateRequestBody();
+        String data_digest = requestBody + "AKe62df84bJ3d8e4b1hea2R45j11klsb";
+        String encode_key = "";
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            md.update(requestBody.getBytes());
+            md.update(data_digest.getBytes());
             byte[] digest = md.digest();
+            String digestString = digest.toString();
+            byte[] card = digestString.getBytes(StandardCharsets.UTF_8);
+            String cardString = new String(card, StandardCharsets.UTF_8);
+            String base64Key = Base64.getEncoder().encodeToString(cardString.getBytes());
+            encode_key = base64Key;
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalArgumentException(e);
         }
@@ -125,8 +134,27 @@ public class SubmitOrder extends SyncDispatcher {
         return jsonReq.toString();
     }
 
-//    private SubmitOrderResult extractResponseBody(String respString) {
-//
-//        return submitOrderResult;
-//    }
+    private SubmitOrderResult extractResponseBody(String respString) {
+        SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+        try {
+            JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
+            LogUtil.info(logprefix, location, "the json resp for submitOrder " + jsonResp, "");
+            JsonArray dataArray = jsonResp.get("details").getAsJsonArray();
+            JsonObject detailsData = dataArray.get(0).getAsJsonObject();
+            String status = detailsData.get("status").getAsString();
+            if (status == "success") {
+                String awbNo = detailsData.get("awb_no").getAsString();
+                JsonObject data = detailsData.get("data").getAsJsonObject();
+                String price = data.get("price").getAsString();
+                String code = data.get("code").getAsString();
+                DeliveryOrder orderCreated = new DeliveryOrder();
+                orderCreated.setSpOrderId(awbNo);
+                orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
+                submitOrderResult.orderCreated = orderCreated;
+            }
+        } catch (Exception ex) {
+            LogUtil.error(logprefix, location, "Error extracting result", "", ex);
+        }
+        return submitOrderResult;
+    }
 }
