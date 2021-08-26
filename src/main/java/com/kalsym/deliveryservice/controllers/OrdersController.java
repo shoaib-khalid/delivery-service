@@ -203,8 +203,12 @@ public class OrdersController {
         //TODO : CREATE CLASS TO READ TABLE
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
         Double weight = symplifiedService.getTotalWeight(orderDetails.getCartId());
+        if (weight == null) {
+            weight = 0.00;
+        }
 
         LogUtil.info(logprefix, location, "Store Details : ", stores.toString());
+        LogUtil.info(logprefix, location, "Weight of the Cart Details : ", weight.toString());
 
         LogUtil.info(logprefix, location, "", "");
         StoreResponseData store = symplifiedService.getStore(orderDetails.getStoreId());
@@ -911,7 +915,7 @@ public class OrdersController {
 
     @GetMapping(path = {"/getDeliveryProvider/{type}/{country}"}, name = "orders-confirm-delivery")
     public ResponseEntity<HttpReponse> getDeliveryProvider(HttpServletRequest request,
-                                                           @PathVariable("type") String type,  @PathVariable("country") String country) {
+                                                           @PathVariable("type") String type, @PathVariable("country") String country) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -920,7 +924,7 @@ public class OrdersController {
 
         LogUtil.info(logprefix, location, "", "");
 //        RegionCountry regionCountry = regionCountryRepository.findByName(country);
-        List<DeliverySpType> deliverySpType = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountry(type,country);
+        List<DeliverySpType> deliverySpType = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountry(type, country);
         if (deliverySpType != null) {
             response.setSuccessStatus(HttpStatus.OK);
             response.setData(deliverySpType);
