@@ -285,6 +285,7 @@ public class OrdersController {
                 deliveryOrder.setDeliveryProviderId(0);
                 deliveryOrder.setAmount(Double.parseDouble(price));
                 deliveryOrder.setValidationPeriod(currentDate);
+                deliveryOrder.setProductCode(orderDetails.getProductCode());
                 DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
 
                 Double dPrice = Double.parseDouble(price);
