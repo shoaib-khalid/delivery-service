@@ -204,7 +204,7 @@ public class OrdersController {
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
         Double weight = symplifiedService.getTotalWeight(orderDetails.getCartId());
         if (weight == null) {
-            weight = 0.00;
+            weight = 0.50;
         }
 
         LogUtil.info(logprefix, location, "Store Details : ", stores.toString());
