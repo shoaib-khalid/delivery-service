@@ -240,13 +240,14 @@ public class OrdersController {
         orderDetails.setInsurance(false);
         orderDetails.setItemType(stores.getItemType());
         orderDetails.setTotalWeightKg(weight);
-/*
-        if (stores.getItemType().name().equals("FOOD") || stores.getItemType().name().equals("PACKAGING") || stores.getItemType().name().equals("PARCEL")) {
-*/
-        orderDetails.setProductCode(stores.getItemType().name());
-        LogUtil.info(logprefix, location, "Item Type : ", stores.getItemType().name());
 
-        /* }*/
+        if (stores.getItemType().name().equals("FOOD") || stores.getItemType().name().equals("PACKAGING") ) {
+            orderDetails.setProductCode(ItemType.PARCEL.name());
+            LogUtil.info(logprefix, location, "Item Type : ", stores.getItemType().name());
+        }
+        else{
+            orderDetails.setProductCode(stores.getItemType().name());
+        }
 
         String phone = orderDetails.getPickup().getPickupContactPhone();
         String contactName = orderDetails.getPickup().getPickupContactName();
@@ -255,7 +256,7 @@ public class OrdersController {
             RegionCountryState regionCountryState = regionCountryStateRepository.findByNameAndRegionCountryId(orderDetails.getDelivery().getDeliveryState(), store.getRegionCountryId());
 
             DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), regionCountryState.getId());
-            LogUtil.info(logprefix, location, "Delivery Options " , deliveryOptions.toString());
+            LogUtil.info(logprefix, location, "Delivery Options ", deliveryOptions.toString());
 
             PriceResult priceResult = new PriceResult();
             if (deliveryOptions == null) {
@@ -278,7 +279,7 @@ public class OrdersController {
                 deliveryOrder.setDeliveryAddress(deliveryAddress);
                 deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
                 deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
-                LogUtil.info(logprefix, location, "Pickup Contact Number :" + contactName + " Number " + phone,"");
+                LogUtil.info(logprefix, location, "Pickup Contact Number :" + contactName + " Number " + phone, "");
 
                 deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
                 deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
