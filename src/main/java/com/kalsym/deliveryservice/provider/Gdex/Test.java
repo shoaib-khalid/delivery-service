@@ -36,7 +36,7 @@ public class Test {
             
             String systemTransactionId = "DS123456";
             Order order = new Order();
-            order.setItemType(ItemType.parcel);
+            order.setItemType(ItemType.PARCEL);
             order.setTransactionId(systemTransactionId);
             Pickup pickup = new Pickup();
             pickup.setPickupPostcode("43650");

@@ -238,20 +238,24 @@ public class OrdersController {
         String pickupAddress = orderDetails.getPickup().getPickupAddress() + "," + orderDetails.getPickup().getPickupPostcode() + "," + orderDetails.getPickup().getPickupCity() + "," + orderDetails.getPickup().getPickupState();
         orderDetails.getPickup().setPickupAddress(pickupAddress);
         orderDetails.setInsurance(false);
-        orderDetails.setItemType(ItemType.parcel);
+        orderDetails.setItemType(stores.getItemType());
         orderDetails.setTotalWeightKg(weight);
-        if (stores.getItemType().name().equals("Food") || stores.getItemType().name().equals("PACKAGING") || stores.getItemType().name().equals("parcel")) {
-            orderDetails.setProductCode(ItemType.parcel.name());
-        }
+/*
+        if (stores.getItemType().name().equals("FOOD") || stores.getItemType().name().equals("PACKAGING") || stores.getItemType().name().equals("PARCEL")) {
+*/
+        orderDetails.setProductCode(stores.getItemType().name());
+        LogUtil.info(logprefix, location, "Item Type : ", stores.getItemType().name());
+
+        /* }*/
 
         String phone = orderDetails.getPickup().getPickupContactPhone();
         String contactName = orderDetails.getPickup().getPickupContactName();
         String deliveryType = stores.getType();
         if (stores.getType().equalsIgnoreCase("self")) {
             RegionCountryState regionCountryState = regionCountryStateRepository.findByNameAndRegionCountryId(orderDetails.getDelivery().getDeliveryState(), store.getRegionCountryId());
-            System.out.println("Test" + regionCountryState);
+
             DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), regionCountryState.getId());
-            System.out.println("Delviery Options " + deliveryOptions);
+            LogUtil.info(logprefix, location, "Delivery Options " , deliveryOptions.toString());
 
             PriceResult priceResult = new PriceResult();
             if (deliveryOptions == null) {
@@ -274,7 +278,7 @@ public class OrdersController {
                 deliveryOrder.setDeliveryAddress(deliveryAddress);
                 deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
                 deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
-                System.err.println("Pickup Contact Number :" + contactName + " Number " + phone);
+                LogUtil.info(logprefix, location, "Pickup Contact Number :" + contactName + " Number " + phone,"");
 
                 deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
                 deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
