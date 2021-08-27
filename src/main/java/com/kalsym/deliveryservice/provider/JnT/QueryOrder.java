@@ -16,8 +16,10 @@ import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
@@ -43,7 +45,7 @@ public class QueryOrder extends SyncDispatcher {
     private String shareLink;
     private String status;
 
-    public QueryOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
+    public QueryOrder(CountDownLatch latch, HashMap config, String spOrderId, String systemTransactionId) {
         super(latch);
         logprefix = systemTransactionId;
         this.systemTransactionId = systemTransactionId;
@@ -57,7 +59,7 @@ public class QueryOrder extends SyncDispatcher {
         this.connectTimeout = Integer.parseInt((String) config.get("submitorder_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("submitorder_wait_timeout"));
         productMap = (HashMap) config.get("productCodeMapping");
-        this.order = order;
+        this.spOrderId = spOrderId;
     }
 
     @Override
@@ -68,15 +70,24 @@ public class QueryOrder extends SyncDispatcher {
         httpHeader.put("Content-Type", "application/json-patch+json");
         httpHeader.put("Connection", "close");
         String requestBody = generateRequestBody();
+        // data signature part
+        String data_digest = requestBody + "AKe62df84bJ3d8e4b1hea2R45j11klsb";
+        String encode_key = "";
+        // encryption
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            md.update(requestBody.getBytes());
+            md.update(data_digest.getBytes());
             byte[] digest = md.digest();
+            String digestString = digest.toString();
+            byte[] card = digestString.getBytes(StandardCharsets.UTF_8);
+            String cardString = new String(card, StandardCharsets.UTF_8);
+            String base64Key = Base64.getEncoder().encodeToString(cardString.getBytes());
+            encode_key = base64Key; // the final value to be used in the request param
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalArgumentException(e);
         }
         String msg_type = "TRACK";
-        String eccompanyid = "666004V106";
+        String eccompanyid = "TEST";
 
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.queryOrder_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
         if (httpResult.resultCode==0) {
@@ -95,26 +106,26 @@ public class QueryOrder extends SyncDispatcher {
         JsonObject jsonReq = new JsonObject();
         jsonReq.addProperty("queryType", "1");
         jsonReq.addProperty("language","2");
-        jsonReq.addProperty("queryCode", "");
+        jsonReq.addProperty("queryCode", spOrderId);
 
         return jsonReq.toString();
     }
 
-//    private QueryOrderResult extractResponseBody(String respString) {
-//        SubmitOrderResult submitOrderResult = new SubmitOrderResult();
-//        JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
-//        String statusCode = jsonResp.get("statusCode").getAsString();
-//        if (statusCode.equals("200")) {
-//            JsonObject dataObject = jsonResp.get("data").getAsJsonObject();
-//            JsonArray consignment = dataObject.get("ConsignmentNumbers").getAsJsonArray();
-//            String InvoiceNumber = dataObject.get("InvoiceNumber").getAsString();
-//            DeliveryOrder orderCreated = new DeliveryOrder();
-//            orderCreated.setSpOrderId(consignment.get(0).getAsString());
-//            orderCreated.setSpOrderName(InvoiceNumber);
-//            orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
-//            orderCreated.setVehicleType(order.getPickup().getVehicleType().name());
-//            submitOrderResult.orderCreated=orderCreated;
-//        }
-//        return QueryOrderResult;
-//    }
+    private QueryOrderResult extractResponseBody(String respString) {
+        QueryOrderResult queryOrderResult = new QueryOrderResult();
+        try {
+            JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
+            JsonObject responseItems = jsonResp.get("responseItems").getAsJsonObject();
+            JsonArray data = responseItems.get("data").getAsJsonArray();
+            JsonArray details = responseItems.get("details").getAsJsonArray();
+            status = details.get(0).getAsJsonObject().get("scanStatus").getAsString();
+            DeliveryOrder orderFound = new DeliveryOrder();
+            orderFound.setSpOrderId(spOrderId);
+            orderFound.setStatus(status);
+            queryOrderResult.orderFound = orderFound;
+        } catch (Exception ex) {
+            LogUtil.error(logprefix, location, "Error extracting result", "", ex);
+        }
+        return queryOrderResult;
+    }
 }

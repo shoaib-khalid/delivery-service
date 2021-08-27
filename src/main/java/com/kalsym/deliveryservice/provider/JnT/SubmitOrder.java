@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
+import com.kalsym.deliveryservice.models.daos.DeliveryQuotation;
 import com.kalsym.deliveryservice.provider.Gdex.VehicleType;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SubmitOrderResult;
@@ -14,6 +15,7 @@ import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
+import com.squareup.okhttp.*;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -63,6 +65,7 @@ public class SubmitOrder extends SyncDispatcher {
 
     @Override
     public ProcessResult process() {
+
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
         HashMap httpHeader = new HashMap();
@@ -85,7 +88,7 @@ public class SubmitOrder extends SyncDispatcher {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalArgumentException(e);
         }
-
+        // how to send the request using x-www-form-urlencoded
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.submitOrder_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
         if (httpResult.resultCode==0) {
             LogUtil.info(logprefix, location, "Request successful", "");
@@ -103,9 +106,9 @@ public class SubmitOrder extends SyncDispatcher {
         JsonObject jsonReq = new JsonObject();
         JsonArray detailsArray = new JsonArray();
         JsonObject details = new JsonObject();
-        details.addProperty("username", "666004V106");
-        details.addProperty("api_key", "x1Wbjv");
-        details.addProperty("cuscode", order.getCustomerId());
+        details.addProperty("username", "TEST");
+        details.addProperty("api_key", "TES123");
+        details.addProperty("cuscode", "ITTEST0001");
         details.addProperty("orderid", order.getTransactionId());
         details.addProperty("shipper_contact", order.getPickup().getPickupContactName());
         details.addProperty("shipper_name", order.getPickup().getPickupContactName());
@@ -143,12 +146,16 @@ public class SubmitOrder extends SyncDispatcher {
             JsonObject detailsData = dataArray.get(0).getAsJsonObject();
             String status = detailsData.get("status").getAsString();
             if (status == "success") {
+                // getting spOrderId
                 String awbNo = detailsData.get("awb_no").getAsString();
                 JsonObject data = detailsData.get("data").getAsJsonObject();
+                // how are we gonna set the price in delivery quotation
                 String price = data.get("price").getAsString();
                 String code = data.get("code").getAsString();
                 DeliveryOrder orderCreated = new DeliveryOrder();
+                DeliveryQuotation deliveryQuotation = new DeliveryQuotation();
                 orderCreated.setSpOrderId(awbNo);
+
                 orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
                 submitOrderResult.orderCreated = orderCreated;
             }
