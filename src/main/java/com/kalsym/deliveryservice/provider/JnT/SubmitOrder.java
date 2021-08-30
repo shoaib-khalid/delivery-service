@@ -17,6 +17,12 @@ import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import com.squareup.okhttp.*;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -74,6 +80,7 @@ public class SubmitOrder extends SyncDispatcher {
         httpHeader.put("Content-Type", "application/json-patch+json");
         httpHeader.put("Connection", "close");
         String requestBody = generateRequestBody();
+
         String data_digest = requestBody + "AKe62df84bJ3d8e4b1hea2R45j11klsb";
         String encode_key = "";
         try {
@@ -87,6 +94,34 @@ public class SubmitOrder extends SyncDispatcher {
             encode_key = base64Key;
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalArgumentException(e);
+        }
+
+        String urlParameters  = "data_param=" + requestBody + "&data_sign="+ encode_key;
+        byte[] postData = urlParameters.getBytes( StandardCharsets.UTF_8 );
+        int postDataLength = postData.length;
+        String request = "http://47.57.89.30/blibli/order/createOrder";
+        InputStream stream = null;
+        try {
+            URL url = new URL(request);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoOutput(true);
+            conn.setInstanceFollowRedirects(false);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn.setRequestProperty("charset", "utf-8");
+            conn.setRequestProperty("Content-Length", Integer.toString(postDataLength));
+            conn.setUseCaches(false);
+            DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+            wr.write(postData);
+            wr.flush();
+            stream = conn.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"), 8);
+            String result = reader.readLine();
+            conn.getResponseCode();
+            LogUtil.info(logprefix, location, "Jnt Result: " + result, "");
+//            return result;
+        } catch (Exception ex) {
+            LogUtil.error(logprefix, location, "Error extracting result", "", ex);
         }
         // how to send the request using x-www-form-urlencoded
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.submitOrder_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
