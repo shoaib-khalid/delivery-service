@@ -225,10 +225,15 @@ public class OrdersController {
         String pickupAddress = orderDetails.getPickup().getPickupAddress() + "," + orderDetails.getPickup().getPickupPostcode() + "," + orderDetails.getPickup().getPickupCity() + "," + orderDetails.getPickup().getPickupState();
         orderDetails.getPickup().setPickupAddress(pickupAddress);
         orderDetails.setInsurance(false);
-        orderDetails.setItemType(ItemType.parcel);
+        orderDetails.setItemType(stores.getItemType());
         orderDetails.setTotalWeightKg(weight);
-        if (stores.getItemType().name().equals("Food") || stores.getItemType().name().equals("PACKAGING") || stores.getItemType().name().equals("parcel")) {
-            orderDetails.setProductCode(ItemType.parcel.name());
+
+        if (stores.getItemType().name().equals("FOOD") || stores.getItemType().name().equals("PACKAGING") ) {
+            orderDetails.setProductCode(ItemType.PARCEL.name());
+            LogUtil.info(logprefix, location, "Item Type : ", stores.getItemType().name());
+        }
+        else{
+            orderDetails.setProductCode(stores.getItemType().name());
         }
 
         Calendar cal = Calendar.getInstance();
