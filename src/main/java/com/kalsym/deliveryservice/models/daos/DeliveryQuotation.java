@@ -46,6 +46,8 @@ public class DeliveryQuotation {
     Date validationPeriod;
     String storeId;
     String orderId;
+    String pickupPostcode;
+    String deliveryPostcode;
 
     @Override
     public String toString() {

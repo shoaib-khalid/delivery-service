@@ -11,6 +11,11 @@ import com.kalsym.deliveryservice.utils.LogUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpHeaders;
 
 import javax.xml.bind.DatatypeConverter;
 import java.math.BigDecimal;
@@ -60,9 +65,9 @@ public class GetPrice extends SyncDispatcher {
         ProcessResult response = new ProcessResult();
 
         try {
-            HashMap httpHeader = new HashMap();
-            httpHeader.put("Content-Type", "application/json");
-            httpHeader.put("account", "TEST");
+            HttpHeaders httpHeader = new HttpHeaders();
+            httpHeader.set("Content-Type", "application/json");
+            httpHeader.set("account", "TEST");
             String requestBody = generateRequestBody();
             LogUtil.info(logprefix, location, "REQUEST BODY OF JNT FOR GET PRICE : ", requestBody);
 
@@ -70,19 +75,33 @@ public class GetPrice extends SyncDispatcher {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] digest = md.digest(data_digest.getBytes(StandardCharsets.UTF_8));
             String sign = DatatypeConverter.printHexBinary(digest).toLowerCase();
-            httpHeader.put("sign", sign);
+            httpHeader.set("sign", sign);
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<String> request = new HttpEntity(requestBody, httpHeader);
+            ResponseEntity<String> responses = restTemplate.exchange(getprice_url, HttpMethod.POST, request, String.class);
 
-            HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.getprice_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
-            if (httpResult.resultCode == 0){
-                LogUtil.info(logprefix, location, "Request successful", "");
-                response.resultCode=0;
-                LogUtil.info(logprefix, location, "Response from JnT: " + response.resultString, "");
-                response.returnObject=extractResponseBody(httpResult.responseString);
+            int statusCode = responses.getStatusCode().value();
+            LogUtil.info(logprefix, location, "Responses", responses.getBody());
+            if (statusCode == 200) {
+                response.resultCode = 0;
+                response.returnObject = extractResponseBody(responses.getBody());
             } else {
                 LogUtil.info(logprefix, location, "Request failed", "");
-                response.resultCode=-1;
+                response.resultCode = -1;
             }
             LogUtil.info(logprefix, location, "Process finish", "");
+
+//            HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.getprice_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
+//            if (httpResult.resultCode == 0){
+//                LogUtil.info(logprefix, location, "Request successful", "");
+//                response.resultCode=0;
+//                LogUtil.info(logprefix, location, "Response from JnT: " + response.resultString, "");
+//                response.returnObject=extractResponseBody(httpResult.responseString);
+//            } else {
+//                LogUtil.info(logprefix, location, "Request failed", "");
+//                response.resultCode=-1;
+//            }
+//            LogUtil.info(logprefix, location, "Process finish", "");
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Exception error :", "", ex);
             response.resultCode=-1;

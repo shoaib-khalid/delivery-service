@@ -224,6 +224,7 @@ public class OrdersController {
         //TODO: pickup address is postcode, city and state combined
         String pickupAddress = orderDetails.getPickup().getPickupAddress() + "," + orderDetails.getPickup().getPickupPostcode() + "," + orderDetails.getPickup().getPickupCity() + "," + orderDetails.getPickup().getPickupState();
         orderDetails.getPickup().setPickupAddress(pickupAddress);
+        orderDetails.getPickup().setPickupPostcode(pickup.getPickupPostcode());
         orderDetails.setInsurance(false);
         orderDetails.setItemType(stores.getItemType());
         orderDetails.setTotalWeightKg(weight);
@@ -264,12 +265,14 @@ public class OrdersController {
                 deliveryOrder.setCustomerId(orderDetails.getCustomerId());
                 deliveryOrder.setPickupAddress(pickupAddress);
                 deliveryOrder.setDeliveryAddress(deliveryAddress);
+                deliveryOrder.setDeliveryPostcode(orderDetails.getDelivery().getDeliveryPostcode());
                 deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
                 deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
                 System.err.println("Pickup Contact Number :" + contactName + " Number " + phone);
 
                 deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
                 deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
+                deliveryOrder.setPickupPostcode(orderDetails.getPickup().getPickupPostcode());
                 deliveryOrder.setItemType(orderDetails.getItemType().name());
                 deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
                 deliveryOrder.setVehicleType(pickup.getVehicleType().name());
@@ -332,12 +335,14 @@ public class OrdersController {
                         deliveryOrder.setCustomerId(orderDetails.getCustomerId());
                         deliveryOrder.setPickupAddress(pickupAddress);
                         deliveryOrder.setDeliveryAddress(deliveryAddress);
+                        deliveryOrder.setDeliveryPostcode(orderDetails.getDelivery().getDeliveryPostcode());
                         deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
                         deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
                         System.err.println("Pickup Contact Number :" + contactName + " Number " + phone);
 
                         deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
                         deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
+                        deliveryOrder.setPickupPostcode(orderDetails.getPickup().getPickupPostcode());
                         deliveryOrder.setItemType(orderDetails.getItemType().name());
                         deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
                         deliveryOrder.setVehicleType(pickup.getVehicleType().name());
@@ -383,12 +388,14 @@ public class OrdersController {
                         deliveryOrder.setCustomerId(orderDetails.getCustomerId());
                         deliveryOrder.setPickupAddress(pickupAddress);
                         deliveryOrder.setDeliveryAddress(deliveryAddress);
+                        deliveryOrder.setDeliveryPostcode(orderDetails.getDelivery().getDeliveryPostcode());
                         deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
                         deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
                         System.err.println("Pickup Contact Number :" + contactName + " Number " + phone);
 
                         deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
                         deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
+                        deliveryOrder.setPickupPostcode(orderDetails.getPickup().getPickupPostcode());
                         deliveryOrder.setItemType(orderDetails.getItemType().name());
                         deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
                         deliveryOrder.setVehicleType(pickup.getVehicleType().name());
@@ -568,7 +575,7 @@ public class OrdersController {
         orderDetails.setProductCode(quotation.getProductCode());
         orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
         orderDetails.setShipmentValue(quotation.getAmount());
-
+        orderDetails.setOrderId(orderId);
 
         Pickup pickup = new Pickup();
 //        if (quotation.getPickupContactName() != null) {
@@ -582,6 +589,7 @@ public class OrdersController {
 //            pickup.setPickupContactPhone("");
 //        }
         pickup.setPickupAddress(quotation.getPickupAddress());
+        pickup.setPickupPostcode(quotation.getPickupPostcode());
         pickup.setVehicleType(VehicleType.valueOf(quotation.getVehicleType()));
         orderDetails.setPickup(pickup);
 
@@ -589,6 +597,7 @@ public class OrdersController {
         delivery.setDeliveryAddress(quotation.getDeliveryAddress());
         delivery.setDeliveryContactName(quotation.getDeliveryContactName());
         delivery.setDeliveryContactPhone(quotation.getDeliveryContactPhone());
+        delivery.setDeliveryPostcode(quotation.getDeliveryPostcode());
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());
 

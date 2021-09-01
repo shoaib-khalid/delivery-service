@@ -15,7 +15,15 @@ import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
+import javax.xml.bind.DatatypeConverter;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -56,8 +64,8 @@ public class QueryOrder extends SyncDispatcher {
         this.secretKey = (String) config.get("secretKey");
         this.apiKey = "x1Wbjv";
         this.endpointUrl = (String) config.get("place_orderUrl");
-        this.connectTimeout = Integer.parseInt((String) config.get("submitorder_connect_timeout"));
-        this.waitTimeout = Integer.parseInt((String) config.get("submitorder_wait_timeout"));
+        this.connectTimeout = Integer.parseInt((String) config.get("queryorder_connect_timeout"));
+        this.waitTimeout = Integer.parseInt((String) config.get("queryorder_wait_timeout"));
         productMap = (HashMap) config.get("productCodeMapping");
         this.spOrderId = spOrderId;
     }
@@ -66,47 +74,66 @@ public class QueryOrder extends SyncDispatcher {
     public ProcessResult process() {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
-        HashMap httpHeader = new HashMap();
-        httpHeader.put("Content-Type", "application/json-patch+json");
-        httpHeader.put("Connection", "close");
+//        HashMap httpHeader = new HashMap();
+//        httpHeader.put("Content-Type", "application/json-patch+json");
+//        httpHeader.put("Connection", "close");
         String requestBody = generateRequestBody();
+        LogUtil.info(logprefix, location, "JnT request body for Query Order: " + requestBody, "");
         // data signature part
-        String data_digest = requestBody + "AKe62df84bJ3d8e4b1hea2R45j11klsb";
+        String data_digest = requestBody + "ffe62df84bb3d8e4b1eaa2c22775014d";
         String encode_key = "";
         // encryption
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
             md.update(data_digest.getBytes());
             byte[] digest = md.digest();
-            String digestString = digest.toString();
-            byte[] card = digestString.getBytes(StandardCharsets.UTF_8);
-            String cardString = new String(card, StandardCharsets.UTF_8);
-            String base64Key = Base64.getEncoder().encodeToString(cardString.getBytes());
-            encode_key = base64Key; // the final value to be used in the request param
+            String myHash = DatatypeConverter.printHexBinary(digest).toLowerCase();
+            String base64Key = Base64.getEncoder().encodeToString(myHash.getBytes());
+            encode_key = base64Key;
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalArgumentException(e);
         }
-        String msg_type = "TRACK";
-        String eccompanyid = "TEST";
 
-        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.queryOrder_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
-        if (httpResult.resultCode==0) {
-            LogUtil.info(logprefix, location, "Request successful", "");
-            response.resultCode=0;
-            response.returnObject=httpResult.responseString; // need to implement extractResponseBody here
+        MultiValueMap<String, Object> postParameters = new LinkedMultiValueMap<>();
+        postParameters.add("logistics_interface", requestBody);
+        postParameters.add("data_digest", encode_key);
+        postParameters.add("msg_type", "TRACK");
+        postParameters.add("eccompanyid", "TEST");
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/x-www-form-urlencoded");
+        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(postParameters, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> responses = restTemplate.exchange(queryOrder_url, HttpMethod.POST, request, String.class);
+
+        int statusCode = responses.getStatusCode().value();
+        LogUtil.info(logprefix, location, "Responses", responses.getBody());
+        if (statusCode == 200) {
+            response.resultCode = 0;
+            LogUtil.info(logprefix, location, "JnT Response for Submit Order: " + responses.getBody(), "");
+            response.returnObject = extractResponseBody(responses.getBody());
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
-            response.resultCode=-1;
+            response.resultCode = -1;
         }
         LogUtil.info(logprefix, location, "Process finish", "");
+//        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.queryOrder_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
+//        if (httpResult.resultCode==0) {
+//            LogUtil.info(logprefix, location, "Request successful", "");
+//            response.resultCode=0;
+//            response.returnObject=httpResult.responseString; // need to implement extractResponseBody here
+//        } else {
+//            LogUtil.info(logprefix, location, "Request failed", "");
+//            response.resultCode=-1;
+//        }
+//        LogUtil.info(logprefix, location, "Process finish", "");
         return response;
     }
 
     private String generateRequestBody() {
         JsonObject jsonReq = new JsonObject();
-        jsonReq.addProperty("queryType", "1");
+        jsonReq.addProperty("queryType", 1);
         jsonReq.addProperty("language","2");
-        jsonReq.addProperty("queryCode", spOrderId);
+        jsonReq.addProperty("queryCodes", spOrderId);
 
         return jsonReq.toString();
     }
@@ -115,10 +142,16 @@ public class QueryOrder extends SyncDispatcher {
         QueryOrderResult queryOrderResult = new QueryOrderResult();
         try {
             JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
-            JsonObject responseItems = jsonResp.get("responseItems").getAsJsonObject();
+            JsonObject responseItems = jsonResp.get("responseitems").getAsJsonObject();
             JsonArray data = responseItems.get("data").getAsJsonArray();
-            JsonArray details = responseItems.get("details").getAsJsonArray();
-            status = details.get(0).getAsJsonObject().get("scanStatus").getAsString();
+            JsonObject dataFirstObject = data.get(0).getAsJsonObject();
+            JsonArray details = dataFirstObject.get("details").getAsJsonArray();
+            if (details.size() > 0) {
+                status = details.get(0).getAsJsonObject().get("scanStatus").getAsString();
+            } else {
+                JsonObject orderDetail = dataFirstObject.get("orderDetail").getAsJsonObject();
+                status = orderDetail.get("orderstatus").getAsString();
+            }
             DeliveryOrder orderFound = new DeliveryOrder();
             orderFound.setSpOrderId(spOrderId);
             orderFound.setStatus(status);

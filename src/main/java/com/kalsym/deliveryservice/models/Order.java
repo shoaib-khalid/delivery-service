@@ -25,6 +25,7 @@ public class Order {
    
    Double totalWeightKg;
    String transactionId;
+   String orderId;
    String shipmentContent;
    Integer pieces;
    boolean isInsurance;
