@@ -134,10 +134,12 @@ public class GetPrice extends SyncDispatcher {
             BigDecimal bd = new BigDecimal(Double.parseDouble(shippingFee));
             bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
             priceResult.price=bd;
+            priceResult.isError = false;
         } else {
-            BigDecimal bd = new BigDecimal(0.00);
-            bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
-            priceResult.price= bd;
+//            BigDecimal bd = new BigDecimal(0.00);
+//            bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+//            priceResult.price= bd;
+            priceResult.isError = true;
         }
         return priceResult;
     }

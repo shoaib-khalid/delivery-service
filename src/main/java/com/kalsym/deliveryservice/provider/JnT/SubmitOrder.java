@@ -225,7 +225,7 @@ public class SubmitOrder extends SyncDispatcher {
 
                 orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
                 submitOrderResult.orderCreated = orderCreated;
-            }
+           }
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
         }
