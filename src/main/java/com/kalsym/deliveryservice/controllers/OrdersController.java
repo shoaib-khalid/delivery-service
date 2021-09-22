@@ -241,11 +241,10 @@ public class OrdersController {
         orderDetails.setItemType(stores.getItemType());
         orderDetails.setTotalWeightKg(weight);
 
-        if (stores.getItemType().name().equals("FOOD") || stores.getItemType().name().equals("PACKAGING") ) {
+        if (stores.getItemType().name().equals("FOOD") || stores.getItemType().name().equals("PACKAGING")) {
             orderDetails.setProductCode(ItemType.PARCEL.name());
             LogUtil.info(logprefix, location, "Item Type : ", stores.getItemType().name());
-        }
-        else{
+        } else {
             orderDetails.setProductCode(stores.getItemType().name());
         }
 
@@ -339,7 +338,6 @@ public class OrdersController {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
                         Date currentDate = new Date((t + (10 * 60000)));
                         String currentTimeStamp = sdf.format(currentDate);
-                        Date afterAddingTenMins = new Date(t + (10 * 60000));
 
                         PriceResult result = new PriceResult();
                         DeliveryQuotation deliveryOrder = new DeliveryQuotation();
@@ -348,7 +346,7 @@ public class OrdersController {
                         deliveryOrder.setDeliveryAddress(deliveryAddress);
                         deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
                         deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
-                        System.err.println("Pickup Contact Number :" + contactName + " Number " + phone);
+                        LogUtil.info(logprefix, location, "Pickup Contact Number :" + contactName + " Number " + phone, "");
 
                         deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
                         deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());

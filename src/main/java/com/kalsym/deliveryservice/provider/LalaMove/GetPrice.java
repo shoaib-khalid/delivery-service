@@ -112,32 +112,6 @@ public class GetPrice extends SyncDispatcher {
         httpHeader.put("Authorization", "hmac " + authToken);
         httpHeader.put("X-LLM-Country", "MY_KUL");
         HttpEntity<String> request = new HttpEntity(bodyJson.toString(), headers);
-        /*LogUtil.info(logprefix, location, "Request Body  : ", bodyJson.toString());
-        try {
-            ResponseEntity<String> responses = restTemplate.exchange(BASE_URL + ENDPOINT_URL, HttpMethod.POST, request, String.class);
-            int statusCode = responses.getStatusCode().value();
-//        PriceResult res = extractResponseBody(responses.toString());
-            LogUtil.info(logprefix, location, "Responses", responses.getBody());
-            if (statusCode == 200) {
-                response.resultCode = 0;
-                response.returnObject = extractResponseBody(responses.getBody());
-            } else {
-                LogUtil.info(logprefix, location, "Request failed", "");
-                response.resultCode = -1;
-            }
-            LogUtil.info(logprefix, location, "Process finish", "");
-        } catch (Exception ex) {
-            PriceResult priceResult = new PriceResult();
-            String message  = ex.getMessage();
-
-
-            priceResult.message = ex.getMessage();;
-            response.resultCode = -1;
-            response.returnObject = priceResult;
-            LogUtil.info(logprefix, location, "Exception", ex.getMessage());
-
-        }*/
-
 
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, BASE_URL + ENDPOINT_URL, httpHeader, bodyJson.toString(), this.connectTimeout, this.waitTimeout);
         if (httpResult.httpResponseCode == 200) {
@@ -156,7 +130,6 @@ public class GetPrice extends SyncDispatcher {
         }
         LogUtil.info(logprefix, location, String.valueOf(httpResult.httpResponseCode), "");
         return response;
-//        return response;
     }
 
 
