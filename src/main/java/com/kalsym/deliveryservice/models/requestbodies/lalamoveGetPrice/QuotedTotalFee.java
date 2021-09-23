@@ -1,4 +1,4 @@
-package com.kalsym.deliveryservice.models.lalamove.getprice;
+package com.kalsym.deliveryservice.models.RequestBodies.lalamoveGetPrice;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
