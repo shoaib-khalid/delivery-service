@@ -963,9 +963,9 @@ public class OrdersController {
                 new Addresses(
                         new MsMY("64000 Sepang, Selangor, Malaysia",
                                 "MY_KUL"))));
-        List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
+        List<com.kalsym.deliveryservice.models.requestbodies.getprice.Delivery> deliveries = new ArrayList<>();
         deliveries.add(
-                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
+                new com.kalsym.deliveryservice.models.requestbodies.getprice.Delivery(
                         1,
                         new Contact("Shen Ong", "0376886555"),
                         "Remarks for drop-off point (#1)."
@@ -1069,9 +1069,9 @@ public class OrdersController {
         String apiKey ="";
 
 
-        List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
+        List<com.kalsym.deliveryservice.models.requestbodies.getprice.Delivery> deliveries = new ArrayList<>();
         deliveries.add(
-                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
+                new com.kalsym.deliveryservice.models.requestbodies.getprice.Delivery(
                         1,
                         new Contact("Irasakumar", "601162802728"),
                         "Remarks for drop-off point (#1)."
