@@ -46,17 +46,20 @@ public class DeliveryQuotation {
     Date validationPeriod;
     String storeId;
     String orderId;
+    String deliveryPostcode;
+    String pickupPostcode;
 
     @Override
     public String toString() {
         return "DeliveryQuotation{" +
                 "id=" + id +
-                ", customerId=" + customerId +
+                ", itemType='" + itemType + '\'' +
+                ", spId=" + spId +
+                ", customerId='" + customerId + '\'' +
                 ", productCode='" + productCode + '\'' +
                 ", pickupAddress='" + pickupAddress + '\'' +
                 ", deliveryAddress='" + deliveryAddress + '\'' +
                 ", systemTransactionId='" + systemTransactionId + '\'' +
-                ", itemType='" + itemType + '\'' +
                 ", pickupContactName='" + pickupContactName + '\'' +
                 ", pickupContactPhone='" + pickupContactPhone + '\'' +
                 ", deliveryContactName='" + deliveryContactName + '\'' +
@@ -67,11 +70,16 @@ public class DeliveryQuotation {
                 ", vehicleType='" + vehicleType + '\'' +
                 ", createdDate=" + createdDate +
                 ", status='" + status + '\'' +
+                ", cartId='" + cartId + '\'' +
                 ", statusDescription='" + statusDescription + '\'' +
-                ", updatedDate='" + updatedDate + '\'' +
+                ", updatedDate=" + updatedDate +
                 ", totalWeightKg=" + totalWeightKg +
                 ", amount=" + amount +
                 ", validationPeriod=" + validationPeriod +
+                ", storeId='" + storeId + '\'' +
+                ", orderId='" + orderId + '\'' +
+                ", deliveryPostcode='" + deliveryPostcode + '\'' +
+                ", pickupPostcode='" + pickupPostcode + '\'' +
                 '}';
     }
 }

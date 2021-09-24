@@ -28,4 +28,5 @@ public class StoreDeliveryType {
     String deliveryType;
     String regionCountryId;
     String storeId;
+    Integer deliveryId;
 }

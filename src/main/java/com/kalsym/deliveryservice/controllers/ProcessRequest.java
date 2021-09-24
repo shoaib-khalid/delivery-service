@@ -130,8 +130,14 @@ public class ProcessRequest {
         }
 
         ProcessResult response = new ProcessResult();
-        response.resultCode = 0;
-        response.returnObject = priceResultList;
+        if(priceResultList.size() != 0) {
+            response.resultCode = 0;
+            response.returnObject = priceResultList;
+        }
+        else{
+            response.resultCode = -1;
+            response.returnObject = priceResultList;
+        }
         LogUtil.info(logprefix, location, "GetPrices finish. resultCode:" + response.resultCode, " priceResult count:" + priceResultList.size());
         return response;
     }
