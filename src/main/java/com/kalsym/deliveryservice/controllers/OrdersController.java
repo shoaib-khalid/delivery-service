@@ -132,7 +132,11 @@ public class OrdersController {
 
         orderDetails.setInsurance(false);
         orderDetails.setItemType(stores.getItemType());
-        orderDetails.setTotalWeightKg(weight);
+        if (weight == null) {
+            orderDetails.setTotalWeightKg(1.0);
+        } else {
+            orderDetails.setTotalWeightKg(weight);
+        }
         orderDetails.setProductCode(stores.getItemType().name());
 
 
