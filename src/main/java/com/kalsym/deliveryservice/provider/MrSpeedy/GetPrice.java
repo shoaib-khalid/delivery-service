@@ -63,9 +63,16 @@ public class GetPrice extends SyncDispatcher {
         String requestBody = generateRequestBody();
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.getprice_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
         if (httpResult.resultCode == 0) {
-            LogUtil.info(logprefix, location, "Request successful", "");
-            response.resultCode = 0;
-            response.returnObject = extractResponseBody(httpResult.responseString);
+            JsonObject jsonReponse = new Gson().fromJson(httpResult.responseString, JsonObject.class);
+            if (jsonReponse.get("is_successful").getAsBoolean()) {
+                LogUtil.info(logprefix, location, "Request successful", "");
+                response.resultCode = 0;
+                response.returnObject = extractResponseBody(httpResult.responseString);
+            } else {
+                response.resultCode = -1;
+                response.returnObject = extractResponseBody(httpResult.responseString);
+                response.resultString = jsonReponse.get("parameter_warnings").getAsString();
+            }
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
             response.resultCode = -1;
@@ -109,8 +116,9 @@ public class GetPrice extends SyncDispatcher {
         String payAmount = orderObject.get("payment_amount").getAsString();
         LogUtil.info(logprefix, location, "Payment Amount:" + payAmount, "");
         PriceResult priceResult = new PriceResult();
-        System.err.println("CHECK : " + jsonResp.get("parameter_warnings") == null);
+        LogUtil.info(logprefix, location, "CHECK : " + jsonResp.get("parameter_warnings"), " ");
         if (jsonResp.get("parameter_warnings") == null) {
+            LogUtil.info(logprefix, location, "CHECK : " + jsonResp.get("parameter_warnings"), " ");
             JsonArray failed = jsonResp.get("parameter_warnings").getAsJsonObject().getAsJsonArray("points");
             priceResult.message = failed.get(1).getAsJsonObject().get("address").getAsJsonArray().toString();
             priceResult.isError = true;
