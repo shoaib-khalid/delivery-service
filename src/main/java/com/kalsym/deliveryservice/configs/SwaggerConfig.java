@@ -33,6 +33,6 @@ public class SwaggerConfig {
                 .description("Used to deliver item via delivery partners")
                 .termsOfServiceUrl("not added yet")
                 .license("not added yet")
-                .licenseUrl("").version("2.0.4-beta").build();
+                .licenseUrl("").version("2.0.0-production").build();
     }
 }
