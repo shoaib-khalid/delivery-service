@@ -130,6 +130,7 @@ public class GetPrice extends SyncDispatcher {
         }
         LogUtil.info(logprefix, location, String.valueOf(httpResult.httpResponseCode), "");
         return response;
+        
     }
 
 
