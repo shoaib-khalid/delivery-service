@@ -46,7 +46,6 @@ public class SubmitOrder extends SyncDispatcher {
         this.baseUrl = (String) config.get("domainUrl");
         this.submitOrder_url = "https://api.tcscourier.com/sandbox/v1/cod/create-order";
         this.secretKey = (String) config.get("secretKey");
-//        this.apiKey = "x1Wbjv";
         this.endpointUrl = (String) config.get("place_orderUrl");
         this.connectTimeout = Integer.parseInt((String) config.get("submitorder_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("submitorder_wait_timeout"));

@@ -33,5 +33,6 @@ public class Pickup {
    String pickupContactEmail;
    boolean isTrolleyRequired;
    String remarks;
+   String pickupZone;
    
 }

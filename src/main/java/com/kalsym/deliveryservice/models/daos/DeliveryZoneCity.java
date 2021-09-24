@@ -20,7 +20,8 @@ import org.hibernate.annotations.GenericGenerator;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeliveryZoneCity implements Serializable{
-    String city;
-    String zone;
+    @Id
+    private String city;
+    private String zone;
 
 }

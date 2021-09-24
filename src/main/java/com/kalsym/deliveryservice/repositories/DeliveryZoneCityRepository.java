@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DeliveryZoneCityRepository extends JpaRepository<DeliveryZoneCity, String> {
-    public DeliveryZoneCity findByCity(String city);
+    DeliveryZoneCity findByCityContains(String city);
 }

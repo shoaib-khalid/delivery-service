@@ -44,6 +44,7 @@ public class QueryOrder extends SyncDispatcher {
         this.systemTransactionId = systemTransactionId;
         LogUtil.info(logprefix, location, "JnT SubmitOrder class initiliazed!!", "");
 
+        //TODO : ADD IN DB DETAILS
         this.baseUrl = (String) config.get("domainUrl");
         this.queryOrder_url = "https://api.tcscourier.com/sandbox/track/v1/shipments/detail";
         this.secretKey = (String) config.get("secretKey");

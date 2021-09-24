@@ -23,4 +23,5 @@ public class Delivery {
    String deliveryContactName;
    String deliveryContactPhone;
    String deliveryContactEmail;
+   String deliveryZone;
 }
