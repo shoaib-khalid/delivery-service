@@ -132,7 +132,7 @@ public class SymplifiedService {
 
 
     public String updateOrderStatus(String orderId, String status) {
-        String url = order + "orders/" + orderId + "/completion-status-updates";
+        String url = order  + orderId + "/completion-status-updates";
         try {
             RestTemplate restTemplate = new RestTemplate();
 
