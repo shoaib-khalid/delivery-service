@@ -256,7 +256,7 @@ public class OrdersController {
 
                     deliveryOrder.setDeliveryProviderId(list.providerId);
                     System.out.println("IF ERROR SHOW ERROR:  " + list.isError);
-                    BigDecimal bd = new BigDecimal(0.00);
+                    BigDecimal bd = new BigDecimal("0.00");
                     if (!list.isError) {
                         deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
                         deliveryOrder.setStatus("PENDING");
