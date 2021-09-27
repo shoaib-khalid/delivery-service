@@ -671,19 +671,19 @@ public class OrdersController {
                 LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
                 deliveryOrder.setStatus(status);
                 String orderStatus = "";
-
+                String res;
                 // change from order status codes to delivery status codes.
-                if (status.equals("planned")) {
-                    orderStatus = "AWAITING_PICKUP";
-                } else if (status.equals("active")) {
+                if (status.equals("active")) {
                     orderStatus = "BEING_DELIVERED";
+                    res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("finished")) {
                     orderStatus = "DELIVERED_TO_CUSTOMER";
+                    res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("canceled")) {
                     orderStatus = "REJECTED_BY_STORE";
+                    res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 }
 
-                String res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
 
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                 deliveryOrdersRepository.save(deliveryOrder);
@@ -751,19 +751,18 @@ public class OrdersController {
                 LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
                 deliveryOrder.setStatus(status);
                 String orderStatus = "";
-
+                String res;
                 // change from order status codes to delivery status codes.
-                if (status.equals("ASSIGNING_DRIVER")) {
-                    orderStatus = "AWAITING_PICKUP";
-                } else if (status.equals("PICKED_UP")) {
+                if (status.equals("PICKED_UP")) {
                     orderStatus = "BEING_DELIVERED";
+                    res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("COMPLETED")) {
                     orderStatus = "DELIVERED_TO_CUSTOMER";
+                    res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
                     orderStatus = "REJECTED_BY_STORE";
+                    res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 }
-
-                String res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
 
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                 deliveryOrdersRepository.save(deliveryOrder);
