@@ -4,11 +4,10 @@
  */
 package com.kalsym.deliveryservice.provider;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.util.Date;
 
 /**
  * @author user
@@ -24,4 +23,6 @@ public class PriceResult {
     public String providerName;
     public String deliveryType;
     public String providerImage;
+    @JsonIgnore
+    public String resultCode;
 }

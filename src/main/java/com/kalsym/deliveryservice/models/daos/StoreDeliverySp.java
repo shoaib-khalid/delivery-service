@@ -11,22 +11,20 @@ import org.hibernate.annotations.FetchMode;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "delivery_type")
+@Table(name = "store_delivery_sp")
 @Getter
 @Setter
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class StoreDeliveryType {
+public class StoreDeliverySp {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "deliveryId", insertable = false, updatable = false)
-    @Fetch(FetchMode.JOIN)
-    private Provider provider;
-    String deliveryType;
-    String regionCountryId;
+    String id;
+//    @OneToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "storeId", insertable = false, updatable = false)
+//    @Fetch(FetchMode.JOIN)
+//    private StoreDeliveryDetail storeDeliveryDetail;
     String storeId;
-    Integer deliveryId;
+    int deliverySpId;
 }

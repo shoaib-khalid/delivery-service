@@ -66,7 +66,7 @@ public class OrdersController {
     DeliveryOptionRepository deliveryOptionRepository;
 
     @Autowired
-    StoreDeliveryTypeRepository storeDeliveryTypeRepository;
+    StoreDeliverySpRepository storeDeliveryTypeRepository;
 
     @Autowired
     RegionCountryStateRepository regionCountryStateRepository;
@@ -138,8 +138,6 @@ public class OrdersController {
             orderDetails.setTotalWeightKg(weight);
         }
         orderDetails.setProductCode(stores.getItemType().name());
-
-
         orderDetails.getDelivery().setDeliveryAddress(deliveryAddress);
 
         /*
@@ -150,6 +148,7 @@ public class OrdersController {
         String contactName = orderDetails.getPickup().getPickupContactName();
         String deliveryType = stores.getType();
 
+        // Self delivery
 
         if (stores.getType().equalsIgnoreCase("self")) {
             DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), orderDetails.getDelivery().getDeliveryState());
@@ -212,11 +211,13 @@ public class OrdersController {
             LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
+            //Provider Query
             try {
-                StoreDeliveryType storeDeliveryType = storeDeliveryTypeRepository.findAllByStoreIdAndDeliveryType(store.getId(), stores.getType());
-                orderDetails.setDeliveryProviderId(storeDeliveryType.getDeliveryId());
-
+                StoreDeliverySp storeDeliverySp = storeDeliveryTypeRepository.findByStoreId(store.getId());
+                orderDetails.setDeliveryProviderId(storeDeliverySp.getDeliverySpId());
             } catch (Exception ex) {
+                LogUtil.info(systemTransactionId, location, "Exception if store sp is null  : " + ex.getMessage(), "");
+
             }
             //generate transaction id
             ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository);
@@ -247,21 +248,31 @@ public class OrdersController {
                     deliveryOrder.setItemType(orderDetails.getItemType().name());
                     deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
                     deliveryOrder.setVehicleType(pickup.getVehicleType().name());
-                    deliveryOrder.setStatus("PENDING");
+
                     deliveryOrder.setCartId(orderDetails.getCartId());
                     deliveryOrder.setCreatedDate(new Date());
                     deliveryOrder.setStoreId(store.getId());
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
 
                     deliveryOrder.setDeliveryProviderId(list.providerId);
+                    System.out.println("IF ERROR SHOW ERROR:  " + list.isError);
+                    BigDecimal bd = new BigDecimal(0.00);
+                    if (!list.isError) {
+                        deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
+                        deliveryOrder.setStatus("PENDING");
+                        DecimalFormat decimalFormat = new DecimalFormat("##.00");
+                        double dPrice = Double.parseDouble(decimalFormat.format(list.price));
+                        bd = new BigDecimal(dPrice);
+                        bd = bd.setScale(2, RoundingMode.HALF_UP);
+                    } else {
+                        deliveryOrder.setAmount(Double.parseDouble("0.00"));
+                        deliveryOrder.setStatus("FAILED");
+                    }
 
-                    deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
                     DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
-                    DecimalFormat decimalFormat = new DecimalFormat("##.00");
-                    Double dPrice = Double.parseDouble(decimalFormat.format(list.price));
-                    BigDecimal bd = new BigDecimal(dPrice);
-                    bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+
                     Integer providerId = res.getDeliveryProviderId();
+
                     Provider providerRes = providerRepository.findOneById(providerId);
                     String providerName = providerRes.getName();
 
@@ -277,11 +288,11 @@ public class OrdersController {
                     } else if (deliveryType.equalsIgnoreCase("scheduled")) {
                         result.deliveryType = deliveryType;
                     }
-                    result.message = list.message;
                     result.isError = list.isError;
+                    result.providerId = list.providerId;
+                    result.message = list.message;
                     result.price = bd;
                     result.refId = res.getId();
-                    result.providerId = list.providerId;
                     result.providerName = providerName;
                     result.validUpTo = currentTimeStamp;
                     result.providerImage = providerRes.getProviderImage();
@@ -292,19 +303,21 @@ public class OrdersController {
                 response.setSuccessStatus(HttpStatus.OK);
                 response.setData(priceResultList);
                 LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
-                return ResponseEntity.status(HttpStatus.OK).body(response);
+//                return ResponseEntity.status(HttpStatus.OK).body(response);
             } else {
+                //fail to get price
+                Set<PriceResult> priceResultList = new HashSet<>();
                 PriceResult priceResult = new PriceResult();
                 priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
-                BigDecimal bd = new BigDecimal(0.00);
-                bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+                BigDecimal bd = new BigDecimal("0.00");
+                bd = bd.setScale(2, RoundingMode.HALF_UP);
                 priceResult.price = bd;
                 priceResult.isError = true;
                 priceResult.deliveryType = deliveryType;
-                response.setData(priceResult);
-                //fail to get price
-                return ResponseEntity.status(HttpStatus.OK).body(response);
+                priceResultList.add(priceResult);
+                response.setData(priceResultList);
             }
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         }
     }
 

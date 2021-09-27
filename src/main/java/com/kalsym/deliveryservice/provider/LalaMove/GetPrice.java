@@ -114,6 +114,7 @@ public class GetPrice extends SyncDispatcher {
         HttpEntity<String> request = new HttpEntity(bodyJson.toString(), headers);
 
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, BASE_URL + ENDPOINT_URL, httpHeader, bodyJson.toString(), this.connectTimeout, this.waitTimeout);
+
         if (httpResult.httpResponseCode == 200) {
             LogUtil.info(logprefix, location, "Request successful", "");
             response.resultCode = 0;
@@ -169,7 +170,7 @@ public class GetPrice extends SyncDispatcher {
     private PriceResult extractResponseBody(String respString) {
         LogUtil.info(logprefix, location, "Response: ", respString);
         JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
-        System.err.println("Lalamove jsonResp: " + jsonResp);
+        LogUtil.info(logprefix, location, "Lalamove jsonResp: " + jsonResp, "");
         String payAmount = jsonResp.get("totalFee").getAsString();
         LogUtil.info(logprefix, location, "Payment Amount:" + payAmount, "");
         PriceResult priceResult = new PriceResult();
