@@ -66,7 +66,7 @@ public class OrdersController {
     DeliveryOptionRepository deliveryOptionRepository;
 
     @Autowired
-    StoreDeliverySpRepository storeDeliveryTypeRepository;
+    StoreDeliverySpRepository storeDeliverySpRepository;
 
     @Autowired
     RegionCountryStateRepository regionCountryStateRepository;
@@ -76,6 +76,15 @@ public class OrdersController {
 
     @Autowired
     RegionCountryRepository regionCountryRepository;
+
+    @Autowired
+    DeliveryZoneCityRepository deliveryZoneCityRepository;
+
+    @Autowired
+    DeliveryZonePriceRepository deliveryZonePriceRepository;
+
+    @Autowired
+    StoreDeliveryDetailRepository storeDeliveryDetailRepository;
 
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
@@ -100,13 +109,12 @@ public class OrdersController {
         Pickup pickup = new Pickup();
         //FIXME : Uncomment this when add the J&T
         //If Store Is PAKISTAN SEARCH DB
-       /* if (store.getRegionCountryId().equals("PAK")) {
+        if (store.getRegionCountryId().equals("PAK")) {
             DeliveryZoneCity zoneCity = deliveryZoneCityRepository.findByCityContains(store.getCity());
             pickup.setPickupZone(zoneCity.getZone());
             DeliveryZoneCity deliveryZone = deliveryZoneCityRepository.findByCityContains(orderDetails.getDelivery().getDeliveryCity());
             orderDetails.getDelivery().setDeliveryZone(deliveryZone.getZone());
         }
-*/
         if (stores.getMaxOrderQuantityForBike() <= 10) {
             pickup.setVehicleType(VehicleType.MOTORCYCLE);
             LogUtil.info(logprefix, location, "Vehicle Type less than 10 : ", pickup.getVehicleType().name());
@@ -136,6 +144,20 @@ public class OrdersController {
             orderDetails.setTotalWeightKg(1.0);
         } else {
             orderDetails.setTotalWeightKg(weight);
+        }
+/*        //TODO: pickup address is postcode, city and state combined
+        String pickupAddress = orderDetails.getPickup().getPickupAddress() + "," + orderDetails.getPickup().getPickupPostcode() + "," + orderDetails.getPickup().getPickupCity() + "," + orderDetails.getPickup().getPickupState();
+        orderDetails.getPickup().setPickupAddress(pickupAddress);
+        orderDetails.getPickup().setPickupPostcode(pickup.getPickupPostcode());
+        orderDetails.setInsurance(false);
+        orderDetails.setItemType(stores.getItemType());
+        orderDetails.setTotalWeightKg(weight);*/
+
+        if (stores.getItemType().name().equals("FOOD") || stores.getItemType().name().equals("PACKAGING")) {
+            orderDetails.setProductCode(ItemType.PARCEL.name());
+            LogUtil.info(logprefix, location, "Item Type : ", stores.getItemType().name());
+        } else {
+            orderDetails.setProductCode(stores.getItemType().name());
         }
         orderDetails.setProductCode(stores.getItemType().name());
         orderDetails.getDelivery().setDeliveryAddress(deliveryAddress);
@@ -213,8 +235,8 @@ public class OrdersController {
         } else {
             //Provider Query
             try {
-                StoreDeliverySp storeDeliverySp = storeDeliveryTypeRepository.findByStoreId(store.getId());
-                orderDetails.setDeliveryProviderId(storeDeliverySp.getDeliverySpId());
+                StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
+                orderDetails.setDeliveryProviderId(storeDeliverySp.getProvider().getId());
             } catch (Exception ex) {
                 LogUtil.info(systemTransactionId, location, "Exception if store sp is null  : " + ex.getMessage(), "");
 
@@ -445,7 +467,7 @@ public class OrdersController {
         orderDetails.setProductCode(quotation.getProductCode());
         orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
         orderDetails.setShipmentValue(quotation.getAmount());
-
+        orderDetails.setOrderId(orderId);
 
         Pickup pickup = new Pickup();
 //        if (quotation.getPickupContactName() != null) {
@@ -455,10 +477,12 @@ public class OrdersController {
 //        }
 //        if (quotation.getPickupContactPhone() != null) {
         pickup.setPickupContactPhone(quotation.getPickupContactPhone());
+        pickup.setPickupContactEmail("kumar@kalsym.com");
 //        } else {
 //            pickup.setPickupContactPhone("");
 //        }
         pickup.setPickupAddress(quotation.getPickupAddress());
+        pickup.setPickupPostcode(quotation.getPickupPostcode());
         pickup.setVehicleType(VehicleType.valueOf(quotation.getVehicleType()));
         orderDetails.setPickup(pickup);
 
@@ -466,6 +490,7 @@ public class OrdersController {
         delivery.setDeliveryAddress(quotation.getDeliveryAddress());
         delivery.setDeliveryContactName(quotation.getDeliveryContactName());
         delivery.setDeliveryContactPhone(quotation.getDeliveryContactPhone());
+        delivery.setDeliveryPostcode(quotation.getDeliveryPostcode());
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());
 
@@ -788,6 +813,7 @@ public class OrdersController {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
         String systemTransactionId = StringUtility.CreateRefID("DL");
+        System.err.println(type + country);
 
 
         LogUtil.info(logprefix, location, "", "");
@@ -854,9 +880,9 @@ public class OrdersController {
                 new Addresses(
                         new MsMY("64000 Sepang, Selangor, Malaysia",
                                 "MY_KUL"))));
-        List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
+        List<com.kalsym.deliveryservice.models.requestbodies.getprice.Delivery> deliveries = new ArrayList<>();
         deliveries.add(
-                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
+                new com.kalsym.deliveryservice.models.requestbodies.getprice.Delivery(
                         1,
                         new Contact("Shen Ong", "0376886555"),
                         "Remarks for drop-off point (#1)."
@@ -960,9 +986,9 @@ public class OrdersController {
         String apiKey ="";
 
 
-        List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
+        List<com.kalsym.deliveryservice.models.requestbodies.getprice.Delivery> deliveries = new ArrayList<>();
         deliveries.add(
-                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
+                new com.kalsym.deliveryservice.models.requestbodies.getprice.Delivery(
                         1,
                         new Contact("Irasakumar", "601162802728"),
                         "Remarks for drop-off point (#1)."

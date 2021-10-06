@@ -1,21 +1,19 @@
 /*
  * Here comes the text of your license
- * Each line should be prefixed with  * 
+ * Each line should be prefixed with  *
  */
 package com.kalsym.deliveryservice.models.daos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.io.Serializable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.*;
+import java.io.Serializable;
+
 /**
- *
  * @author user
  */
 @Entity
@@ -48,4 +46,5 @@ public class Provider implements Serializable {
     @JsonIgnore
     String locationIdClassname;
     String providerImage;
+    String regionCountryId;
 }

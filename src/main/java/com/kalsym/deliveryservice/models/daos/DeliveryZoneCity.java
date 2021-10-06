@@ -13,21 +13,15 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
-/**
- *
- * @author Sarosh
- */
 @Entity
-@Table(name = "sequence_number")
+@Table(name = "delivery_zone_city")
 @Getter
 @Setter
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class SequenceNumber implements Serializable {
-    
+public class DeliveryZoneCity implements Serializable{
     @Id
-    private String sp;
-
-    private Integer sequence;
+    private String city;
+    private String zone;
 
 }
