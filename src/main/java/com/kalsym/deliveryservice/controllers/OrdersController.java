@@ -248,7 +248,7 @@ public class OrdersController {
                     deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
                     deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
 
-//                    deliveryOrder.setItemType(orderDetails.getItemType().name());
+                    deliveryOrder.setItemType(orderDetails.getItemType().name());
                     deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
                     deliveryOrder.setVehicleType(pickup.getVehicleType().name());
 
