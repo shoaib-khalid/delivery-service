@@ -1,22 +1,13 @@
 package com.kalsym.deliveryservice.filters;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kalsym.deliveryservice.utils.DateTimeUtil;
-import com.kalsym.deliveryservice.utils.LogUtil;
 import com.kalsym.deliveryservice.VersionHolder;
+import com.kalsym.deliveryservice.models.HttpReponse;
 import com.kalsym.deliveryservice.security.model.Auth;
 import com.kalsym.deliveryservice.security.model.MySQLUserDetails;
-import com.kalsym.deliveryservice.models.HttpReponse;
-
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Optional;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import com.kalsym.deliveryservice.utils.DateTimeUtil;
+import com.kalsym.deliveryservice.utils.LogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -28,19 +19,27 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
- *
  * @author Sarosh
  */
 @Component
 public class SessionRequestFilter extends OncePerRequestFilter {
-    
+
     @Autowired
     RestTemplate restTemplate;
 
     @Value("${services.user-service.session_details:not-known}")
     String userServiceSessionDetailsUrl;
-    
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
@@ -57,7 +56,7 @@ public class SessionRequestFilter extends OncePerRequestFilter {
         if (null != authHeader && authHeader.startsWith("Bearer ")) {
             accessToken = authHeader.replace("Bearer ", "");
             LogUtil.info(VersionHolder.VERSION, location, "token: " + accessToken, "");
-            LogUtil.info(VersionHolder.VERSION, location, "token length: " + accessToken.length(), "");            
+            LogUtil.info(VersionHolder.VERSION, location, "token length: " + accessToken.length(), "");
         } else {
             LogUtil.warn(VersionHolder.VERSION, location, "token does not begin with Bearer String", "");
         }
@@ -67,7 +66,7 @@ public class SessionRequestFilter extends OncePerRequestFilter {
             ResponseEntity<HttpReponse> authResponse = null;
             try {
                 authResponse = restTemplate.postForEntity(userServiceSessionDetailsUrl, accessToken, HttpReponse.class);
-            
+
                 Date expiryTime = null;
 
                 Auth auth = null;
@@ -75,7 +74,8 @@ public class SessionRequestFilter extends OncePerRequestFilter {
 
                 if (authResponse.getStatusCode() == HttpStatus.ACCEPTED) {
                     ObjectMapper mapper = new ObjectMapper();
-//                    LogUtil.info(VersionHolder.VERSION, location, "data: " + authResponse.getBody().getData(), "");
+                    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                    //                    LogUtil.info(VersionHolder.VERSION, location, "data: " + authResponse.getBody().getData(), "");
 
                     auth = mapper.convertValue(authResponse.getBody().getData(), Auth.class);
                     username = auth.getSession().getUsername();
@@ -99,7 +99,7 @@ public class SessionRequestFilter extends OncePerRequestFilter {
                                 userDetails, null, userDetails.getAuthorities());
                         usernamePasswordAuthenticationToken
                                 .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                        LogUtil.info(VersionHolder.VERSION, location, "isAuthentcated:"+usernamePasswordAuthenticationToken.isAuthenticated(),"");
+                        LogUtil.info(VersionHolder.VERSION, location, "isAuthentcated:" + usernamePasswordAuthenticationToken.isAuthenticated(), "");
                         SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
                     } else {
                         LogUtil.warn(VersionHolder.VERSION, location, "session expired", "");
@@ -110,7 +110,7 @@ public class SessionRequestFilter extends OncePerRequestFilter {
                     LogUtil.error(VersionHolder.VERSION, location, "Fail to validate token", "", null);
                 }
             } catch (Exception ex) {
-                LogUtil.warn(VersionHolder.VERSION, location, " Fail to validate token error : "+ex.getMessage(), "");
+                LogUtil.warn(VersionHolder.VERSION, location, " Fail to validate token error : " + ex.getMessage(), "");
             }
         }
         chain.doFilter(request, response);

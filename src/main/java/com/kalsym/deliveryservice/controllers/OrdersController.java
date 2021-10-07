@@ -131,13 +131,13 @@ public class OrdersController {
         //More Details For Delivery
 
         orderDetails.setInsurance(false);
-        orderDetails.setItemType(stores.getItemType());
+//        orderDetails.setItemType(stores.getItemType());
         if (weight == null) {
             orderDetails.setTotalWeightKg(1.0);
         } else {
             orderDetails.setTotalWeightKg(weight);
         }
-        orderDetails.setProductCode(stores.getItemType().name());
+//        orderDetails.setProductCode(stores.getItemType().name());
         orderDetails.getDelivery().setDeliveryAddress(deliveryAddress);
 
         /*
@@ -181,7 +181,7 @@ public class OrdersController {
                 deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
                 deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
                 deliveryOrder.setPickupPostcode(orderDetails.getPickup().getPickupPostcode());
-                deliveryOrder.setItemType(orderDetails.getItemType().name());
+//                deliveryOrder.setItemType(orderDetails.getItemType().name()); // remove itemType not for self delivery
                 deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
                 deliveryOrder.setVehicleType(pickup.getVehicleType().name());
                 deliveryOrder.setStatus("PENDING");
@@ -211,6 +211,7 @@ public class OrdersController {
             LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
+            orderDetails.setProductCode(stores.getItemType().name());
             //Provider Query
             try {
                 StoreDeliverySp storeDeliverySp = storeDeliveryTypeRepository.findByStoreId(store.getId());
