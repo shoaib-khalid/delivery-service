@@ -11,6 +11,6 @@ package com.kalsym.deliveryservice.models.enums;
 public enum ItemType {
     PARCEL,
     FOOD,
-    PACKAGING, DOCUMENT
+    PACKAGING, DOCUMENT,SELF
 }
 

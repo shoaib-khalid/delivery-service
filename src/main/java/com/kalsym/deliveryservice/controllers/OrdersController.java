@@ -153,6 +153,7 @@ public class OrdersController {
         if (stores.getType().equalsIgnoreCase("self")) {
             DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), orderDetails.getDelivery().getDeliveryState());
             PriceResult priceResult = new PriceResult();
+            orderDetails.setItemType(ItemType.SELF);
 
             if (deliveryOptions == null) {
                 priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
@@ -441,7 +442,9 @@ public class OrdersController {
         LogUtil.info(systemTransactionId, location, "Quotation : ", quotation.toString());
         Order orderDetails = new Order();
         orderDetails.setCustomerId(quotation.getCustomerId());
-        orderDetails.setItemType(ItemType.valueOf(quotation.getItemType()));
+        if (!quotation.getItemType().isEmpty()) {
+            orderDetails.setItemType(ItemType.valueOf(quotation.getItemType()));
+        }
         orderDetails.setDeliveryProviderId(quotation.getDeliveryProviderId());
         LogUtil.info(systemTransactionId, location, "PROVIDER ID :", quotation.getDeliveryProviderId().toString());
         orderDetails.setProductCode(quotation.getProductCode());
@@ -474,7 +477,7 @@ public class OrdersController {
 
         //generate transaction id
         LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " "
-                + "itemType:" + orderDetails.getItemType() + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
+                + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
         ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository,
                 providerConfigurationRepository, providerRepository, sequenceNumberRepository);
         ProcessResult processResult = process.SubmitOrder();
