@@ -211,6 +211,7 @@ public class OrdersController {
             LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
+            orderDetails.setItemType(stores.getItemType());
             orderDetails.setProductCode(stores.getItemType().name());
             //Provider Query
             try {
@@ -246,7 +247,7 @@ public class OrdersController {
                     deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
                     deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
 
-                    deliveryOrder.setItemType(orderDetails.getItemType().name());
+//                    deliveryOrder.setItemType(orderDetails.getItemType().name());
                     deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
                     deliveryOrder.setVehicleType(pickup.getVehicleType().name());
 
