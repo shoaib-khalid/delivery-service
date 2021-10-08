@@ -325,6 +325,7 @@ public class OrdersController {
     }
 
 
+
     @RequestMapping(method = RequestMethod.GET, value = "/getpickupdate/{spId}/{postcode}", name = "orders-get-pickupdate")
     public ResponseEntity<HttpReponse> getPickupDate(HttpServletRequest request,
                                                      @PathVariable("spId") Integer serviceProviderId,
@@ -450,7 +451,7 @@ public class OrdersController {
         orderDetails.setProductCode(quotation.getProductCode());
         orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
         orderDetails.setShipmentValue(quotation.getAmount());
-
+        orderDetails.setOrderId(orderId);
 
         Pickup pickup = new Pickup();
 //        if (quotation.getPickupContactName() != null) {
@@ -464,6 +465,7 @@ public class OrdersController {
 //            pickup.setPickupContactPhone("");
 //        }
         pickup.setPickupAddress(quotation.getPickupAddress());
+        pickup.setPickupPostcode(quotation.getPickupPostcode());
         pickup.setVehicleType(VehicleType.valueOf(quotation.getVehicleType()));
         orderDetails.setPickup(pickup);
 
@@ -471,6 +473,7 @@ public class OrdersController {
         delivery.setDeliveryAddress(quotation.getDeliveryAddress());
         delivery.setDeliveryContactName(quotation.getDeliveryContactName());
         delivery.setDeliveryContactPhone(quotation.getDeliveryContactPhone());
+        delivery.setDeliveryPostcode(quotation.getDeliveryPostcode());
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());
 
