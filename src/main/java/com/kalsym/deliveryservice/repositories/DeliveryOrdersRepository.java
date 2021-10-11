@@ -15,4 +15,6 @@ public interface DeliveryOrdersRepository extends JpaRepository<DeliveryOrder, L
     
     public DeliveryOrder findByDeliveryProviderIdAndSpOrderId(Integer deliveryProviderId, String spOrderId );
 
+    public DeliveryOrder findBySpOrderId( String spOrderId );
+
 }

@@ -47,5 +47,7 @@ public class Provider implements Serializable {
     String pickupTimeClassname;
     @JsonIgnore
     String locationIdClassname;
+    @JsonIgnore
+    String airwayBillClassName;
     String providerImage;
 }

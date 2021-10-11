@@ -5,38 +5,26 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
-import com.kalsym.deliveryservice.models.daos.DeliveryQuotation;
-import com.kalsym.deliveryservice.provider.Gdex.VehicleType;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SubmitOrderResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.DateTimeUtil;
-import com.kalsym.deliveryservice.utils.HttpResult;
-import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
-import com.squareup.okhttp.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpEntity;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import javax.xml.bind.DatatypeConverter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
-import javax.xml.bind.DatatypeConverter;
 
 public class SubmitOrder extends SyncDispatcher {
 
@@ -69,7 +57,7 @@ public class SubmitOrder extends SyncDispatcher {
         this.baseUrl = (String) config.get("domainUrl");
         this.submitOrder_url = "http://47.57.89.30/blibli/order/createOrder";
         this.secretKey = (String) config.get("secretKey");
-        this.apiKey = "x1Wbjv";
+        this.apiKey = (String) config.get("apiKey");
         this.endpointUrl = (String) config.get("place_orderUrl");
         this.connectTimeout = Integer.parseInt((String) config.get("submitorder_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("submitorder_wait_timeout"));
@@ -98,6 +86,7 @@ public class SubmitOrder extends SyncDispatcher {
             String myHash = DatatypeConverter.printHexBinary(digest).toLowerCase();
             String base64Key = Base64.getEncoder().encodeToString(myHash.getBytes());
             encode_key = base64Key;
+            System.err.println(encode_key);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalArgumentException(e);
         }
@@ -170,7 +159,7 @@ public class SubmitOrder extends SyncDispatcher {
         details.addProperty("username", "TEST");
         details.addProperty("api_key", "TES123");
         details.addProperty("cuscode", "ITTEST0001");
-        details.addProperty("orderid", order.getOrderId());
+        details.addProperty("orderid", systemTransactionId);
         details.addProperty("shipper_contact", order.getPickup().getPickupContactName());
         details.addProperty("shipper_name", order.getPickup().getPickupContactName());
         details.addProperty("shipper_phone", order.getPickup().getPickupContactPhone());
@@ -180,11 +169,11 @@ public class SubmitOrder extends SyncDispatcher {
         details.addProperty("receiver_addr", order.getDelivery().getDeliveryAddress());
         details.addProperty("receiver_phone", order.getDelivery().getDeliveryContactPhone());
         details.addProperty("receiver_zip", order.getDelivery().getDeliveryPostcode());
-        if (order.getPieces() == 0) {
-            details.addProperty("qty", "1");
-        } else {
-            details.addProperty("qty", order.getPieces().toString());
-        }
+//        if (order.getPieces() == 0) {
+        details.addProperty("qty", "1");
+//        } else {
+//            details.addProperty("qty", order.getPieces().toString());
+//        }
         details.addProperty("weight", order.getTotalWeightKg().toString());
         details.addProperty("item_name", "");
         details.addProperty("goodsdesc", order.getShipmentContent());
@@ -215,7 +204,7 @@ public class SubmitOrder extends SyncDispatcher {
             String status = detailsData.get("status").getAsString();
             LogUtil.info(logprefix, location, "the status for submitOrder " + status, "");
             if (status.equalsIgnoreCase("success")) {
-                LogUtil.info(logprefix, location, "inside submitOrder if" , "");
+                LogUtil.info(logprefix, location, "inside submitOrder if", "");
                 // getting spOrderId
                 String awbNo = detailsData.get("awb_no").getAsString();
                 LogUtil.info(logprefix, location, "the awb number for submitOrder " + awbNo, "");
