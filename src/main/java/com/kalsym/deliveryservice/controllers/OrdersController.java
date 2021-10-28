@@ -750,6 +750,7 @@ public class OrdersController {
             SpCallbackResult spCallbackResult = (SpCallbackResult) processResult.returnObject;
             String spOrderId = spCallbackResult.spOrderId;
             String status = spCallbackResult.status;
+            String deliveryId = spCallbackResult.driverId;
             int spId = spCallbackResult.providerId;
             DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
             if (deliveryOrder != null) {
@@ -770,6 +771,7 @@ public class OrdersController {
                 }
 
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
+                deliveryOrder.setDriverId(deliveryId);
                 deliveryOrdersRepository.save(deliveryOrder);
             } else {
                 LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
@@ -806,6 +808,40 @@ public class OrdersController {
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+
+    @GetMapping(path = {"/getDeliveryProviderDetails/{orderId}"}, name = "delivery-rider-details")
+    public ResponseEntity<HttpReponse> getDeliveryRiderDetails(HttpServletRequest request,
+                                                               @PathVariable("orderId") String orderId) {
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = new HttpReponse(request.getRequestURI());
+
+        DeliveryOrder order = deliveryOrdersRepository.findByOrderId(orderId);
+
+        if (order != null) {
+            ProcessRequest process = new ProcessRequest(order.getSystemTransactionId(), order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+            ProcessResult processResult = process.GetDriverDetails();
+
+            DriverDetailsResult driverDetailsResult = (DriverDetailsResult) processResult.returnObject;
+            order.setRiderName(driverDetailsResult.driverDetails.getName());
+            order.setRiderPhoneNo(driverDetailsResult.driverDetails.getPhoneNumber());
+            order.setRiderCarPlateNo(driverDetailsResult.driverDetails.getPlateNumber());
+            deliveryOrdersRepository.save(order);
+            RiderDetails riderDetails = driverDetailsResult.driverDetails;
+            riderDetails.setOrderNumber(order.getSpOrderId());
+            riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
+            response.setData(riderDetails);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        } else {
+
+            LogUtil.info(logprefix, location, "", "order not found ");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+
     }
 
 

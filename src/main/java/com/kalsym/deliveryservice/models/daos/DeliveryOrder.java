@@ -51,4 +51,8 @@ public class DeliveryOrder {
     Double totalWeightKg;
     String merchantTrackingUrl;
     String customerTrackingUrl;
+    String driverId;
+    String riderName;
+    String riderPhoneNo;
+    String riderCarPlateNo;
 }

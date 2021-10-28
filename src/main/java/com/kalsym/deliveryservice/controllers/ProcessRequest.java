@@ -39,6 +39,7 @@ public class ProcessRequest {
     GetPickupDateResult pickupDateResult;
     GetPickupTimeResult pickupTimeResult;
     LocationIdResult locationIdResult;
+    DriverDetailsResult driverDetailsResult;
     Object requestBody;
     SequenceNumberRepository sequenceNumberRepository;
     @Autowired
@@ -101,8 +102,7 @@ public class ProcessRequest {
                 ProviderThread dthread = new ProviderThread(this, sysTransactionId, providerRatePlanList.get(i).getProvider(), config, order, "GetPrices", sequenceNumberRepository);
                 dthread.start();
             }
-        }
-        else{
+        } else {
             List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(order.getDeliveryProviderId());
             Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
             HashMap config = new HashMap();
@@ -130,11 +130,10 @@ public class ProcessRequest {
         }
 
         ProcessResult response = new ProcessResult();
-        if(priceResultList.size() != 0) {
+        if (priceResultList.size() != 0) {
             response.resultCode = 0;
             response.returnObject = priceResultList;
-        }
-        else{
+        } else {
             response.resultCode = -1;
             response.returnObject = priceResultList;
         }
@@ -432,6 +431,42 @@ public class ProcessRequest {
         return response;
     }
 
+    public ProcessResult GetDriverDetails() {
+        //get provider rate plan
+        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + deliveryOrder.getDeliveryProviderId(), "");
+        Provider provider = providerRepository.findOneById(deliveryOrder.getDeliveryProviderId());
+        List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(provider.getId());
+        HashMap config = new HashMap();
+        for (int j = 0; j < providerConfigList.size(); j++) {
+            String fieldName = providerConfigList.get(j).getId().getConfigField();
+            String fieldValue = providerConfigList.get(j).getConfigValue();
+            config.put(fieldName, fieldValue);
+        }
+
+        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, deliveryOrder, "GetDriverDetails", sequenceNumberRepository);
+        dthread.start();
+
+
+        try {
+            Thread.sleep(100);
+        } catch (Exception ex) {
+        }
+
+        while (providerThreadRunning > 0) {
+            try {
+                Thread.sleep(500);
+            } catch (Exception ex) {
+            }
+            //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
+        }
+
+        ProcessResult response = new ProcessResult();
+        response.resultCode = 0;
+        response.returnObject = driverDetailsResult ;
+        LogUtil.info(logprefix, location, "GetLocationId finish. resultCode:" + response.resultCode, " driverDetailsResult count:" + driverDetailsResult);
+        return response;
+    }
+
 
     public synchronized void addPriceResult(PriceResult priceResult) {
         priceResultList.add(priceResult);
@@ -472,4 +507,10 @@ public class ProcessRequest {
     public synchronized void deductProviderThreadRunning() {
         providerThreadRunning--;
     }
+
+    public synchronized void setDriverDetailsResult(DriverDetailsResult driverDetailsResult) {
+        this.driverDetailsResult = driverDetailsResult;
+    }
+
+
 }
