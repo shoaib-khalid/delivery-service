@@ -811,7 +811,7 @@ public class OrdersController {
     }
 
 
-    @GetMapping(path = {"/getDeliveryProviderDetails/{orderId}"}, name = "delivery-rider-details")
+    @GetMapping(path = {"/getDeliveryRiderDetails/{orderId}"}, name = "delivery-rider-details")
     public ResponseEntity<HttpReponse> getDeliveryRiderDetails(HttpServletRequest request,
                                                                @PathVariable("orderId") String orderId) {
         String logprefix = request.getRequestURI() + " ";
@@ -823,6 +823,7 @@ public class OrdersController {
         if (order != null) {
             ProcessRequest process = new ProcessRequest(order.getSystemTransactionId(), order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
             ProcessResult processResult = process.GetDriverDetails();
+            Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
 
             DriverDetailsResult driverDetailsResult = (DriverDetailsResult) processResult.returnObject;
             order.setRiderName(driverDetailsResult.driverDetails.getName());
@@ -832,6 +833,8 @@ public class OrdersController {
             RiderDetails riderDetails = driverDetailsResult.driverDetails;
             riderDetails.setOrderNumber(order.getSpOrderId());
             riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
+            riderDetails.setProviderName(provider.getName());
+            riderDetails.setAirwayBill(order.getAirwayBillURL());
             response.setData(riderDetails);
             return ResponseEntity.status(HttpStatus.OK).body(response);
 

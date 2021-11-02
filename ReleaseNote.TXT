@@ -1,3 +1,10 @@
+Version v.2.1.0
+-------------------------
+Date:02-Nov-2021
+Developer:Kumar
+
+1. New Endpoint For Get Driver Details with Consignment Note Url
+
 Version v.2.0.15
 -------------------------
 Date:07-Oct-2021

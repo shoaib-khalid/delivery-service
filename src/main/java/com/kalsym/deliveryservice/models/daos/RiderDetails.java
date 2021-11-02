@@ -18,4 +18,6 @@ public class RiderDetails {
     String plateNumber;
     String trackingUrl;
     String orderNumber;
+    String providerName;
+    String airwayBill;
 }

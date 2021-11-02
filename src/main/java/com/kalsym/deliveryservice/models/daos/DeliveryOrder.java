@@ -55,4 +55,5 @@ public class DeliveryOrder {
     String riderName;
     String riderPhoneNo;
     String riderCarPlateNo;
+    String airwayBillURL;
 }
