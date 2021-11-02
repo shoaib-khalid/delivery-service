@@ -833,7 +833,7 @@ public class OrdersController {
             RiderDetails riderDetails = driverDetailsResult.driverDetails;
             riderDetails.setOrderNumber(order.getSpOrderId());
             riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
-            riderDetails.setProviderName(provider.getName());
+            riderDetails.setProvider(provider);
             riderDetails.setAirwayBill(order.getAirwayBillURL());
             response.setData(riderDetails);
             return ResponseEntity.status(HttpStatus.OK).body(response);
