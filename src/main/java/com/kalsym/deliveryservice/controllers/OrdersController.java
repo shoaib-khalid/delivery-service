@@ -77,6 +77,9 @@ public class OrdersController {
     @Autowired
     RegionCountryRepository regionCountryRepository;
 
+    @Autowired
+    DeliveryMarkupPriceRepository deliveryMarkupPriceRepository;
+
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
                                                 @Valid @RequestBody Order orderDetails) {
@@ -260,13 +263,26 @@ public class OrdersController {
                     deliveryOrder.setDeliveryProviderId(list.providerId);
                     System.out.println("IF ERROR SHOW ERROR:  " + list.isError);
                     BigDecimal bd = new BigDecimal("0.00");
+
                     if (!list.isError) {
-                        deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
-                        deliveryOrder.setStatus("PENDING");
-                        DecimalFormat decimalFormat = new DecimalFormat("##.00");
-                        double dPrice = Double.parseDouble(decimalFormat.format(list.price));
-                        bd = new BigDecimal(dPrice);
-                        bd = bd.setScale(2, RoundingMode.HALF_UP);
+                        if (deliveryType.equalsIgnoreCase("adhoc")) {
+                            DeliveryMarkupPrice markupPrice = deliveryMarkupPriceRepository.findByDeliverySpId(deliveryOrder.getSpId().toString());
+                            if (markupPrice.getStartTime().getTime() > new Date().getTime() && markupPrice.getEndTime().getTime() < new Date().getTime()) {
+                                deliveryOrder.setAmount(Double.parseDouble(list.price.toString()) + markupPrice.getMarkupPrice().doubleValue());
+                                deliveryOrder.setStatus("PENDING");
+                                DecimalFormat decimalFormat = new DecimalFormat("##.00");
+                                double dPrice = Double.parseDouble(decimalFormat.format(list.price));
+                                bd = new BigDecimal(dPrice);
+                                bd = bd.setScale(2, RoundingMode.HALF_UP);
+                            }
+                        } else {
+                            deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
+                            deliveryOrder.setStatus("PENDING");
+                            DecimalFormat decimalFormat = new DecimalFormat("##.00");
+                            double dPrice = Double.parseDouble(decimalFormat.format(list.price));
+                            bd = new BigDecimal(dPrice);
+                            bd = bd.setScale(2, RoundingMode.HALF_UP);
+                        }
                     } else {
                         deliveryOrder.setAmount(Double.parseDouble("0.00"));
                         deliveryOrder.setStatus("FAILED");
@@ -817,6 +833,7 @@ public class OrdersController {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
+        System.out.println("OrderId : " + orderId);
 
         DeliveryOrder order = deliveryOrdersRepository.findByOrderId(orderId);
 
