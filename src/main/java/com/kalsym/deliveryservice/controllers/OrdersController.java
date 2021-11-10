@@ -848,6 +848,24 @@ public class OrdersController {
     }
 
 
+    @GetMapping(path = {"/getDeliveryProviderDetails/{providerId}"}, name = "delivery-provider-details")
+    public ResponseEntity<HttpReponse> getDeliveryProviderDetails(HttpServletRequest request,
+                                                               @PathVariable("providerId") String providerId) {
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = new HttpReponse(request.getRequestURI());
+        Provider provider = providerRepository.findOneById(Integer.valueOf(providerId));
+        if (provider != null) {
+            response.setData(provider);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } else {
+            LogUtil.info(logprefix, location, "", "provider not found ");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+
+
+
     //TODO: REMOVE BELOW LINE NOT USING ANYMORE. REFERENCE PURPOSE FOR LALAMOVE
 
    /* @PostMapping(path = "/setDeliveryPrice", name = "set-delivery-price")
