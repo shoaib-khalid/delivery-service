@@ -18,6 +18,8 @@ public class Pickup {
    String parcelReadyTime;
    String pickupDate;
    String pickupTime;
+   String endPickupDate;
+   String endPickupTime;
    String pickupOption;
    VehicleType vehicleType;
    

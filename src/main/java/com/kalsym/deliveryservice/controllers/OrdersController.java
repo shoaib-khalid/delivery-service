@@ -2,10 +2,7 @@ package com.kalsym.deliveryservice.controllers;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.kalsym.deliveryservice.models.Delivery;
-import com.kalsym.deliveryservice.models.HttpReponse;
-import com.kalsym.deliveryservice.models.Order;
-import com.kalsym.deliveryservice.models.Pickup;
+import com.kalsym.deliveryservice.models.*;
 import com.kalsym.deliveryservice.models.daos.*;
 import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
@@ -442,7 +439,7 @@ public class OrdersController {
 
     @PostMapping(path = {"/confirmDelivery/{refId}/{orderId}"}, name = "orders-confirm-delivery")
     public ResponseEntity<HttpReponse> submitOrder(HttpServletRequest request,
-                                                   @PathVariable("refId") long refId, @PathVariable("orderId") String orderId) {
+                                                   @PathVariable("refId") long refId, @PathVariable("orderId") String orderId, @Valid @RequestBody Schedule schedule) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -465,20 +462,17 @@ public class OrdersController {
         orderDetails.setOrderId(orderId);
 
         Pickup pickup = new Pickup();
-//        if (quotation.getPickupContactName() != null) {
         pickup.setPickupContactName(quotation.getPickupContactName());
-//        } else {
-//            pickup.setPickupContactName("");
-//        }
-//        if (quotation.getPickupContactPhone() != null) {
         pickup.setPickupContactPhone(quotation.getPickupContactPhone());
-//        } else {
-//            pickup.setPickupContactPhone("");
-//        }
         pickup.setPickupAddress(quotation.getPickupAddress());
         pickup.setPickupPostcode(quotation.getPickupPostcode());
         pickup.setVehicleType(VehicleType.valueOf(quotation.getVehicleType()));
+        pickup.setEndPickupDate(schedule.getEndPickScheduleDate());
+        pickup.setEndPickupTime(schedule.getEndPickScheduleTime());
+        pickup.setPickupDate(schedule.getStartPickScheduleDate());
+        pickup.setPickupTime(schedule.getStartPickScheduleTime());
         orderDetails.setPickup(pickup);
+
 
         Delivery delivery = new Delivery();
         delivery.setDeliveryAddress(quotation.getDeliveryAddress());
@@ -487,6 +481,7 @@ public class OrdersController {
         delivery.setDeliveryPostcode(quotation.getDeliveryPostcode());
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());
+
 
 
         //generate transaction id

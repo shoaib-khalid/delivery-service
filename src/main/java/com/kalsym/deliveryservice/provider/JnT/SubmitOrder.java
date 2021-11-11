@@ -22,7 +22,10 @@ import org.springframework.web.client.RestTemplate;
 import javax.xml.bind.DatatypeConverter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
@@ -43,10 +46,7 @@ public class SubmitOrder extends SyncDispatcher {
     private String location = "JnTSubmitOrder";
     private String secretKey;
     private String apiKey;
-    private String spOrderId;
-    private String driverId;
-    private String shareLink;
-    private String status;
+    private String username;
 
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
@@ -55,7 +55,7 @@ public class SubmitOrder extends SyncDispatcher {
         LogUtil.info(logprefix, location, "JnT SubmitOrder class initiliazed!!", "");
 
         this.baseUrl = (String) config.get("domainUrl");
-        this.submitOrder_url = "http://47.57.89.30/blibli/order/createOrder";
+        this.submitOrder_url =  (String) config.get("submitOrder_url");
         this.secretKey = (String) config.get("secretKey");
         this.apiKey = (String) config.get("apiKey");
         this.endpointUrl = (String) config.get("place_orderUrl");
@@ -77,7 +77,7 @@ public class SubmitOrder extends SyncDispatcher {
 //        httpHeader.put("Connection", "close");
         String requestBody = generateRequestBody();
         LogUtil.info(logprefix, location, "JnT request body for Submit Order: " + requestBody, "");
-        String data_digest = requestBody + "AKe62df84bJ3d8e4b1hea2R45j11klsb";
+        String data_digest = requestBody + apiKey;
         String encode_key = "";
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
@@ -86,7 +86,7 @@ public class SubmitOrder extends SyncDispatcher {
             String myHash = DatatypeConverter.printHexBinary(digest).toLowerCase();
             String base64Key = Base64.getEncoder().encodeToString(myHash.getBytes());
             encode_key = base64Key;
-            System.err.println(encode_key);
+            LogUtil.info(logprefix, location, "encode_key :", encode_key);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalArgumentException(e);
         }
@@ -153,12 +153,25 @@ public class SubmitOrder extends SyncDispatcher {
     }
 
     private String generateRequestBody() {
+
+        String pattern = "yyyy-MM-dd hh:mm:ss";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        Date startPickScheduleDate = null;
+        Date endPickScheduleDate = null;
+        try {
+            startPickScheduleDate = simpleDateFormat.parse(order.getPickup().getPickupDate() + order.getPickup().getPickupTime());
+            endPickScheduleDate = simpleDateFormat.parse(order.getPickup().getEndPickupDate() + order.getPickup().getEndPickupTime());
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+
         JsonObject jsonReq = new JsonObject();
         JsonArray detailsArray = new JsonArray();
         JsonObject details = new JsonObject();
-        details.addProperty("username", "TEST");
-        details.addProperty("api_key", "TES123");
-        details.addProperty("cuscode", "ITTEST0001");
+        details.addProperty("username", this.username);
+        details.addProperty("api_key", this.apiKey);
+        details.addProperty("cuscode", systemTransactionId);
         details.addProperty("orderid", systemTransactionId);
         details.addProperty("shipper_contact", order.getPickup().getPickupContactName());
         details.addProperty("shipper_name", order.getPickup().getPickupContactName());
@@ -182,8 +195,8 @@ public class SubmitOrder extends SyncDispatcher {
         details.addProperty("expressType", "");
         details.addProperty("goodType", order.getItemType().name());
         details.addProperty("serviceType", "1");
-        details.addProperty("sendstarttime", "");
-        details.addProperty("sendendtime", "");
+        details.addProperty("sendstarttime", startPickScheduleDate.toString());
+        details.addProperty("sendendtime", endPickScheduleDate.toString());
         details.addProperty("offerFeeFlag", order.isInsurance());
         detailsArray.add(details);
         jsonReq.add("detail", detailsArray);
