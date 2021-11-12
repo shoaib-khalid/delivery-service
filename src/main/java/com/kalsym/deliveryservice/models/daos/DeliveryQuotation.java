@@ -48,6 +48,7 @@ public class DeliveryQuotation {
     String orderId;
     String deliveryPostcode;
     String pickupPostcode;
+    Double serviceFee;
 
     @Override
     public String toString() {
@@ -80,6 +81,7 @@ public class DeliveryQuotation {
                 ", orderId='" + orderId + '\'' +
                 ", deliveryPostcode='" + deliveryPostcode + '\'' +
                 ", pickupPostcode='" + pickupPostcode + '\'' +
+                ", serviceFee='" + serviceFee + '\'' +
                 '}';
     }
 }

@@ -12,19 +12,20 @@ import javax.persistence.Table;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Time;
+import java.util.Date;
 
 @Entity
-@Table(name = "delivery_markup_price")
+@Table(name = "delivery_service_charge")
 @Getter
 @Setter
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class DeliveryMarkupPrice implements Serializable {
+public class DeliveryServiceCharge implements Serializable {
 
     @Id
     private Long id;
-    private Time startTime;
-    private Time endTime;
+    private String startTime;
+    private String endTime;
     private String deliverySpId;
-    private BigDecimal markupPrice;
+    private BigDecimal serviceFee;
 }
