@@ -24,7 +24,10 @@ public class StoreDeliverySp {
 //    @OneToOne(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "storeId", insertable = false, updatable = false)
 //    @Fetch(FetchMode.JOIN)
-//    private StoreDeliveryDetail storeDeliveryDetail;
+//    private StoreDeliveryDetailRepository storeDeliveryDetail;
     String storeId;
-    int deliverySpId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deliverySpId", insertable = false, updatable = false)
+    @Fetch(FetchMode.JOIN)
+    private Provider provider;
 }

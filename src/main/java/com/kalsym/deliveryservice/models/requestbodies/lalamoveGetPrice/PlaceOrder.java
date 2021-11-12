@@ -1,6 +1,5 @@
-package com.kalsym.deliveryservice.models.lalamove.getprice;
+package com.kalsym.deliveryservice.models.RequestBodies.lalamoveGetPrice;
 
-import com.kalsym.deliveryservice.models.lalamove.getprice.GetPrices;
 import lombok.ToString;
 
 @ToString

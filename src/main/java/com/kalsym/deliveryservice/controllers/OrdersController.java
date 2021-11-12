@@ -73,7 +73,7 @@ public class OrdersController {
     DeliveryOptionRepository deliveryOptionRepository;
 
     @Autowired
-    StoreDeliverySpRepository storeDeliveryTypeRepository;
+    StoreDeliverySpRepository storeDeliverySpRepository;
 
     @Autowired
     RegionCountryStateRepository regionCountryStateRepository;
@@ -83,6 +83,15 @@ public class OrdersController {
 
     @Autowired
     RegionCountryRepository regionCountryRepository;
+
+    @Autowired
+    DeliveryZoneCityRepository deliveryZoneCityRepository;
+
+    @Autowired
+    DeliveryZonePriceRepository deliveryZonePriceRepository;
+
+    @Autowired
+    StoreDeliveryDetailRepository storeDeliveryDetailRepository;
 
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
@@ -107,13 +116,12 @@ public class OrdersController {
         Pickup pickup = new Pickup();
         //FIXME : Uncomment this when add the J&T
         //If Store Is PAKISTAN SEARCH DB
-       /* if (store.getRegionCountryId().equals("PAK")) {
+        if (store.getRegionCountryId().equals("PAK")) {
             DeliveryZoneCity zoneCity = deliveryZoneCityRepository.findByCityContains(store.getCity());
             pickup.setPickupZone(zoneCity.getZone());
             DeliveryZoneCity deliveryZone = deliveryZoneCityRepository.findByCityContains(orderDetails.getDelivery().getDeliveryCity());
             orderDetails.getDelivery().setDeliveryZone(deliveryZone.getZone());
         }
-*/
         if (stores.getMaxOrderQuantityForBike() <= 10) {
             pickup.setVehicleType(VehicleType.MOTORCYCLE);
             LogUtil.info(logprefix, location, "Vehicle Type less than 10 : ", pickup.getVehicleType().name());
@@ -225,8 +233,8 @@ public class OrdersController {
 //            System.err.println(orderDetails.getPieces());
             //Provider Query
             try {
-                StoreDeliverySp storeDeliverySp = storeDeliveryTypeRepository.findByStoreId(store.getId());
-                orderDetails.setDeliveryProviderId(storeDeliverySp.getDeliverySpId());
+                StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
+                orderDetails.setDeliveryProviderId(storeDeliverySp.getProvider().getId());
             } catch (Exception ex) {
                 LogUtil.info(systemTransactionId, location, "Exception if store sp is null  : " + ex.getMessage(), "");
 
@@ -804,6 +812,7 @@ public class OrdersController {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
         String systemTransactionId = StringUtility.CreateRefID("DL");
+        System.err.println(type + country);
 
 
         LogUtil.info(logprefix, location, "", "");

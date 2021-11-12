@@ -1,3 +1,10 @@
+Version v.2.2
+-------------------------
+Date:12-Nov-2021
+Developer:Kumar
+
+1. Added New TCS Provider Integration
+
 Version v.2.1.5
 -------------------------
 Date:11-Nov-2021

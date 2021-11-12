@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
-import com.kalsym.deliveryservice.models.lalamove.getprice.*;
+import com.kalsym.deliveryservice.models.RequestBodies.lalamoveGetPrice.*;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SubmitOrderResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
@@ -141,10 +141,10 @@ public class SubmitOrder extends SyncDispatcher {
     }
 
     private PlaceOrder generateRequestBody() {
-        List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
+        List<Delivery> deliveries = new ArrayList<>();
 
         deliveries.add(
-                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
+                new Delivery(
                         1,
                         new Contact(order.getDelivery().getDeliveryContactName(), order.getDelivery().getDeliveryContactPhone()),
                         ""
