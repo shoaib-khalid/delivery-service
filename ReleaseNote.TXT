@@ -1,3 +1,10 @@
+Version v.2.2.1
+-------------------------
+Date:15-Nov-2021
+Developer:Kumar
+
+1. Airway Bill For Jnt Upload Into Server Part Done
+
 Version v.2.2.0
 -------------------------
 Date:12-Nov-2021
