@@ -40,6 +40,7 @@ public class ProcessRequest {
     GetPickupTimeResult pickupTimeResult;
     LocationIdResult locationIdResult;
     DriverDetailsResult driverDetailsResult;
+    AirwayBillResult airwayBillResult;
     Object requestBody;
     SequenceNumberRepository sequenceNumberRepository;
     @Autowired
@@ -470,7 +471,7 @@ public class ProcessRequest {
     public ProcessResult GetAirwayBill() {
         //get provider rate plan
 //        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
-        Provider provider = providerRepository.getOne(order.getDeliveryProviderId());
+        Provider provider = providerRepository.getOne(deliveryOrder.getDeliveryProviderId());
 
 
         List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(provider.getId());
@@ -480,7 +481,7 @@ public class ProcessRequest {
             String fieldValue = providerConfigList.get(j).getConfigValue();
             config.put(fieldName, fieldValue);
         }
-        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetAirwayBill", sequenceNumberRepository);
+        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, deliveryOrder, "GetAirwayBill", sequenceNumberRepository);
         dthread.start();
 
 
@@ -499,7 +500,7 @@ public class ProcessRequest {
 
         ProcessResult response = new ProcessResult();
         response.resultCode = 0;
-        response.returnObject = locationIdResult;
+        response.returnObject = airwayBillResult;
         LogUtil.info(logprefix, location, "GetLocationId finish. resultCode:" + response.resultCode, " locationIdResult count:" + locationIdResult);
         return response;
     }
@@ -547,6 +548,10 @@ public class ProcessRequest {
 
     public synchronized void setDriverDetailsResult(DriverDetailsResult driverDetailsResult) {
         this.driverDetailsResult = driverDetailsResult;
+    }
+
+    public synchronized void setAirwayBillResult(AirwayBillResult airwayBillResult) {
+        this.airwayBillResult = airwayBillResult;
     }
 
 

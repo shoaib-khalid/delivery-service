@@ -47,6 +47,7 @@ public class DeliveryQuotation {
     String orderId;
     String pickupPostcode;
     String deliveryPostcode;
+    Double serviceFee;
 
 
     @Override
@@ -80,6 +81,7 @@ public class DeliveryQuotation {
                 ", orderId='" + orderId + '\'' +
                 ", deliveryPostcode='" + deliveryPostcode + '\'' +
                 ", pickupPostcode='" + pickupPostcode + '\'' +
+                ", serviceFee='" + serviceFee + '\'' +
                 '}';
     }
 }

@@ -16,23 +16,30 @@ import com.kalsym.deliveryservice.utils.LogUtil;
 import com.kalsym.deliveryservice.utils.StringUtility;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.*;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.xml.bind.DatatypeConverter;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -84,6 +91,7 @@ public class OrdersController {
     @Autowired
     RegionCountryRepository regionCountryRepository;
 
+
     @Autowired
     DeliveryZoneCityRepository deliveryZoneCityRepository;
 
@@ -92,6 +100,18 @@ public class OrdersController {
 
     @Autowired
     StoreDeliveryDetailRepository storeDeliveryDetailRepository;
+
+    @Value("${folderPath}")
+    String folderPath;
+
+//    @Autowired
+//    DeliveryZoneCityRepository deliveryZoneCityRepository;
+//
+//    @Autowired
+//    DeliveryZonePriceRepository deliveryZonePriceRepository;
+//
+//    @Autowired
+//    StoreDeliveryDetailRepository storeDeliveryDetailRepository;
 
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
@@ -122,6 +142,7 @@ public class OrdersController {
             DeliveryZoneCity deliveryZone = deliveryZoneCityRepository.findByCityContains(orderDetails.getDelivery().getDeliveryCity());
             orderDetails.getDelivery().setDeliveryZone(deliveryZone.getZone());
         }
+
         if (stores.getMaxOrderQuantityForBike() <= 10) {
             pickup.setVehicleType(VehicleType.MOTORCYCLE);
             LogUtil.info(logprefix, location, "Vehicle Type less than 10 : ", pickup.getVehicleType().name());
@@ -235,6 +256,7 @@ public class OrdersController {
             try {
                 StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
                 orderDetails.setDeliveryProviderId(storeDeliverySp.getProvider().getId());
+
             } catch (Exception ex) {
                 LogUtil.info(systemTransactionId, location, "Exception if store sp is null  : " + ex.getMessage(), "");
 
@@ -341,7 +363,6 @@ public class OrdersController {
         }
     }
 
-
     @RequestMapping(method = RequestMethod.GET, value = "/getpickupdate/{spId}/{postcode}", name = "orders-get-pickupdate")
     public ResponseEntity<HttpReponse> getPickupDate(HttpServletRequest request,
                                                      @PathVariable("spId") Integer serviceProviderId,
@@ -374,7 +395,6 @@ public class OrdersController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
 
     @RequestMapping(method = RequestMethod.GET, value = "/getpickuptime/{spId}/{pickupdate}", name = "orders-get-pickuptime")
     public ResponseEntity<HttpReponse> getPickupTime(HttpServletRequest request,
@@ -409,7 +429,6 @@ public class OrdersController {
         }
     }
 
-
     @RequestMapping(method = RequestMethod.GET, value = "/getlocationid/{postcode}/{productCode}", name = "orders-get-locationid")
     public ResponseEntity<HttpReponse> getLocationId(HttpServletRequest request,
                                                      @PathVariable("postcode") String postcode,
@@ -443,7 +462,6 @@ public class OrdersController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
 
     @PostMapping(path = {"/confirmDelivery/{refId}/{orderId}"}, name = "orders-confirm-delivery")
     public ResponseEntity<HttpReponse> submitOrder(HttpServletRequest request,
@@ -553,7 +571,6 @@ public class OrdersController {
         }
     }
 
-
     @RequestMapping(method = RequestMethod.PATCH, value = "/cancelorder/{order-id}", name = "orders-cancel-order")
     public ResponseEntity<HttpReponse> cancelOrder(HttpServletRequest request,
                                                    @PathVariable("order-id") Long orderId) {
@@ -588,7 +605,6 @@ public class OrdersController {
         }
 
     }
-
 
     @RequestMapping(method = RequestMethod.GET, value = "/queryorder/{order-id}", name = "orders-query-order")
     public ResponseEntity<HttpReponse> queryOrder(HttpServletRequest request,
@@ -664,7 +680,6 @@ public class OrdersController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
-
 
     @PostMapping(path = {"/callback"}, name = "orders-sp-callback")
     public ResponseEntity<HttpReponse> spCallback(HttpServletRequest request,
@@ -804,7 +819,6 @@ public class OrdersController {
         }
     }
 
-
     @GetMapping(path = {"/getDeliveryProvider/{type}/{country}"}, name = "orders-confirm-delivery")
     public ResponseEntity<HttpReponse> getDeliveryProvider(HttpServletRequest request,
                                                            @PathVariable("type") String type, @PathVariable("country") String country) {
@@ -885,85 +899,42 @@ public class OrdersController {
     @GetMapping(path = {"/getAirwayBill/{orderId}"}, name = "get-airwaybill-delivery")
     public ResponseEntity<HttpReponse> getAirwayBill(HttpServletRequest request,
                                                      @PathVariable("orderId") String orderId) {
+
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
         String systemTransactionId = StringUtility.CreateRefID("DL");
-//TODO: Airway Bill
-
-        try {
-            JsonObject jsonReq = new JsonObject();
-            jsonReq.addProperty("billcode", "630020026924");
-            jsonReq.addProperty("account", "TEST");
-            jsonReq.addProperty("password", "TES123");
-            jsonReq.addProperty("customercode", "ITTEST0001");
-
-            LogUtil.info(logprefix, location, "REQUEST BODY OF JNT FOR GET PRICE : ", jsonReq.toString());
-
-            String data_digest = "630020026924";
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            md.update(data_digest.getBytes());
-            byte[] digest = md.digest();
-            String myHash = DatatypeConverter.printHexBinary(digest).toLowerCase();
-            System.err.println("SIGN " + myHash);
-
-            MultiValueMap<String, Object> postParameters = new LinkedMultiValueMap<>();
-            postParameters.add("logistics_interface", jsonReq);
-            postParameters.add("msg_type", "1");
-            postParameters.add("data_digest", myHash);
-            System.err.println("logistic " + jsonReq.toString());
-            System.err.println("data_t " + myHash);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Content-Type", "application/x-www-form-urlencoded");
 
 
-            RestTemplate restTemplate = new RestTemplate();
-            HttpEntity<String> requests = new HttpEntity(postParameters, headers);
-            ResponseEntity<String> responses = restTemplate.exchange("http://47.57.89.30/jandt_web/print/A4facelistAction!print.action", HttpMethod.POST, requests, String.class);
+
+        DeliveryOrder order = deliveryOrdersRepository.findByOrderId(orderId);
+        LogUtil.info(logprefix, location, "Order ", order.toString());
+
+        if (order != null) {
+            ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+            ProcessResult processResult = process.GetAirwayBill();
+            if (processResult.resultCode == 0) {
+                AirwayBillResult airwayBillResult = (AirwayBillResult) processResult.returnObject;
+                LogUtil.info(logprefix, location, "Consignment Response ", airwayBillResult.consignmentNote.toString());
+                try {
+                    Files.write(Paths.get(folderPath + order.getOrderId() + ".pdf"), airwayBillResult.consignmentNote);
 
 
-            int statusCode = responses.getStatusCode().value();
-            LogUtil.info(logprefix, location, "Responses", responses.getBody());
-            byte[] bytes = responses.getBody().getBytes();
-            Files.write(Paths.get("C:\\fileDownload\\1210.pdf"), bytes, StandardOpenOption.CREATE);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                } catch (IOException e) {
+                    LogUtil.info(logprefix, location, "Consignment Response ", airwayBillResult.consignmentNote.toString());
+                    response.setMessage(e.getMessage());
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
 
-//            if (statusCode == 200) {
-//                responses.resultCode = 0;
-//                responses.returnObject = extractResponseBody(responses.getBody());
-//            } else {
-//                LogUtil.info(logprefix, location, "Request failed", "");
-//                responses.resultCode = -1;
-//            }
 
-            LogUtil.info(logprefix, location, "Process finish", "");
-        } catch (Exception ex) {
-            LogUtil.error(logprefix, location, "Exception error :", "", ex);
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-
-        LogUtil.info(logprefix, location, "", "");
-
-
-//        DeliveryOrder order = deliveryOrdersRepository.findBySpOrderId(orderId);
-//
-//        if(order != null){
-//            ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-//            ProcessResult processResult = process.GetAirwayBill();
-//
-//        }
-
-//        RegionCountry regionCountry = regionCountryRepository.findByName(country);
-//        List<DeliverySpType> deliverySpType = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountry(type, country);
-//        if (deliverySpType != null) {
-//            response.setSuccessStatus(HttpStatus.OK);
-//            response.setData(deliverySpType);
-//            LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-//        } else {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//        }
     }
-
 
 }
 

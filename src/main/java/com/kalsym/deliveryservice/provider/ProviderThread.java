@@ -1,7 +1,3 @@
-/*
- * Here comes the text of your license
- * Each line should be prefixed with  *
- */
 package com.kalsym.deliveryservice.provider;
 
 import com.kalsym.deliveryservice.controllers.ProcessRequest;
@@ -220,9 +216,9 @@ public class ProviderThread extends Thread implements Runnable {
                 driverDetailsResult.providerId = provider.getId();
                 caller.setDriverDetailsResult(driverDetailsResult);
             } else if (functionName.equalsIgnoreCase("GetAirwayBill")) {
-                LocationIdResult locationIdResult = (LocationIdResult) response.returnObject;
-                locationIdResult.providerId = provider.getId();
-                caller.setLocationIdResult(locationIdResult);
+                AirwayBillResult airwayBillResult = (AirwayBillResult) response.returnObject;
+                airwayBillResult.providerId = provider.getId();
+                caller.setAirwayBillResult(airwayBillResult);
             }
             LogUtil.info(logprefix, location, "Response code:" + response.resultCode + " string:" + response.resultString + " returnObject:" + response.returnObject, "");
         } catch (Exception exp) {
@@ -231,3 +227,4 @@ public class ProviderThread extends Thread implements Runnable {
         caller.deductProviderThreadRunning();
     }
 }
+
