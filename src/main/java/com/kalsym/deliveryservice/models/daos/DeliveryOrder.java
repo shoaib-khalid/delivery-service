@@ -13,6 +13,7 @@ import javax.persistence.GenerationType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  *
@@ -24,6 +25,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@ToString
 public class DeliveryOrder {
     
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -51,4 +53,9 @@ public class DeliveryOrder {
     Double totalWeightKg;
     String merchantTrackingUrl;
     String customerTrackingUrl;
+    String driverId;
+    String riderName;
+    String riderPhoneNo;
+    String riderCarPlateNo;
+    String airwayBillURL;
 }

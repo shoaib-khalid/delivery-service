@@ -39,6 +39,8 @@ public class ProcessRequest {
     GetPickupDateResult pickupDateResult;
     GetPickupTimeResult pickupTimeResult;
     LocationIdResult locationIdResult;
+    DriverDetailsResult driverDetailsResult;
+    AirwayBillResult airwayBillResult;
     Object requestBody;
     SequenceNumberRepository sequenceNumberRepository;
     @Autowired
@@ -430,12 +432,10 @@ public class ProcessRequest {
         return response;
     }
 
-    public ProcessResult GetAirwayBill() {
+    public ProcessResult GetDriverDetails() {
         //get provider rate plan
-//        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
-        Provider provider = providerRepository.getOne(order.getDeliveryProviderId());
-
-
+        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + deliveryOrder.getDeliveryProviderId(), "");
+        Provider provider = providerRepository.findOneById(deliveryOrder.getDeliveryProviderId());
         List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(provider.getId());
         HashMap config = new HashMap();
         for (int j = 0; j < providerConfigList.size(); j++) {
@@ -443,7 +443,8 @@ public class ProcessRequest {
             String fieldValue = providerConfigList.get(j).getConfigValue();
             config.put(fieldName, fieldValue);
         }
-        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetAirwayBill", sequenceNumberRepository);
+
+        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, deliveryOrder, "GetDriverDetails", sequenceNumberRepository);
         dthread.start();
 
 
@@ -462,7 +463,44 @@ public class ProcessRequest {
 
         ProcessResult response = new ProcessResult();
         response.resultCode = 0;
-        response.returnObject = locationIdResult;
+        response.returnObject = driverDetailsResult ;
+        LogUtil.info(logprefix, location, "GetLocationId finish. resultCode:" + response.resultCode, " driverDetailsResult count:" + driverDetailsResult);
+        return response;
+    }
+
+    public ProcessResult GetAirwayBill() {
+        //get provider rate plan
+//        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
+        Provider provider = providerRepository.getOne(deliveryOrder.getDeliveryProviderId());
+
+
+        List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(provider.getId());
+        HashMap config = new HashMap();
+        for (int j = 0; j < providerConfigList.size(); j++) {
+            String fieldName = providerConfigList.get(j).getId().getConfigField();
+            String fieldValue = providerConfigList.get(j).getConfigValue();
+            config.put(fieldName, fieldValue);
+        }
+        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, deliveryOrder, "GetAirwayBill", sequenceNumberRepository);
+        dthread.start();
+
+
+        try {
+            Thread.sleep(100);
+        } catch (Exception ex) {
+        }
+
+        while (providerThreadRunning > 0) {
+            try {
+                Thread.sleep(500);
+            } catch (Exception ex) {
+            }
+            //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
+        }
+
+        ProcessResult response = new ProcessResult();
+        response.resultCode = 0;
+        response.returnObject = airwayBillResult;
         LogUtil.info(logprefix, location, "GetLocationId finish. resultCode:" + response.resultCode, " locationIdResult count:" + locationIdResult);
         return response;
     }
@@ -507,4 +545,14 @@ public class ProcessRequest {
     public synchronized void deductProviderThreadRunning() {
         providerThreadRunning--;
     }
+
+    public synchronized void setDriverDetailsResult(DriverDetailsResult driverDetailsResult) {
+        this.driverDetailsResult = driverDetailsResult;
+    }
+
+    public synchronized void setAirwayBillResult(AirwayBillResult airwayBillResult) {
+        this.airwayBillResult = airwayBillResult;
+    }
+
+
 }

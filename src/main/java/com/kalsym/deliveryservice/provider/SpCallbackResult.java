@@ -14,4 +14,5 @@ public class SpCallbackResult {
     public int providerId;
     public String spOrderId;
     public String status;
+    public String driverId;
 }

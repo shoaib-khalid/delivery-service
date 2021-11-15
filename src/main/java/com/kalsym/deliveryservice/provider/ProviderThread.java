@@ -1,11 +1,8 @@
-/*
- * Here comes the text of your license
- * Each line should be prefixed with  *
- */
 package com.kalsym.deliveryservice.provider;
 
 import com.kalsym.deliveryservice.controllers.ProcessRequest;
 import com.kalsym.deliveryservice.models.Order;
+import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.daos.Provider;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.LogUtil;
@@ -23,6 +20,7 @@ public class ProviderThread extends Thread implements Runnable {
     private final String sysTransactionId;
     private final Provider provider;
     private final Order order;
+    private final DeliveryOrder deliveryOrder;
     private final String spOrderId;
     private final HashMap providerConfig;
     private ProcessRequest caller;
@@ -41,6 +39,7 @@ public class ProviderThread extends Thread implements Runnable {
         this.functionName = functionName;
         this.spOrderId = null;
         this.sequenceNumberRepository = sequenceNumberRepository;
+        this.deliveryOrder = null;
     }
 
     public ProviderThread(ProcessRequest caller, String sysTransactionId,
@@ -52,6 +51,7 @@ public class ProviderThread extends Thread implements Runnable {
         this.caller = caller;
         this.functionName = functionName;
         this.order = null;
+        this.deliveryOrder = null;
     }
 
     public ProviderThread(ProcessRequest caller, String sysTransactionId,
@@ -64,6 +64,8 @@ public class ProviderThread extends Thread implements Runnable {
         this.functionName = functionName;
         this.spOrderId = null;
         this.order = null;
+        this.deliveryOrder = null;
+
     }
 
     public ProviderThread(ProcessRequest caller, String sysTransactionId,
@@ -75,6 +77,22 @@ public class ProviderThread extends Thread implements Runnable {
         this.functionName = functionName;
         this.spOrderId = null;
         this.order = order;
+        this.deliveryOrder = null;
+
+    }
+
+    public ProviderThread(ProcessRequest caller, String sysTransactionId,
+                          Provider provider, HashMap providerConfig, DeliveryOrder order, String functionName,
+                          SequenceNumberRepository sequenceNumberRepository) {
+        this.sysTransactionId = sysTransactionId;
+        this.provider = provider;
+        this.deliveryOrder = order;
+        this.order = null;
+        this.providerConfig = providerConfig;
+        this.caller = caller;
+        this.functionName = functionName;
+        this.spOrderId = null;
+        this.sequenceNumberRepository = sequenceNumberRepository;
     }
 
     /* (non-Javadoc)
@@ -114,6 +132,9 @@ public class ProviderThread extends Thread implements Runnable {
             } else if (functionName.equalsIgnoreCase("GetLocationId")) {
                 className = provider.getLocationIdClassname();
                 LogUtil.info(logprefix, location, "GetLocationId class name for SP ID:" + provider.getId() + " -> " + className, "");
+            } else if (functionName.equalsIgnoreCase("GetDriverDetails")) {
+                className = provider.getDriverDetailsClassName();
+                LogUtil.info(logprefix, location, "GetLocationId class name for SP ID:" + provider.getId() + " -> " + className, "");
             } else if (functionName.equalsIgnoreCase("GetAirwayBill")) {
                 className = provider.getAirwayBillClassName();
                 LogUtil.info(logprefix, location, "GetAirwayBill class name for SP ID:" + provider.getId() + " -> " + className, "");
@@ -132,6 +153,11 @@ public class ProviderThread extends Thread implements Runnable {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, requestBody, this.sysTransactionId);
                 } else if (functionName.equalsIgnoreCase("GetPickupDate") || functionName.equalsIgnoreCase("GetPickupTime") || functionName.equalsIgnoreCase("GetLocationId")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId);
+                }else if (functionName.equalsIgnoreCase("GetDriverDetails")) {
+                    reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
+                }
+                else if (functionName.equalsIgnoreCase("GetAirwayBill")) {
+                    reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
                 } else {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository);
                 }
@@ -185,10 +211,14 @@ public class ProviderThread extends Thread implements Runnable {
                 LocationIdResult locationIdResult = (LocationIdResult) response.returnObject;
                 locationIdResult.providerId = provider.getId();
                 caller.setLocationIdResult(locationIdResult);
+            } else if (functionName.equalsIgnoreCase("GetDriverDetails")) {
+                DriverDetailsResult driverDetailsResult = (DriverDetailsResult) response.returnObject;
+                driverDetailsResult.providerId = provider.getId();
+                caller.setDriverDetailsResult(driverDetailsResult);
             } else if (functionName.equalsIgnoreCase("GetAirwayBill")) {
-                LocationIdResult locationIdResult = (LocationIdResult) response.returnObject;
-                locationIdResult.providerId = provider.getId();
-                caller.setLocationIdResult(locationIdResult);
+                AirwayBillResult airwayBillResult = (AirwayBillResult) response.returnObject;
+                airwayBillResult.providerId = provider.getId();
+                caller.setAirwayBillResult(airwayBillResult);
             }
             LogUtil.info(logprefix, location, "Response code:" + response.resultCode + " string:" + response.resultString + " returnObject:" + response.returnObject, "");
         } catch (Exception exp) {

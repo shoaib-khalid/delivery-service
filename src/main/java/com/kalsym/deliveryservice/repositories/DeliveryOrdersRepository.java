@@ -12,9 +12,9 @@ import java.util.List;
  */
 @Repository
 public interface DeliveryOrdersRepository extends JpaRepository<DeliveryOrder, Long> {
-    
-    public DeliveryOrder findByDeliveryProviderIdAndSpOrderId(Integer deliveryProviderId, String spOrderId );
 
+    public DeliveryOrder findByDeliveryProviderIdAndSpOrderId(Integer deliveryProviderId, String spOrderId );
+    public DeliveryOrder findByOrderId(String orderId);
     public DeliveryOrder findBySpOrderId( String spOrderId );
 
 }
