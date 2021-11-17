@@ -39,6 +39,8 @@ public class GetPrice extends SyncDispatcher {
     private final String apiKey;
     private String sessionToken;
     private String sslVersion = "SSL";
+    private String username;
+    private String passowrd ;
 
 
     public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
@@ -47,7 +49,7 @@ public class GetPrice extends SyncDispatcher {
         this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;
         LogUtil.info(logprefix, location, "JnT GetPrices class initiliazed!!", "");
-        this.getprice_url = "http://47.57.89.30/open/api/express/getQuotedPriceByCustomer";
+        this.getprice_url = (String) config.get("getprice_url");
         this.baseUrl = (String) config.get("domainUrl");
 
         this.secretKey = (String) config.get("secretKey");
@@ -57,6 +59,8 @@ public class GetPrice extends SyncDispatcher {
         productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
         this.sslVersion = (String) config.get("ssl_version");
+        this.username = (String) config.get("username");
+        this.passowrd = (String) config.get("password");
     }
 
     @Override
@@ -71,7 +75,8 @@ public class GetPrice extends SyncDispatcher {
             String requestBody = generateRequestBody();
             LogUtil.info(logprefix, location, "REQUEST BODY OF JNT FOR GET PRICE : ", requestBody);
 
-            String data_digest = requestBody + "ffe62df84bb3d8e4b1eaa2c22775014d";
+//            String data_digest = requestBody + "ffe62df84bb3d8e4b1eaa2c22775014d";
+            String data_digest = requestBody + secretKey;
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] digest = md.digest(data_digest.getBytes(StandardCharsets.UTF_8));
             String sign = DatatypeConverter.printHexBinary(digest).toLowerCase();
@@ -111,8 +116,8 @@ public class GetPrice extends SyncDispatcher {
 
     private String generateRequestBody(){
         JsonObject jsonReq = new JsonObject();
-        jsonReq.addProperty("customerCode", "ITTEST0001");
-        jsonReq.addProperty("password", "1234");
+        jsonReq.addProperty("customerCode", username);
+        jsonReq.addProperty("password", passowrd);
         jsonReq.addProperty("expressType", "EZ");
         jsonReq.addProperty("goodsType", order.getItemType().name());
         jsonReq.addProperty("pcs", order.getPieces());

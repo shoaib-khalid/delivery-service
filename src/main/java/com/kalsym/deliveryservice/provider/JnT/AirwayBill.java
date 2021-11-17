@@ -42,11 +42,14 @@ public class AirwayBill extends SyncDispatcher {
     private final HashMap productMap;
     private final String atxProductCode = "";
     private final String logprefix;
-    private final String location = "JnTGetPrice";
+    private final String location = "JnTGetAirwayBill";
     private final String secretKey;
     private final String apiKey;
     private String sessionToken;
     private String sslVersion = "SSL";
+    private String username;
+    private String passowrd ;
+    private String customerCode ;
 
     public AirwayBill(CountDownLatch latch, HashMap config, DeliveryOrder order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
 
@@ -54,7 +57,7 @@ public class AirwayBill extends SyncDispatcher {
         this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;
         LogUtil.info(logprefix, location, "JnT AirwayBill class initiliazed!!", "");
-        this.getAirwayBill_url = "http://47.57.89.30/jandt_web/print/facelistAction!print.action";
+        this.getAirwayBill_url = (String) config.get("airwayBillURL");
         this.baseUrl = (String) config.get("domainUrl");
 
         this.secretKey = (String) config.get("secretKey");
@@ -64,6 +67,9 @@ public class AirwayBill extends SyncDispatcher {
         productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
         this.sslVersion = (String) config.get("ssl_version");
+        this.username = (String) config.get("username");
+        this.passowrd = (String) config.get("password");
+        this.customerCode = (String) config.get("customerCode");
     }
 
     @Override
@@ -76,7 +82,8 @@ public class AirwayBill extends SyncDispatcher {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/x-www-form-urlencoded");
 
-            String data_digest = "630020026924";
+//            String data_digest = "630020026924";
+            String data_digest =order.getSpOrderId();
             MessageDigest md = MessageDigest.getInstance("MD5");
             md.update(data_digest.getBytes());
             byte[] digest = md.digest();
@@ -121,22 +128,14 @@ public class AirwayBill extends SyncDispatcher {
         return response;
     }
 
-    private String generateRequestBody() {
-        JsonObject jsonReq = new JsonObject();
-        jsonReq.addProperty("billcode'", "630019479435");
-        jsonReq.addProperty("account'", "TEST");
-        jsonReq.addProperty("password'", "TES123");
-        jsonReq.addProperty("customercode'", "'ITTEST0001");
 
-        return jsonReq.toString();
-    }
 
     private MultiValueMap generateRequestBody(String hash) {
         JsonObject jsonReq = new JsonObject();
-        jsonReq.addProperty("billcode", "630020026924");
-        jsonReq.addProperty("account", "TEST");
-        jsonReq.addProperty("password", "TES123");
-        jsonReq.addProperty("customercode", "ITTEST0001");
+        jsonReq.addProperty("billcode", order.getSpOrderId());
+        jsonReq.addProperty("account", username);
+        jsonReq.addProperty("password", passowrd);
+        jsonReq.addProperty("customercode", customerCode);
 
         MultiValueMap<String, Object> postParameters = new LinkedMultiValueMap<>();
         postParameters.add("logistics_interface", jsonReq);

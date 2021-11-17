@@ -1,3 +1,11 @@
+Version v.2.2.2
+-------------------------
+Date:17-Nov-2021
+Developer:Kumar
+
+1. MarkupPrice added for delivery during get quotation
+2. Integrated TCS print airway bill
+
 Version v.2.2.1
 -------------------------
 Date:15-Nov-2021

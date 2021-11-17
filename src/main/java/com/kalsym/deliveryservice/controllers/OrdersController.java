@@ -40,7 +40,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
@@ -112,6 +114,8 @@ public class OrdersController {
 //
 //    @Autowired
 //    StoreDeliveryDetailRepository storeDeliveryDetailRepository;
+    @Autowired
+    DeliveryServiceChargeRepository deliveryMarkupPriceRepository;
 
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
@@ -299,13 +303,83 @@ public class OrdersController {
                     deliveryOrder.setDeliveryProviderId(list.providerId);
                     System.out.println("IF ERROR SHOW ERROR:  " + list.isError);
                     BigDecimal bd = new BigDecimal("0.00");
+
                     if (!list.isError) {
-                        deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
-                        deliveryOrder.setStatus("PENDING");
-                        DecimalFormat decimalFormat = new DecimalFormat("##.00");
-                        double dPrice = Double.parseDouble(decimalFormat.format(list.price));
-                        bd = new BigDecimal(dPrice);
-                        bd = bd.setScale(2, RoundingMode.HALF_UP);
+
+                        if (deliveryType.equalsIgnoreCase("adhoc")) {
+                            DeliveryServiceCharge deliveryServiceCharge = deliveryMarkupPriceRepository.findByDeliverySpIdAndStartTimeNotNull(deliveryOrder.getDeliveryProviderId().toString());
+
+                            if (deliveryServiceCharge != null) {
+                                String pattern = "HH:mm:ss";
+                                DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+
+                                Date string1 = new Date();
+                                Date currentTime = null;
+                                try {
+                                    currentTime = new SimpleDateFormat("HH:mm:ss").parse(dateFormat.format(string1));
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+                                Calendar calendar1 = Calendar.getInstance();
+                                calendar1.setTime(currentTime);
+                                calendar1.add(Calendar.DATE, 1);
+
+                                Date start = null;
+                                try {
+                                    start = new SimpleDateFormat("HH:mm:ss").parse(deliveryServiceCharge.getStartTime());
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+                                Calendar calendar2 = Calendar.getInstance();
+                                calendar2.setTime(start);
+                                calendar2.add(Calendar.DATE, 1);
+
+                                Date end = null;
+                                try {
+                                    end = new SimpleDateFormat("HH:mm:ss").parse(deliveryServiceCharge.getEndTime());
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+                                Calendar calendar3 = Calendar.getInstance();
+                                calendar3.setTime(end);
+                                calendar3.add(Calendar.DATE, 1);
+
+                                if (calendar1.getTime().after(calendar2.getTime()) && calendar1.getTime().before(calendar3.getTime())) {
+                                    Double totalPrice = Double.parseDouble(list.price.toString()) + deliveryServiceCharge.getServiceFee().doubleValue();
+                                    deliveryOrder.setAmount(totalPrice);
+                                    deliveryOrder.setStatus("PENDING");
+                                    deliveryOrder.setServiceFee(deliveryServiceCharge.getServiceFee().doubleValue());
+                                    DecimalFormat decimalFormat = new DecimalFormat("##.00");
+                                    double dPrice = totalPrice;
+                                    bd = new BigDecimal(dPrice);
+                                    bd = bd.setScale(2, RoundingMode.HALF_UP);
+                                } else {
+                                    Double totalPrice = deliveryMarkupPriceRepository.getMarkupPrice(deliveryOrder.getDeliveryProviderId().toString(), Double.parseDouble(list.price.toString()));
+                                    deliveryOrder.setAmount(totalPrice);
+                                    deliveryOrder.setStatus("PENDING");
+                                    deliveryOrder.setServiceFee(totalPrice - Double.parseDouble(list.price.toString()));
+                                    DecimalFormat decimalFormat = new DecimalFormat("##.00");
+                                    double dPrice = totalPrice;
+                                    bd = new BigDecimal(dPrice);
+                                    bd = bd.setScale(2, RoundingMode.HALF_UP);
+                                }
+
+                            } else {
+                                deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
+                                deliveryOrder.setStatus("PENDING");
+                                DecimalFormat decimalFormat = new DecimalFormat("##.00");
+                                double dPrice = Double.parseDouble(decimalFormat.format(Double.parseDouble(list.price.toString())));
+                                bd = new BigDecimal(dPrice);
+                                bd = bd.setScale(2, RoundingMode.HALF_UP);
+                            }
+                        } else {
+                            deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
+                            deliveryOrder.setStatus("PENDING");
+                            DecimalFormat decimalFormat = new DecimalFormat("##.00");
+                            double dPrice = Double.parseDouble(decimalFormat.format(list.price));
+                            bd = new BigDecimal(dPrice);
+                            bd = bd.setScale(2, RoundingMode.HALF_UP);
+                        }
                     } else {
                         deliveryOrder.setAmount(Double.parseDouble("0.00"));
                         deliveryOrder.setStatus("FAILED");
@@ -566,6 +640,7 @@ public class OrdersController {
             quotation.setOrderId(orderId);
             quotation.setUpdatedDate(new Date());
             deliveryQuotationRepository.save(quotation);
+            response.setMessage(processResult.resultString);
             //fail to get price
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
@@ -848,6 +923,7 @@ public class OrdersController {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
+        System.out.println("OrderId : " + orderId);
 
         DeliveryOrder order = deliveryOrdersRepository.findByOrderId(orderId);
 

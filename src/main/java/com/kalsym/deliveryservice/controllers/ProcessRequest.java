@@ -203,6 +203,7 @@ public class ProcessRequest {
             response.resultCode = 0;
         } else {
             response.resultCode = -1;
+            response.resultString = submitOrderResult.message;
             LogUtil.info(logprefix, location, "Fail to create order", "");
         }
 
@@ -463,7 +464,7 @@ public class ProcessRequest {
 
         ProcessResult response = new ProcessResult();
         response.resultCode = 0;
-        response.returnObject = driverDetailsResult ;
+        response.returnObject = driverDetailsResult;
         LogUtil.info(logprefix, location, "GetLocationId finish. resultCode:" + response.resultCode, " driverDetailsResult count:" + driverDetailsResult);
         return response;
     }

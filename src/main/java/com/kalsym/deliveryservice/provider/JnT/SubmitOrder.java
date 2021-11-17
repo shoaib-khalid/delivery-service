@@ -47,6 +47,7 @@ public class SubmitOrder extends SyncDispatcher {
     private String secretKey;
     private String apiKey;
     private String username;
+    private String passowrd;
 
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
@@ -63,6 +64,8 @@ public class SubmitOrder extends SyncDispatcher {
         this.waitTimeout = Integer.parseInt((String) config.get("submitorder_wait_timeout"));
         productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
+        this.username = (String) config.get("username");
+        this.passowrd = (String) config.get("password");
     }
 
     @Override
@@ -172,7 +175,7 @@ public class SubmitOrder extends SyncDispatcher {
         JsonArray detailsArray = new JsonArray();
         JsonObject details = new JsonObject();
         details.addProperty("username", this.username);
-        details.addProperty("api_key", this.apiKey);
+        details.addProperty("api_key", this.passowrd);
         details.addProperty("cuscode", systemTransactionId);
         details.addProperty("orderid", systemTransactionId);
         details.addProperty("shipper_contact", order.getPickup().getPickupContactName());

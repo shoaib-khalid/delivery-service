@@ -14,4 +14,5 @@ public class SubmitOrderResult {
     public int providerId;
     public DeliveryOrder orderCreated;
     public boolean isSuccess;
+    public String message;
 }

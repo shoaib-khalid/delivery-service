@@ -49,7 +49,6 @@ public class DeliveryQuotation {
     String deliveryPostcode;
     Double serviceFee;
 
-
     @Override
     public String toString() {
         return "DeliveryQuotation{" +

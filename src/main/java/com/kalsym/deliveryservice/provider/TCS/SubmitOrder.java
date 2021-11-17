@@ -3,10 +3,12 @@ package com.kalsym.deliveryservice.provider.TCS;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
+import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SubmitOrderResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
+import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
@@ -36,6 +38,9 @@ public class SubmitOrder extends SyncDispatcher {
     private String shareLink;
     private String status;
 
+    private String username;
+    private String passowrd ;
+
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
         logprefix = systemTransactionId;
@@ -50,6 +55,8 @@ public class SubmitOrder extends SyncDispatcher {
         this.waitTimeout = Integer.parseInt((String) config.get("submitorder_wait_timeout"));
         productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
+        this.username = (String) config.get("username");
+        this.passowrd = (String) config.get("password");
     }
 
     @Override
@@ -80,8 +87,8 @@ public class SubmitOrder extends SyncDispatcher {
 
     private String generateBody() {
         JsonObject jsonRequest = new JsonObject();
-        jsonRequest.addProperty("userName", "Testapp");
-        jsonRequest.addProperty("password", "test123");
+        jsonRequest.addProperty("userName", username);
+        jsonRequest.addProperty("password", passowrd);
         jsonRequest.addProperty("costCenterCode", "1123");
         jsonRequest.addProperty("consigneeName", order.getPickup().getPickupContactName());
         jsonRequest.addProperty("consigneeAddress", order.getPickup().getPickupAddress());
@@ -110,20 +117,48 @@ public class SubmitOrder extends SyncDispatcher {
             JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
             JsonObject returnStatus = jsonResp.get("returnStatus").getAsJsonObject();
             String message = returnStatus.get("message").getAsString();
+            String status = returnStatus.get("status").getAsString();
             String code = returnStatus.get("code").getAsString();
+
+            DeliveryOrder orderCreated = new DeliveryOrder();
             if (code == "0200") {
                 JsonObject bookingReply = jsonResp.get("bookingReply").getAsJsonObject();
                 String consignmentNote = bookingReply.get("result").getAsString();
                 String extractedCN = consignmentNote.substring(21);
+
+                orderCreated.setSpOrderId(extractedCN);
+                orderCreated.setSpOrderName(extractedCN);
+                orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
+                orderCreated.setStatus(status);
+                submitOrderResult.orderCreated = orderCreated;
+                submitOrderResult.isSuccess = true;
+
                 LogUtil.info(logprefix, location, "Consignment note for TCS: " + extractedCN, "");
             } else if (code == "0400") {
+
+                submitOrderResult.providerId = orderCreated.getDeliveryProviderId();
+                submitOrderResult.isSuccess = false;
+                submitOrderResult.message = message;
+
                 LogUtil.info(logprefix, location, "TCS: Bad Request / Custom validation message. Message: " + message, "");
             } else if (code == "0404") {
+                submitOrderResult.providerId = orderCreated.getDeliveryProviderId();
+                submitOrderResult.isSuccess = false;
+                submitOrderResult.message = message;
+
                 LogUtil.info(logprefix, location, "TCS: Data Not Found.", "");
             } else if (code == "0408") {
+                submitOrderResult.providerId = orderCreated.getDeliveryProviderId();
+                submitOrderResult.isSuccess = false;
+                submitOrderResult.message = message;
+
                 LogUtil.info(logprefix, location, "TCS: The server is taking too long to respond, please try later.", "");
             } else {
                 LogUtil.info(logprefix, location, "TCS: An internal error has occurred.", "");
+                submitOrderResult.providerId = orderCreated.getDeliveryProviderId();
+                submitOrderResult.isSuccess = false;
+                submitOrderResult.message = message;
+
             }
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
