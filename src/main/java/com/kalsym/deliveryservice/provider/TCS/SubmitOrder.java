@@ -25,21 +25,14 @@ public class SubmitOrder extends SyncDispatcher {
     private final int waitTimeout;
     private final String systemTransactionId;
     private Order order;
-    private HashMap productMap;
-    private String atxProductCode = "";
-    private String sessionToken;
-    private String sslVersion = "SSL";
     private String logprefix;
     private String location = "TCSSubmitOrder";
-    private String secretKey;
-    private String apiKey;
-    private String spOrderId;
-    private String driverId;
-    private String shareLink;
-    private String status;
+
+    private String costCenterCode;
+    private String clientId;
 
     private String username;
-    private String passowrd ;
+    private String password ;
 
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
@@ -48,15 +41,15 @@ public class SubmitOrder extends SyncDispatcher {
         LogUtil.info(logprefix, location, "TCS SubmitOrder class initiliazed!!", "");
 
         this.baseUrl = (String) config.get("domainUrl");
-        this.submitOrder_url = "https://api.tcscourier.com/sandbox/v1/cod/create-order";
-        this.secretKey = (String) config.get("secretKey");
+        this.submitOrder_url = (String) config.get("submitOrder_url");
         this.endpointUrl = (String) config.get("place_orderUrl");
         this.connectTimeout = Integer.parseInt((String) config.get("submitorder_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("submitorder_wait_timeout"));
-        productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
         this.username = (String) config.get("username");
-        this.passowrd = (String) config.get("password");
+        this.password = (String) config.get("password");
+        this.costCenterCode = (String) config.get("costCenterCode");
+        this.clientId = (String) config.get("clientId");
     }
 
     @Override
@@ -67,7 +60,7 @@ public class SubmitOrder extends SyncDispatcher {
         RestTemplate restTemplate = new RestTemplate();
         HashMap httpHeader = new HashMap();
         httpHeader.put("Content-Type", "application/json");
-        httpHeader.put("X-IBM-Client-Id", "e6966d77-3b34-4594-b84d-612a66adb01d");
+        httpHeader.put("X-IBM-Client-Id", clientId);
         String requestBody = generateBody();
 
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, submitOrder_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
@@ -88,17 +81,17 @@ public class SubmitOrder extends SyncDispatcher {
     private String generateBody() {
         JsonObject jsonRequest = new JsonObject();
         jsonRequest.addProperty("userName", username);
-        jsonRequest.addProperty("password", passowrd);
-        jsonRequest.addProperty("costCenterCode", "1123");
+        jsonRequest.addProperty("password", password);
+        jsonRequest.addProperty("costCenterCode", costCenterCode);
         jsonRequest.addProperty("consigneeName", order.getPickup().getPickupContactName());
         jsonRequest.addProperty("consigneeAddress", order.getPickup().getPickupAddress());
         jsonRequest.addProperty("consigneeMobNo", order.getPickup().getPickupContactPhone());
         jsonRequest.addProperty("consigneeEmail", order.getPickup().getPickupContactEmail());
-        jsonRequest.addProperty("originCityName", "Karachi"); //TODO : SAFE IN DB
-        jsonRequest.addProperty("destinationCityName", "Lahore");
+        jsonRequest.addProperty("originCityName", order.getPickup().getPickupCity());
+        jsonRequest.addProperty("destinationCityName", order.getDelivery().getDeliveryCity());
         jsonRequest.addProperty("weight", order.getTotalWeightKg());
         jsonRequest.addProperty("pieces", 1);
-        jsonRequest.addProperty("codAmount", 231.20);
+        jsonRequest.addProperty("codAmount", order.getShipmentValue());
         jsonRequest.addProperty("customerReferenceNo", order.getOrderId());
         jsonRequest.addProperty("services", "O");
         jsonRequest.addProperty("fragile", "yes");

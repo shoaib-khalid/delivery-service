@@ -1,7 +1,6 @@
 package com.kalsym.deliveryservice.provider.TCS;
 
 import com.kalsym.deliveryservice.models.Order;
-import com.kalsym.deliveryservice.models.daos.DeliveryZoneCity;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
@@ -20,7 +19,7 @@ public class GetPrice extends SyncDispatcher {
     private final int connectTimeout;
     private final int waitTimeout;
     private final String systemTransactionId;
-//    private final Integer providerId;
+    //    private final Integer providerId;
     @Autowired
     private DeliveryZoneCityRepository deliveryZoneCityRepository;
     private Order order;
@@ -64,8 +63,10 @@ public class GetPrice extends SyncDispatcher {
         Double gst;
         Double totalCharge = 0.00;
 
+
         Double weight = order.getTotalWeightKg();
         if (pickupCity.equals(deliveryCity)) {
+
             if (weight <= 0.5) {
                 lastMileLogistics = 120.00;
             } else if (weight > 0.5 && weight == 1) {
@@ -75,6 +76,7 @@ public class GetPrice extends SyncDispatcher {
             }
 
         } else if (zonePickup.equals(zoneDelivery)) {
+
             if (weight <= 0.5) {
                 lastMileLogistics = 170.00;
             } else if (weight > 0.5 && weight == 1) {
@@ -94,10 +96,15 @@ public class GetPrice extends SyncDispatcher {
         fuelCharges = (lastMileLogistics * 20) / 100;
         gst = (lastMileLogistics * 16) / 100;
         totalCharge = lastMileLogistics + fuelCharges + gst;
+
         PriceResult priceResult = new PriceResult();
         BigDecimal bd = new BigDecimal(totalCharge);
         bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
         priceResult.price = bd;
+        priceResult.pickupCity = pickupCity;
+        priceResult.deliveryCity = deliveryCity;
+        priceResult.pickupZone = zonePickup;
+        priceResult.deliveryZone = zoneDelivery;
         response.resultCode = 0;
         response.returnObject = priceResult;
 

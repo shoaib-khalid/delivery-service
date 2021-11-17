@@ -93,14 +93,6 @@ public class OrdersController {
     @Value("${folderPath}")
     String folderPath;
 
-    //    @Autowired
-//    DeliveryZoneCityRepository deliveryZoneCityRepository;
-//
-//    @Autowired
-//    DeliveryZonePriceRepository deliveryZonePriceRepository;
-//
-//    @Autowired
-//    StoreDeliveryDetailRepository storeDeliveryDetailRepository;
     @Autowired
     DeliveryServiceChargeRepository deliveryMarkupPriceRepository;
 
@@ -166,10 +158,6 @@ public class OrdersController {
         }
 //        orderDetails.setProductCode(stores.getItemType().name());
         orderDetails.getDelivery().setDeliveryAddress(deliveryAddress);
-
-        /*
-        Calendar cal = Calendar.getInstance();
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-mm-dd HH:mm");*/
 
         String phone = orderDetails.getPickup().getPickupContactPhone();
         String contactName = orderDetails.getPickup().getPickupContactName();
@@ -272,11 +260,13 @@ public class OrdersController {
                     deliveryOrder.setPickupPostcode(orderDetails.getPickup().getPickupPostcode());
                     deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
                     deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
+                    deliveryOrder.setPickupCity(orderDetails.getPickup().getPickupCity());
 
                     deliveryOrder.setDeliveryAddress(deliveryAddress);
                     deliveryOrder.setDeliveryPostcode(orderDetails.getDelivery().getDeliveryPostcode());
                     deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
                     deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
+                    deliveryOrder.setDeliveryCity(orderDetails.getDelivery().getDeliveryCity());
 
                     deliveryOrder.setItemType(orderDetails.getItemType().name());
                     deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
@@ -288,7 +278,13 @@ public class OrdersController {
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
 
                     deliveryOrder.setDeliveryProviderId(list.providerId);
-                    System.out.println("IF ERROR SHOW ERROR:  " + list.isError);
+
+                    if (store.getRegionCountryId().equals("PAK")) {
+                        deliveryOrder.setPickupZone(list.pickupZone);
+                        deliveryOrder.setDeliveryZone(list.deliveryZone);
+                    }
+
+
                     BigDecimal bd = new BigDecimal("0.00");
 
                     if (!list.isError) {
@@ -550,6 +546,10 @@ public class OrdersController {
         orderDetails.setOrderId(orderId);
 
         Pickup pickup = new Pickup();
+
+        Delivery delivery = new Delivery();
+
+
         pickup.setPickupContactName(quotation.getPickupContactName());
         pickup.setPickupContactPhone(quotation.getPickupContactPhone());
         pickup.setPickupAddress(quotation.getPickupAddress());
@@ -559,17 +559,17 @@ public class OrdersController {
         pickup.setEndPickupTime(schedule.getEndPickScheduleTime());
         pickup.setPickupDate(schedule.getStartPickScheduleDate());
         pickup.setPickupTime(schedule.getStartPickScheduleTime());
+        pickup.setPickupCity(quotation.getPickupCity());
         orderDetails.setPickup(pickup);
 
 
-        Delivery delivery = new Delivery();
         delivery.setDeliveryAddress(quotation.getDeliveryAddress());
         delivery.setDeliveryContactName(quotation.getDeliveryContactName());
         delivery.setDeliveryContactPhone(quotation.getDeliveryContactPhone());
         delivery.setDeliveryPostcode(quotation.getDeliveryPostcode());
+        delivery.setDeliveryCity(quotation.getDeliveryCity());
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());
-
 
         //generate transaction id
         LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " "

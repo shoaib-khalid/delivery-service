@@ -49,6 +49,11 @@ public class DeliveryQuotation {
     String deliveryPostcode;
     Double serviceFee;
 
+    String pickupCity;
+    String deliveryCity;
+    String pickupZone;
+    String deliveryZone;
+
     @Override
     public String toString() {
         return "DeliveryQuotation{" +
