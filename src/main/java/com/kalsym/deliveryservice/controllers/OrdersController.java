@@ -1,7 +1,6 @@
 package com.kalsym.deliveryservice.controllers;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.*;
 import com.kalsym.deliveryservice.models.daos.*;
 import com.kalsym.deliveryservice.models.enums.ItemType;
@@ -16,30 +15,18 @@ import com.kalsym.deliveryservice.utils.LogUtil;
 import com.kalsym.deliveryservice.utils.StringUtility;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.*;
-import org.springframework.http.converter.ByteArrayHttpMessageConverter;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -106,7 +93,7 @@ public class OrdersController {
     @Value("${folderPath}")
     String folderPath;
 
-//    @Autowired
+    //    @Autowired
 //    DeliveryZoneCityRepository deliveryZoneCityRepository;
 //
 //    @Autowired
@@ -930,28 +917,30 @@ public class OrdersController {
         if (order != null) {
             ProcessRequest process = new ProcessRequest(order.getSystemTransactionId(), order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
             ProcessResult processResult = process.GetDriverDetails();
-            Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
+            if (processResult.resultCode == 0) {
+                Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
 
-            DriverDetailsResult driverDetailsResult = (DriverDetailsResult) processResult.returnObject;
-            order.setRiderName(driverDetailsResult.driverDetails.getName());
-            order.setRiderPhoneNo(driverDetailsResult.driverDetails.getPhoneNumber());
-            order.setRiderCarPlateNo(driverDetailsResult.driverDetails.getPlateNumber());
-            deliveryOrdersRepository.save(order);
-            RiderDetails riderDetails = driverDetailsResult.driverDetails;
-            riderDetails.setOrderNumber(order.getSpOrderId());
-            riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
-            riderDetails.setProvider(provider);
-            riderDetails.setAirwayBill(order.getAirwayBillURL());
-            response.setData(riderDetails);
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+                DriverDetailsResult driverDetailsResult = (DriverDetailsResult) processResult.returnObject;
+                order.setRiderName(driverDetailsResult.driverDetails.getName());
+                order.setRiderPhoneNo(driverDetailsResult.driverDetails.getPhoneNumber());
+                order.setRiderCarPlateNo(driverDetailsResult.driverDetails.getPlateNumber());
+                deliveryOrdersRepository.save(order);
+                RiderDetails riderDetails = driverDetailsResult.driverDetails;
+                riderDetails.setOrderNumber(order.getSpOrderId());
+                riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
+                riderDetails.setProvider(provider);
+                riderDetails.setAirwayBill(order.getAirwayBillURL());
+                response.setData(riderDetails);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 
+            }
         } else {
 
             LogUtil.info(logprefix, location, "", "order not found ");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
-
-
     }
 
 
@@ -982,7 +971,6 @@ public class OrdersController {
         String systemTransactionId = StringUtility.CreateRefID("DL");
 
 
-
         DeliveryOrder order = deliveryOrdersRepository.findByOrderId(orderId);
         LogUtil.info(logprefix, location, "Order ", order.toString());
 
@@ -1005,8 +993,6 @@ public class OrdersController {
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
-
-
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }

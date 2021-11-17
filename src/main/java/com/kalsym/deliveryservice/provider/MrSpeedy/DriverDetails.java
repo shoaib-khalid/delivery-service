@@ -78,15 +78,23 @@ public class DriverDetails extends SyncDispatcher {
 
     private DriverDetailsResult extractResponseBody(String respString) {
         JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
-        JsonObject orderObject = jsonResp.get("courier").getAsJsonObject();
-
+        boolean status = jsonResp.get("is_successful").getAsBoolean();
         DriverDetailsResult driverDetailsResult = new DriverDetailsResult();
-        RiderDetails details = new RiderDetails();
-        details.setDriverId(orderObject.get("courier_id").getAsString());
-        details.setName(orderObject.get("name").getAsString());
-        details.setPhoneNumber(orderObject.get("phone").getAsString());
 
-        driverDetailsResult.driverDetails = details;
+        if (status) {
+            JsonObject orderObject = jsonResp.get("courier").getAsJsonObject();
+
+            RiderDetails details = new RiderDetails();
+            details.setDriverId(orderObject.get("courier_id").getAsString());
+            details.setName(orderObject.get("name").getAsString());
+            details.setPhoneNumber(orderObject.get("phone").getAsString());
+            driverDetailsResult.driverDetails = details;
+            driverDetailsResult.resultCode = 0;
+
+        } else {
+            driverDetailsResult.resultCode = -1;
+        }
+
         return driverDetailsResult;
     }
 }

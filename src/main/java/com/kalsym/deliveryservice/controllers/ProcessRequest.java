@@ -463,9 +463,9 @@ public class ProcessRequest {
         }
 
         ProcessResult response = new ProcessResult();
-        response.resultCode = 0;
+        response.resultCode = driverDetailsResult.resultCode;
         response.returnObject = driverDetailsResult;
-        LogUtil.info(logprefix, location, "GetLocationId finish. resultCode:" + response.resultCode, " driverDetailsResult count:" + driverDetailsResult);
+        LogUtil.info(logprefix, location, "GetDriverDetails finish. resultCode:" + response.resultCode, " driverDetailsResult count:" + driverDetailsResult);
         return response;
     }
 
@@ -502,7 +502,7 @@ public class ProcessRequest {
         ProcessResult response = new ProcessResult();
         response.resultCode = 0;
         response.returnObject = airwayBillResult;
-        LogUtil.info(logprefix, location, "GetLocationId finish. resultCode:" + response.resultCode, " locationIdResult count:" + locationIdResult);
+        LogUtil.info(logprefix, location, "GetAirwayBill finish. resultCode:" + response.resultCode, " airwayBillResult count:" + airwayBillResult);
         return response;
     }
 
