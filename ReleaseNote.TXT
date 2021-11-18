@@ -1,9 +1,25 @@
+Version v.2.1.5
+-------------------------
+Date:18-Nov-2021
+Developer:Kumar
+
+1. Production Server Bug Fixed (get rider details)
+2. Callback Lalamove status bug fixed
+3. Removed latest changes after version 2.2.0
+
 Version v.2.2.4
 -------------------------
 Date:17-Nov-2021
 Developer:Kumar
 
 1. Tcs Bug Fixed
+
+DB:
+delivery_quotation
+1. deliveryCity varchar(100)
+2. pickupCity varchar(100)
+3. deliveryZone varchar(100)
+4. pickupZone varchar(100)
 
 Version v.2.2.3
 -------------------------
@@ -12,13 +28,27 @@ Developer:Kumar
 
 1. Get Rider Details Bug Fixed
 
-
 Version v.2.2.2
 -------------------------
 Date:17-Nov-2021
 Developer:Kumar
 
 1. MarkupPrice added for delivery during get quotation
+
+DB:
+delivery_quotation
+1. serviceFee DECIMAL(10,2)
+
+CREATE TABLE `delivery_service_charge` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `deliverySpId` varchar(50) NOT NULL,
+  `startTime` varchar(50) DEFAULT NULL,
+  `endTime` varchar(50) DEFAULT NULL,
+  `serviceFee` decimal(10,2) NOT NULL,
+  `priceBelowRange` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3
+
 2. Integrated TCS print airway bill
 
 Version v.2.2.1
@@ -34,6 +64,29 @@ Date:12-Nov-2021
 Developer:Kumar
 
 1. Added New TCS Provider Integration
+DB:
+delivery_quotation
+1. deliveryPostcode
+2. pickupPostcode
+
+provider
+1. regionCountryId
+
+CREATE TABLE `delivery_zone_city` (
+  `city` varchar(200) DEFAULT NULL,
+  `zone` varchar(200) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3
+
+
+CREATE TABLE `delivery_zone_price` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `spId` varchar(50) NOT NULL,
+  `weight` decimal(15,2) NOT NULL,
+  `withInCity` decimal(15,2) NOT NULL,
+  `sameZone` decimal(15,2) NOT NULL,
+  `differentZone` decimal(15,2) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3
 
 Version v.2.1.5
 -------------------------

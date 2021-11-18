@@ -28,7 +28,7 @@ public class DriverDetails extends SyncDispatcher {
     private String sessionToken;
     private String sslVersion = "SSL";
     private String logprefix;
-    private String location = "MrSpeedyGetPrice";
+    private String location = "MrSpeedyQueryRiderDetails";
 
     public DriverDetails(CountDownLatch latch, HashMap config, DeliveryOrder order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
 

@@ -36,7 +36,7 @@ public class DriverDetails extends SyncDispatcher {
     private String sessionToken;
     private String sslVersion = "SSL";
     private String logprefix;
-    private String location = "LalaMoveQueryOrder";
+    private String location = "LalaMoveQueryRiderDetails";
     private String secretKey;
     private String apiKey;
     private DeliveryOrder order;
