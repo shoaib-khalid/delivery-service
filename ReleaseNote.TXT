@@ -1,3 +1,11 @@
+Version v.2.1.7
+-------------------------
+Date:18-Nov-2021
+Developer:Kumar
+
+1. Bug Fixed Remove Latest Patch DB Parameter
+
+
 Version v.2.1.6
 -------------------------
 Date:18-Nov-2021

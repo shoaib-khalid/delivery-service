@@ -574,7 +574,7 @@ public class OrdersController {
 //        pickup.setEndPickupTime(schedule.getEndPickScheduleTime());
 //        pickup.setPickupDate(schedule.getStartPickScheduleDate());
 //        pickup.setPickupTime(schedule.getStartPickScheduleTime());
-        pickup.setPickupCity(quotation.getPickupCity());
+//        pickup.setPickupCity(quotation.getPickupCity());
         orderDetails.setPickup(pickup);
 
 
@@ -582,7 +582,7 @@ public class OrdersController {
         delivery.setDeliveryContactName(quotation.getDeliveryContactName());
         delivery.setDeliveryContactPhone(quotation.getDeliveryContactPhone());
 //        delivery.setDeliveryPostcode(quotation.getDeliveryPostcode());
-        delivery.setDeliveryCity(quotation.getDeliveryCity());
+//        delivery.setDeliveryCity(quotation.getDeliveryCity());
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());
 
