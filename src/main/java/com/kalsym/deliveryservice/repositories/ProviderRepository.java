@@ -13,5 +13,5 @@ import java.util.List;
 public interface ProviderRepository extends JpaRepository<Provider, Integer> {
     public Provider findOneById(Integer id);
 
-    public List<Provider> findAllByRegionCountryId(String regionCountry);
+//    public List<Provider> findAllByRegionCountryId(String regionCountry);
 }

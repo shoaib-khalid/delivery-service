@@ -263,13 +263,13 @@ public class OrdersController {
                     deliveryOrder.setPickupPostcode(orderDetails.getPickup().getPickupPostcode());
                     deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
                     deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
-                    deliveryOrder.setPickupCity(orderDetails.getPickup().getPickupCity());
+//                    deliveryOrder.setPickupCity(orderDetails.getPickup().getPickupCity());
 
                     deliveryOrder.setDeliveryAddress(deliveryAddress);
                     deliveryOrder.setDeliveryPostcode(orderDetails.getDelivery().getDeliveryPostcode());
                     deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
                     deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
-                    deliveryOrder.setDeliveryCity(orderDetails.getDelivery().getDeliveryCity());
+//                    deliveryOrder.setDeliveryCity(orderDetails.getDelivery().getDeliveryCity());
 
                     deliveryOrder.setItemType(orderDetails.getItemType().name());
                     deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
@@ -282,10 +282,10 @@ public class OrdersController {
 
                     deliveryOrder.setDeliveryProviderId(list.providerId);
 
-                    if (store.getRegionCountryId().equals("PAK")) {
-                        deliveryOrder.setPickupZone(list.pickupZone);
-                        deliveryOrder.setDeliveryZone(list.deliveryZone);
-                    }
+//                    if (store.getRegionCountryId().equals("PAK")) {
+//                        deliveryOrder.setPickupZone(list.pickupZone);
+//                        deliveryOrder.setDeliveryZone(list.deliveryZone);
+//                    }
 
 
                     BigDecimal bd = new BigDecimal("0.00");
@@ -568,7 +568,7 @@ public class OrdersController {
         pickup.setPickupContactName(quotation.getPickupContactName());
         pickup.setPickupContactPhone(quotation.getPickupContactPhone());
         pickup.setPickupAddress(quotation.getPickupAddress());
-        pickup.setPickupPostcode(quotation.getPickupPostcode());
+//        pickup.setPickupPostcode(quotation.getPickupPostcode());
         pickup.setVehicleType(VehicleType.valueOf(quotation.getVehicleType()));
 //        pickup.setEndPickupDate(schedule.getEndPickScheduleDate());
 //        pickup.setEndPickupTime(schedule.getEndPickScheduleTime());
@@ -581,7 +581,7 @@ public class OrdersController {
         delivery.setDeliveryAddress(quotation.getDeliveryAddress());
         delivery.setDeliveryContactName(quotation.getDeliveryContactName());
         delivery.setDeliveryContactPhone(quotation.getDeliveryContactPhone());
-        delivery.setDeliveryPostcode(quotation.getDeliveryPostcode());
+//        delivery.setDeliveryPostcode(quotation.getDeliveryPostcode());
         delivery.setDeliveryCity(quotation.getDeliveryCity());
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());
