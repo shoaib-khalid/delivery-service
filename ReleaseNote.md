@@ -1,14 +1,14 @@
-Version v.2.1.9
--------------------------
-Date:19-Nov-2021
-Developer:Kumar
+##################################################
+# Version v.2.1.10 | 19-November-2021
+##################################################
+### Code Changes:
 
-1. Bug Fixed Get Rider Details.
+1.  MrSpeedy Get Rider Details Bug fixed 
 
-Version v.2.1.8
--------------------------
-Date:19-Nov-2021
-Developer:Kumar
+##################################################
+#Version v.2.1.8 | 19-November-2021
+##################################################
+### Code Changes:
 
 1. Bug Fixed Get Rider Details.
 2. Move the query rider details to during callback

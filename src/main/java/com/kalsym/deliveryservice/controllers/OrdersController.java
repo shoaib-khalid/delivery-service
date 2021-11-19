@@ -780,12 +780,18 @@ public class OrdersController {
             String spOrderId = spCallbackResult.spOrderId;
             String status = spCallbackResult.status;
             int spId = spCallbackResult.providerId;
+            String deliveryId = spCallbackResult.driverId;
             DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
+
+
             if (deliveryOrder != null) {
                 LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
                 deliveryOrder.setStatus(status);
                 String orderStatus = "";
                 String res;
+
+                deliveryOrder.setDriverId(deliveryId);
+                deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                 // change from order status codes to delivery status codes.
                 if (status.equals("active")) {
                     orderStatus = "BEING_DELIVERED";
@@ -805,7 +811,6 @@ public class OrdersController {
                     orderStatus = "REJECTED_BY_STORE";
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 }
-
 
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                 deliveryOrdersRepository.save(deliveryOrder);
