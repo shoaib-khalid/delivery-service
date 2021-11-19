@@ -1,3 +1,10 @@
+Version v.2.1.9
+-------------------------
+Date:19-Nov-2021
+Developer:Kumar
+
+1. Bug Fixed Get Rider Details.
+
 Version v.2.1.8
 -------------------------
 Date:19-Nov-2021

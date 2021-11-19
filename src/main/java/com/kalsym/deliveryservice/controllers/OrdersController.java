@@ -874,6 +874,9 @@ public class OrdersController {
                 deliveryOrder.setStatus(status);
                 String orderStatus = "";
                 String res;
+                deliveryOrder.setDriverId(deliveryId);
+                deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
+
                 // change from order status codes to delivery status codes.
                 if (status.equals("ON_GOING")) {
                     LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime : ", status);
@@ -910,8 +913,6 @@ public class OrdersController {
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 }
 
-                deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
-                deliveryOrder.setDriverId(deliveryId);
                 deliveryOrdersRepository.save(deliveryOrder);
             } else {
                 LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
@@ -972,8 +973,8 @@ public class OrdersController {
 //                order.setRiderCarPlateNo(driverDetailsResult.driverDetails.getPlateNumber());
 //                deliveryOrdersRepository.save(order);
                 RiderDetails riderDetails =new RiderDetails();
-                riderDetails.setName(order.getDeliveryContactName());
-                riderDetails.setPhoneNumber(order.getDeliveryContactPhone());
+                riderDetails.setName(order.getRiderName());
+                riderDetails.setPhoneNumber(order.getRiderPhoneNo());
                 riderDetails.setDriverId(order.getDriverId());
                 riderDetails.setPlateNumber(order.getRiderCarPlateNo());
                 riderDetails.setOrderNumber(order.getSpOrderId());
