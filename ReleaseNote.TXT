@@ -1,3 +1,11 @@
+Version v.2.1.8
+-------------------------
+Date:19-Nov-2021
+Developer:Kumar
+
+1. Bug Fixed Get Rider Details.
+2. Move the query rider details to during callback
+
 Version v.2.1.7
 -------------------------
 Date:18-Nov-2021

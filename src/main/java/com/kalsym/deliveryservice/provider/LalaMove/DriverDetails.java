@@ -65,7 +65,6 @@ public class DriverDetails extends SyncDispatcher {
         String transactionId = "";
         Mac mac = null;
         String METHOD = "GET";
-        spOrderId = "143768903055";
 
         try {
             mac = Mac.getInstance("HmacSHA256");
@@ -76,16 +75,15 @@ public class DriverDetails extends SyncDispatcher {
         } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
-        System.out.println("DELIVERY RIDER ID : " + order.getDriverId());
-        String url = queryRiderDetails_url + spOrderId + "/drivers/" + order.getDriverId();
+
+        String url = queryRiderDetails_url + order.getSpOrderId() + "/drivers/" + order.getDriverId();
         String timeStamp = String.valueOf(System.currentTimeMillis());
-        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v2/orders/" + spOrderId + "/drivers/" + order.getDriverId() + "\r\n\r\n";
+        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v2/orders/" + order.getSpOrderId() + "/drivers/" + order.getDriverId() + "\r\n\r\n";
         byte[] byteSig = mac.doFinal(rawSignature.getBytes());
         String signature = DatatypeConverter.printHexBinary(byteSig);
         signature = signature.toLowerCase();
 
         String token = apiKey + ":" + timeStamp + ":" + signature;
-        System.out.println();
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();

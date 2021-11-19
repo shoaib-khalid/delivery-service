@@ -790,6 +790,14 @@ public class OrdersController {
                 if (status.equals("active")) {
                     orderStatus = "BEING_DELIVERED";
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                    ProcessRequest rider = new ProcessRequest(deliveryOrder.getSystemTransactionId(), deliveryOrder, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+                    ProcessResult riderResponse = rider.GetDriverDetails();
+                    if (processResult.resultCode == 0) {
+                        DriverDetailsResult driverDetailsResult = (DriverDetailsResult) riderResponse.returnObject;
+                        deliveryOrder.setRiderName(driverDetailsResult.driverDetails.getName());
+                        deliveryOrder.setRiderPhoneNo(driverDetailsResult.driverDetails.getPhoneNumber());
+                        deliveryOrder.setRiderCarPlateNo(driverDetailsResult.driverDetails.getPlateNumber());
+                    }
                 } else if (status.equals("finished")) {
                     orderStatus = "DELIVERED_TO_CUSTOMER";
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
@@ -813,7 +821,6 @@ public class OrdersController {
             //fail to get price
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-
 
     }
 
@@ -870,10 +877,28 @@ public class OrdersController {
                 // change from order status codes to delivery status codes.
                 if (status.equals("ON_GOING")) {
                     LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime : ", status);
+                    ProcessRequest rider = new ProcessRequest(deliveryOrder.getSystemTransactionId(), deliveryOrder, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+                    ProcessResult riderResponse = rider.GetDriverDetails();
+                    if (processResult.resultCode == 0) {
+                        DriverDetailsResult driverDetailsResult = (DriverDetailsResult) riderResponse.returnObject;
+                        deliveryOrder.setRiderName(driverDetailsResult.driverDetails.getName());
+                        deliveryOrder.setRiderPhoneNo(driverDetailsResult.driverDetails.getPhoneNumber());
+                        deliveryOrder.setRiderCarPlateNo(driverDetailsResult.driverDetails.getPlateNumber());
+                    }
                 } else if (status.equals("PICKED_UP")) {
                     LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime : ", status);
                     orderStatus = "BEING_DELIVERED";
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+
+                    ProcessRequest rider = new ProcessRequest(deliveryOrder.getSystemTransactionId(), deliveryOrder, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+                    ProcessResult riderResponse = rider.GetDriverDetails();
+                    if (processResult.resultCode == 0) {
+                        DriverDetailsResult driverDetailsResult = (DriverDetailsResult) riderResponse.returnObject;
+                        deliveryOrder.setRiderName(driverDetailsResult.driverDetails.getName());
+                        deliveryOrder.setRiderPhoneNo(driverDetailsResult.driverDetails.getPhoneNumber());
+                        deliveryOrder.setRiderCarPlateNo(driverDetailsResult.driverDetails.getPlateNumber());
+                    }
+
                 } else if (status.equals("COMPLETED")) {
                     LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime : ", status);
                     orderStatus = "DELIVERED_TO_CUSTOMER";
@@ -936,27 +961,31 @@ public class OrdersController {
         DeliveryOrder order = deliveryOrdersRepository.findByOrderId(orderId);
 
         if (order != null) {
-            ProcessRequest process = new ProcessRequest(order.getSystemTransactionId(), order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-            ProcessResult processResult = process.GetDriverDetails();
-            if (processResult.resultCode == 0) {
+//            ProcessRequest process = new ProcessRequest(order.getSystemTransactionId(), order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+//            ProcessResult processResult = process.GetDriverDetails();
+//            if (processResult.resultCode == 0) {
                 Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
-
-                DriverDetailsResult driverDetailsResult = (DriverDetailsResult) processResult.returnObject;
-                order.setRiderName(driverDetailsResult.driverDetails.getName());
-                order.setRiderPhoneNo(driverDetailsResult.driverDetails.getPhoneNumber());
-                order.setRiderCarPlateNo(driverDetailsResult.driverDetails.getPlateNumber());
-                deliveryOrdersRepository.save(order);
-                RiderDetails riderDetails = driverDetailsResult.driverDetails;
+//
+//                DriverDetailsResult driverDetailsResult = (DriverDetailsResult) processResult.returnObject;
+//                order.setRiderName(driverDetailsResult.driverDetails.getName());
+//                order.setRiderPhoneNo(driverDetailsResult.driverDetails.getPhoneNumber());
+//                order.setRiderCarPlateNo(driverDetailsResult.driverDetails.getPlateNumber());
+//                deliveryOrdersRepository.save(order);
+                RiderDetails riderDetails =new RiderDetails();
+                riderDetails.setName(order.getDeliveryContactName());
+                riderDetails.setPhoneNumber(order.getDeliveryContactPhone());
+                riderDetails.setDriverId(order.getDriverId());
+                riderDetails.setPlateNumber(order.getRiderCarPlateNo());
                 riderDetails.setOrderNumber(order.getSpOrderId());
                 riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
                 riderDetails.setProvider(provider);
                 riderDetails.setAirwayBill(order.getAirwayBillURL());
                 response.setData(riderDetails);
                 return ResponseEntity.status(HttpStatus.OK).body(response);
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-
-            }
+//            } else {
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+//
+//            }
         } else {
 
             LogUtil.info(logprefix, location, "", "order not found ");
