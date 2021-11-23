@@ -47,12 +47,12 @@ public class DeliveryQuotation {
     String orderId;
     String pickupPostcode;
     String deliveryPostcode;
-//    Double serviceFee;
+    Double serviceFee;
 
-//    String pickupCity;
-//    String deliveryCity;
-//    String pickupZone;
-//    String deliveryZone;
+    String pickupCity;
+    String deliveryCity;
+    String pickupZone;
+    String deliveryZone;
 
     @Override
     public String toString() {

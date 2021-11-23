@@ -1,4 +1,17 @@
 ##################################################
+# Version v.2.2.5 | 23-November-2021
+##################################################
+### Code Changes:
+
+1. Update the Tcs Integration Code Back
+2. Add deliveryServiceFee into (Delivery Quotation Table)
+3. String pickupCity;
+   String deliveryCity;
+   String pickupZone;
+   String deliveryZone;
+field in delivery quotation table
+
+##################################################
 # Version v.2.1.11 | 19-November-2021
 ##################################################
 ### Code Changes:
