@@ -125,6 +125,7 @@ public class OrdersController {
             DeliveryZoneCity deliveryZone = deliveryZoneCityRepository.findByCityContains(orderDetails.getDelivery().getDeliveryCity());
             orderDetails.getDelivery().setDeliveryZone(deliveryZone.getZone());
         }
+        
 
         if (stores.getMaxOrderQuantityForBike() <= 10) {
             pickup.setVehicleType(VehicleType.MOTORCYCLE);
