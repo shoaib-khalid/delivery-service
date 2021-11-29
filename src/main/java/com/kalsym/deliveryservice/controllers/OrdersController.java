@@ -122,8 +122,13 @@ public class OrdersController {
         if (store.getRegionCountryId().equals("PAK")) {
             DeliveryZoneCity zoneCity = deliveryZoneCityRepository.findByCityContains(store.getCity());
             pickup.setPickupZone(zoneCity.getZone());
-            DeliveryZoneCity deliveryZone = deliveryZoneCityRepository.findByCityContains(orderDetails.getDelivery().getDeliveryCity());
-            orderDetails.getDelivery().setDeliveryZone(deliveryZone.getZone());
+            try {
+                DeliveryZoneCity deliveryZone = deliveryZoneCityRepository.findByCityContains(orderDetails.getDelivery().getDeliveryCity());
+                orderDetails.getDelivery().setDeliveryZone(deliveryZone.getZone());
+            }catch (Exception ex){
+                orderDetails.getDelivery().setDeliveryZone("null");
+            }
+
         }
 
 
