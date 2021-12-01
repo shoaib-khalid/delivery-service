@@ -1,4 +1,16 @@
 ##################################################
+# Version v.2.2.7 | 01-December-2021
+##################################################
+### Code Changes:
+
+1. Bug Fix For JNT delivery Provider 
+2. Get Airway Bill Save file folder and Save the url into DB
+3. Bug fixed for TCS submit order
+4. Add upload path in application properties "/home/docker/Software/assets/delivery-assets/"
+5. Add url for airway bill in Application Properties "https://symplified.it/delivery-assets/"
+
+
+##################################################
 # Version v.2.2.6 | 29-November-2021
 ##################################################
 ### Code Changes:

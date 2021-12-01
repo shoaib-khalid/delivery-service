@@ -114,7 +114,7 @@ public class SubmitOrder extends SyncDispatcher {
             String code = returnStatus.get("code").getAsString();
 
             DeliveryOrder orderCreated = new DeliveryOrder();
-            if (code == "0200") {
+            if (code.equals("0200")) {
                 JsonObject bookingReply = jsonResp.get("bookingReply").getAsJsonObject();
                 String consignmentNote = bookingReply.get("result").getAsString();
                 String extractedCN = consignmentNote.substring(21);
@@ -127,20 +127,20 @@ public class SubmitOrder extends SyncDispatcher {
                 submitOrderResult.isSuccess = true;
 
                 LogUtil.info(logprefix, location, "Consignment note for TCS: " + extractedCN, "");
-            } else if (code == "0400") {
+            } else if (code.equals("0400")) {
 
                 submitOrderResult.providerId = orderCreated.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
                 submitOrderResult.message = message;
 
                 LogUtil.info(logprefix, location, "TCS: Bad Request / Custom validation message. Message: " + message, "");
-            } else if (code == "0404") {
+            } else if (code.equals("0404")) {
                 submitOrderResult.providerId = orderCreated.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
                 submitOrderResult.message = message;
 
                 LogUtil.info(logprefix, location, "TCS: Data Not Found.", "");
-            } else if (code == "0408") {
+            } else if (code.equals("0408")) {
                 submitOrderResult.providerId = orderCreated.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
                 submitOrderResult.message = message;

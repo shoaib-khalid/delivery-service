@@ -20,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.xml.bind.DatatypeConverter;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -34,18 +35,9 @@ import java.util.concurrent.CountDownLatch;
 
 public class AirwayBill extends SyncDispatcher {
     private final String getAirwayBill_url;
-    private final String baseUrl;
-    private final int connectTimeout;
-    private final int waitTimeout;
-    private final String systemTransactionId;
     private final DeliveryOrder order;
-    private final HashMap productMap;
-    private final String atxProductCode = "";
     private final String logprefix;
     private final String location = "JnTGetAirwayBill";
-    private final String secretKey;
-    private final String apiKey;
-    private String sessionToken;
     private String sslVersion = "SSL";
     private String username;
     private String passowrd ;
@@ -54,22 +46,14 @@ public class AirwayBill extends SyncDispatcher {
     public AirwayBill(CountDownLatch latch, HashMap config, DeliveryOrder order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
 
         super(latch);
-        this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;
         LogUtil.info(logprefix, location, "JnT AirwayBill class initiliazed!!", "");
         this.getAirwayBill_url = (String) config.get("airwayBillURL");
-        this.baseUrl = (String) config.get("domainUrl");
-
-        this.secretKey = (String) config.get("secretKey");
-        this.apiKey = (String) config.get("apiKey");
-        this.connectTimeout = Integer.parseInt((String) config.get("getprice_connect_timeout"));
-        this.waitTimeout = Integer.parseInt((String) config.get("getprice_wait_timeout"));
-        productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
         this.sslVersion = (String) config.get("ssl_version");
         this.username = (String) config.get("username");
         this.passowrd = (String) config.get("password");
-        this.customerCode = (String) config.get("customerCode");
+        this.customerCode = (String) config.get("cuscode");
     }
 
     @Override
@@ -84,12 +68,25 @@ public class AirwayBill extends SyncDispatcher {
 
 //            String data_digest = "630020026924";
             String data_digest =order.getSpOrderId();
+//            MessageDigest md = MessageDigest.getInstance("MD5");
+//            md.update(data_digest.getBytes());
+//            byte[] digest = md.digest();
+//            String hash = DatatypeConverter.printHexBinary(digest).toLowerCase();
             MessageDigest md = MessageDigest.getInstance("MD5");
-            md.update(data_digest.getBytes());
-            byte[] digest = md.digest();
-            String hash = DatatypeConverter.printHexBinary(digest).toLowerCase();
+            // digest() method is called to calculate message digest
+            //  of an input digest() return array of byte
+            byte[] messageDigest = md.digest(data_digest.getBytes());
 
-            MultiValueMap<String, Object> requestBody = generateRequestBody(hash);
+            // Convert byte array into signum representation
+            BigInteger no = new BigInteger(1, messageDigest);
+
+            // Convert message digest into hex value
+            String hashtext = no.toString(16);
+            while (hashtext.length() < 32) {
+                hashtext = "0" + hashtext;
+            }
+
+            MultiValueMap<String, Object> requestBody = generateRequestBody(hashtext);
             LogUtil.info(logprefix, location, "REQUEST BODY OF JNT FOR GET PRICE : ", requestBody.toString());
 
 
@@ -127,8 +124,6 @@ public class AirwayBill extends SyncDispatcher {
         }
         return response;
     }
-
-
 
     private MultiValueMap generateRequestBody(String hash) {
         JsonObject jsonReq = new JsonObject();

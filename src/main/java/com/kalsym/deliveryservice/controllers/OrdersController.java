@@ -93,6 +93,9 @@ public class OrdersController {
     @Value("${folderPath}")
     String folderPath;
 
+    @Value("${airwayBillHost}")
+    String airwayBillHost;
+
     @Autowired
     DeliveryServiceChargeRepository deliveryMarkupPriceRepository;
 
@@ -125,7 +128,7 @@ public class OrdersController {
             try {
                 DeliveryZoneCity deliveryZone = deliveryZoneCityRepository.findByCityContains(orderDetails.getDelivery().getDeliveryCity());
                 orderDetails.getDelivery().setDeliveryZone(deliveryZone.getZone());
-            }catch (Exception ex){
+            } catch (Exception ex) {
                 orderDetails.getDelivery().setDeliveryZone("null");
             }
 
@@ -920,7 +923,7 @@ public class OrdersController {
 
         DeliveryOrder order = deliveryOrdersRepository.findByOrderId(orderId);
 
-        if (order != null) {
+        if (order.getDriverId() != null) {
             ProcessRequest process = new ProcessRequest(order.getSystemTransactionId(), order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
             ProcessResult processResult = process.GetDriverDetails();
             if (processResult.resultCode == 0) {
@@ -942,8 +945,16 @@ public class OrdersController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 
             }
+        } else if (order.getAirwayBillURL() != null) {
+            Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
+            RiderDetails riderDetails = new RiderDetails();
+            riderDetails.setOrderNumber(order.getSpOrderId());
+            riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
+            riderDetails.setProvider(provider);
+            riderDetails.setAirwayBill(order.getAirwayBillURL());
+            response.setData(riderDetails);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
-
             LogUtil.info(logprefix, location, "", "order not found ");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
@@ -985,11 +996,19 @@ public class OrdersController {
             ProcessResult processResult = process.GetAirwayBill();
             if (processResult.resultCode == 0) {
                 AirwayBillResult airwayBillResult = (AirwayBillResult) processResult.returnObject;
-                LogUtil.info(logprefix, location, "Consignment Response ", airwayBillResult.consignmentNote.toString());
+                LogUtil.info(logprefix, location, "Consignment Response  FILE", airwayBillResult.consignmentNote.toString());
                 try {
                     Files.write(Paths.get(folderPath + order.getOrderId() + ".pdf"), airwayBillResult.consignmentNote);
+                    System.err.println(Files.write(Paths.get(folderPath + order.getOrderId() + ".pdf"), airwayBillResult.consignmentNote));
+//                    order.setAirwayBillURL(airwayBillHost + order.getOrderId() + ".pdf");
+                    order.setAirwayBillURL(folderPath + order.getOrderId() + ".pdf");
+//                    order.setUpdatedDate(new Date().toString());
+                    deliveryOrdersRepository.save(order);
 
-
+                    RiderDetails riderDetails = new RiderDetails();
+                    riderDetails.setAirwayBill(order.getAirwayBillURL());
+                    riderDetails.setOrderNumber(order.getSpOrderId());
+                    response.setData(riderDetails);
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 } catch (IOException e) {
                     LogUtil.info(logprefix, location, "Consignment Response ", airwayBillResult.consignmentNote.toString());
