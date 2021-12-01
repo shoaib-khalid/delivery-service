@@ -1000,8 +1000,8 @@ public class OrdersController {
                 try {
                     Files.write(Paths.get(folderPath + order.getOrderId() + ".pdf"), airwayBillResult.consignmentNote);
                     System.err.println(Files.write(Paths.get(folderPath + order.getOrderId() + ".pdf"), airwayBillResult.consignmentNote));
-//                    order.setAirwayBillURL(airwayBillHost + order.getOrderId() + ".pdf");
-                    order.setAirwayBillURL(folderPath + order.getOrderId() + ".pdf");
+                    order.setAirwayBillURL(airwayBillHost + order.getOrderId() + ".pdf");
+//                    order.setAirwayBillURL(folderPath + order.getOrderId() + ".pdf");
 //                    order.setUpdatedDate(new Date().toString());
                     deliveryOrdersRepository.save(order);
 
