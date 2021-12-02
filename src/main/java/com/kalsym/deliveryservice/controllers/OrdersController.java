@@ -531,7 +531,7 @@ public class OrdersController {
 
     @PostMapping(path = {"/confirmDelivery/{refId}/{orderId}"}, name = "orders-confirm-delivery")
     public ResponseEntity<HttpReponse> submitOrder(HttpServletRequest request,
-                                                   @PathVariable("refId") long refId, @PathVariable("orderId") String orderId, @Valid @RequestBody Schedule schedule) {
+                                                   @PathVariable("refId") long refId, @PathVariable("orderId") String orderId, @RequestBody Schedule schedule) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -955,8 +955,17 @@ public class OrdersController {
             response.setData(riderDetails);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
-            LogUtil.info(logprefix, location, "", "order not found ");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
+            if (provider.getAirwayBillClassName() != null) {
+                getAirwayBill(request, orderId);
+            }
+            RiderDetails riderDetails = new RiderDetails();
+            riderDetails.setOrderNumber(order.getSpOrderId());
+            riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
+            riderDetails.setProvider(provider);
+            riderDetails.setAirwayBill(order.getAirwayBillURL());
+            response.setData(riderDetails);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         }
     }
 

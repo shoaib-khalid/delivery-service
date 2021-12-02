@@ -64,10 +64,10 @@ public class SubmitOrder extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
         String requestBody = generateRequestBody();
-        LogUtil.info(logprefix, location, "JnT request body for Submit Order requestBody : " + requestBody, "");
+//        LogUtil.info(logprefix, location, "JnT request body for Submit Order requestBody : " + requestBody, "");
 
         String data_digest = requestBody.concat(this.apiKey);
-        LogUtil.info(logprefix, location, "JnT request body for Submit Order data_digest : " + data_digest, "");
+//        LogUtil.info(logprefix, location, "JnT request body for Submit Order data_digest : " + data_digest, "");
 
         String encode_key = "";
         try {
@@ -97,6 +97,8 @@ public class SubmitOrder extends SyncDispatcher {
         MultiValueMap<String, Object> postParameters = new LinkedMultiValueMap<>();
         postParameters.add("data_param", requestBody);
         postParameters.add("data_sign", encode_key);
+        LogUtil.info(logprefix, location, "JnT Request body for Submit Order  : " + postParameters, "");
+
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/x-www-form-urlencoded");
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(postParameters, headers);
