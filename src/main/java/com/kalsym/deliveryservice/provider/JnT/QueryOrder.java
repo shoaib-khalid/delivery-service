@@ -46,9 +46,11 @@ public class QueryOrder extends SyncDispatcher {
     private String sslVersion = "SSL";
     private String logprefix;
     private String location = "JnTSubmitOrder";
-    private String secretKey;
+    private String password;
     private String apiKey;
     private String spOrderId;
+    private String username;
+    private String msgType;
     private String driverId;
     private String shareLink;
     private String status;
@@ -60,9 +62,11 @@ public class QueryOrder extends SyncDispatcher {
         LogUtil.info(logprefix, location, "JnT SubmitOrder class initiliazed!!", "");
 
         this.baseUrl = (String) config.get("domainUrl");
-        this.queryOrder_url = "http://47.57.89.30/common/track/trackings";
-        this.secretKey = (String) config.get("secretKey");
-        this.apiKey = "x1Wbjv";
+        this.queryOrder_url = (String) config.get("queryOrder_url");
+        this.username = (String) config.get("username");
+        this.password = (String) config.get("password");
+        this.apiKey = (String) config.get("apiKey");
+        this.msgType = (String) config.get("msgType");
         this.endpointUrl = (String) config.get("place_orderUrl");
         this.connectTimeout = Integer.parseInt((String) config.get("queryorder_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("queryorder_wait_timeout"));
@@ -80,7 +84,7 @@ public class QueryOrder extends SyncDispatcher {
         String requestBody = generateRequestBody();
         LogUtil.info(logprefix, location, "JnT request body for Query Order: " + requestBody, "");
         // data signature part
-        String data_digest = requestBody + "ffe62df84bb3d8e4b1eaa2c22775014d";
+        String data_digest = requestBody + this.apiKey;
         String encode_key = "";
         // encryption
         try {
@@ -97,8 +101,8 @@ public class QueryOrder extends SyncDispatcher {
         MultiValueMap<String, Object> postParameters = new LinkedMultiValueMap<>();
         postParameters.add("logistics_interface", requestBody);
         postParameters.add("data_digest", encode_key);
-        postParameters.add("msg_type", "TRACK");
-        postParameters.add("eccompanyid", "TEST");
+        postParameters.add("msg_type", this.msgType);
+        postParameters.add("eccompanyid", this.username);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/x-www-form-urlencoded");
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(postParameters, headers);
