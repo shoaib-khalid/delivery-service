@@ -984,7 +984,7 @@ public class OrdersController {
         } else {
             RiderDetails riderDetails = new RiderDetails();
             response.setData(riderDetails);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         }
     }
 
