@@ -26,12 +26,15 @@ public class AirwayBill extends SyncDispatcher {
     private final String location = "TCSGetAirwayBill";
     private String sessionToken;
     private String sslVersion = "SSL";
+    private String airwayHtmlPath;
+
 
     public AirwayBill(CountDownLatch latch, HashMap config, DeliveryOrder order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
 
         super(latch);
         this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;
+        this.airwayHtmlPath = (String) config.get("airwayHtmlPath");
         this.order = order;
         LogUtil.info(logprefix, location, "TCS AirwayBill class initiliazed!!", "");
     }
@@ -44,7 +47,8 @@ public class AirwayBill extends SyncDispatcher {
         try {
 
 
-            File invoiceHTML = new File("src/main/java/com/kalsym/deliveryservice/provider/TCS/airwayBillDesign.html");
+//            File invoiceHTML = new File("src/main/java/com/kalsym/deliveryservice/provider/TCS/airwayBillDesign.html");
+            File invoiceHTML = new File(this.airwayHtmlPath);
             Document doc = Jsoup.parse(invoiceHTML, "UTF-8", "http://example.com/");
 
 
@@ -103,6 +107,7 @@ public class AirwayBill extends SyncDispatcher {
             LogUtil.info(logprefix, location, "Process finish", "");
 
         } catch (Exception ex) {
+
             LogUtil.error(logprefix, location, "Exception error :", "", ex);
             response.resultCode = -1;
         }

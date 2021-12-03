@@ -971,6 +971,7 @@ public class OrdersController {
             } else {
                 Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
                 if (provider.getAirwayBillClassName() != null) {
+                    LogUtil.info(logprefix, location, "Generate Airway Bill : ", provider.getAirwayBillClassName());
                     getAirwayBill(request, orderId);
                 }
                 RiderDetails riderDetails = new RiderDetails();
@@ -1024,10 +1025,10 @@ public class OrdersController {
             ProcessResult processResult = process.GetAirwayBill();
             if (processResult.resultCode == 0) {
                 AirwayBillResult airwayBillResult = (AirwayBillResult) processResult.returnObject;
-                LogUtil.info(logprefix, location, "Consignment Response  FILE", airwayBillResult.consignmentNote.toString());
+                LogUtil.info(logprefix, location, "Consignment Response  FILE : ", airwayBillResult.consignmentNote.toString());
                 try {
                     Files.write(Paths.get(folderPath + order.getOrderId() + ".pdf"), airwayBillResult.consignmentNote);
-                    System.err.println(Files.write(Paths.get(folderPath + order.getOrderId() + ".pdf"), airwayBillResult.consignmentNote));
+                    LogUtil.info(logprefix, location, folderPath + order.getOrderId() + ".pdf", "");
                     order.setAirwayBillURL(airwayBillHost + order.getOrderId() + ".pdf");
 //                    order.setAirwayBillURL(folderPath + order.getOrderId() + ".pdf");
 //                    order.setUpdatedDate(new Date().toString());
