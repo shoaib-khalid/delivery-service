@@ -923,34 +923,57 @@ public class OrdersController {
 
         DeliveryOrder order = deliveryOrdersRepository.findByOrderId(orderId);
 
-        if (order.getDriverId() != null) {
-            if (order.getDeliveryContactName() == null) {
-                ProcessRequest process = new ProcessRequest(order.getSystemTransactionId(), order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-                ProcessResult processResult = process.GetDriverDetails();
-                if (processResult.resultCode == 0) {
-                    Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
+        if (order != null) {
+            if (order.getDriverId() != null) {
+                if (order.getDeliveryContactName() == null) {
+                    ProcessRequest process = new ProcessRequest(order.getSystemTransactionId(), order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+                    ProcessResult processResult = process.GetDriverDetails();
+                    if (processResult.resultCode == 0) {
+                        Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
 
-                    DriverDetailsResult driverDetailsResult = (DriverDetailsResult) processResult.returnObject;
-                    order.setRiderName(driverDetailsResult.driverDetails.getName());
-                    order.setRiderPhoneNo(driverDetailsResult.driverDetails.getPhoneNumber());
-                    order.setRiderCarPlateNo(driverDetailsResult.driverDetails.getPlateNumber());
-                    deliveryOrdersRepository.save(order);
-                    RiderDetails riderDetails = driverDetailsResult.driverDetails;
+                        DriverDetailsResult driverDetailsResult = (DriverDetailsResult) processResult.returnObject;
+                        order.setRiderName(driverDetailsResult.driverDetails.getName());
+                        order.setRiderPhoneNo(driverDetailsResult.driverDetails.getPhoneNumber());
+                        order.setRiderCarPlateNo(driverDetailsResult.driverDetails.getPlateNumber());
+                        deliveryOrdersRepository.save(order);
+                        RiderDetails riderDetails = driverDetailsResult.driverDetails;
+                        riderDetails.setOrderNumber(order.getSpOrderId());
+                        riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
+                        riderDetails.setProvider(provider);
+                        riderDetails.setAirwayBill(order.getAirwayBillURL());
+                        response.setData(riderDetails);
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    } else {
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                    }
+                } else {
+                    Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
+                    RiderDetails riderDetails = new RiderDetails();
+                    riderDetails.setName(order.getRiderName());
+                    riderDetails.setPhoneNumber(order.getRiderPhoneNo());
+                    riderDetails.setPlateNumber(order.getRiderCarPlateNo());
                     riderDetails.setOrderNumber(order.getSpOrderId());
                     riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
                     riderDetails.setProvider(provider);
                     riderDetails.setAirwayBill(order.getAirwayBillURL());
                     response.setData(riderDetails);
                     return ResponseEntity.status(HttpStatus.OK).body(response);
-                } else {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
                 }
-            } else {
+            } else if (order.getAirwayBillURL() != null) {
                 Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
                 RiderDetails riderDetails = new RiderDetails();
-                riderDetails.setName(order.getRiderName());
-                riderDetails.setPhoneNumber(order.getRiderPhoneNo());
-                riderDetails.setPlateNumber(order.getRiderCarPlateNo());
+                riderDetails.setOrderNumber(order.getSpOrderId());
+                riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
+                riderDetails.setProvider(provider);
+                riderDetails.setAirwayBill(order.getAirwayBillURL());
+                response.setData(riderDetails);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            } else {
+                Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
+                if (provider.getAirwayBillClassName() != null) {
+                    getAirwayBill(request, orderId);
+                }
+                RiderDetails riderDetails = new RiderDetails();
                 riderDetails.setOrderNumber(order.getSpOrderId());
                 riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
                 riderDetails.setProvider(provider);
@@ -958,27 +981,10 @@ public class OrdersController {
                 response.setData(riderDetails);
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             }
-        } else if (order.getAirwayBillURL() != null) {
-            Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
-            RiderDetails riderDetails = new RiderDetails();
-            riderDetails.setOrderNumber(order.getSpOrderId());
-            riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
-            riderDetails.setProvider(provider);
-            riderDetails.setAirwayBill(order.getAirwayBillURL());
-            response.setData(riderDetails);
-            return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
-            Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
-            if (provider.getAirwayBillClassName() != null) {
-                getAirwayBill(request, orderId);
-            }
             RiderDetails riderDetails = new RiderDetails();
-            riderDetails.setOrderNumber(order.getSpOrderId());
-            riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
-            riderDetails.setProvider(provider);
-            riderDetails.setAirwayBill(order.getAirwayBillURL());
             response.setData(riderDetails);
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
 
