@@ -1048,7 +1048,8 @@ public class OrdersController {
                     String filename = provider.getName() + "_" + invoiceId + "_" + order.getSpOrderId() + ".pdf";
                     Files.write(Paths.get(path + "/" + filename), airwayBillResult.consignmentNote);
                     LogUtil.info(logprefix, location, path + filename, "");
-                    order.setAirwayBillURL(airwayBillHost + filename);
+                    String fileUrl = airwayBillHost + date.getMonth() + "-" + (date.getYear() + 1900) + "/" + filename;
+                    order.setAirwayBillURL(fileUrl);
 //                    order.setAirwayBillURL(folderPath + order.getOrderId() + ".pdf");
 //                    order.setUpdatedDate(new Date().toString());
                     deliveryOrdersRepository.save(order);
