@@ -1,21 +1,18 @@
 package com.kalsym.deliveryservice.provider.JnT;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
-import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.PriceResult;
+import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
-import com.kalsym.deliveryservice.utils.HttpResult;
-import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpHeaders;
 
 import javax.xml.bind.DatatypeConverter;
 import java.math.BigDecimal;
@@ -31,16 +28,14 @@ public class GetPrice extends SyncDispatcher {
     private final int waitTimeout;
     private final String systemTransactionId;
     private final Order order;
-    private final HashMap productMap;
-    private final String atxProductCode = "";
     private final String logprefix;
     private final String location = "JnTGetPrice";
     private final String secretKey;
     private final String apiKey;
-    private String sessionToken;
     private String sslVersion = "SSL";
-    private String username;
-    private String passowrd ;
+    private String passowrd;
+    private String customerCode;
+    private String account;
 
 
     public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
@@ -56,27 +51,28 @@ public class GetPrice extends SyncDispatcher {
         this.apiKey = (String) config.get("apiKey");
         this.connectTimeout = Integer.parseInt((String) config.get("getprice_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("getprice_wait_timeout"));
-        productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
         this.sslVersion = (String) config.get("ssl_version");
-        this.username = (String) config.get("username");
-        this.passowrd = (String) config.get("password");
+        this.passowrd = (String) config.get("getPricePassword");
+        this.customerCode = (String) config.get("cuscode");
+        this.account = (String) config.get("account");
+
     }
 
     @Override
-    public ProcessResult process(){
+    public ProcessResult process() {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
 
         try {
             HttpHeaders httpHeader = new HttpHeaders();
             httpHeader.set("Content-Type", "application/json");
-            httpHeader.set("account", "TEST");
+            httpHeader.set("account", this.account);
             String requestBody = generateRequestBody();
             LogUtil.info(logprefix, location, "REQUEST BODY OF JNT FOR GET PRICE : ", requestBody);
 
 //            String data_digest = requestBody + "ffe62df84bb3d8e4b1eaa2c22775014d";
-            String data_digest = requestBody + secretKey;
+            String data_digest = requestBody + this.secretKey;
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] digest = md.digest(data_digest.getBytes(StandardCharsets.UTF_8));
             String sign = DatatypeConverter.printHexBinary(digest).toLowerCase();
@@ -87,12 +83,14 @@ public class GetPrice extends SyncDispatcher {
 
             int statusCode = responses.getStatusCode().value();
             LogUtil.info(logprefix, location, "Responses", responses.getBody());
-            if (statusCode == 200) {
+            PriceResult priceResult = extractResponseBody(responses.getBody());
+            if (priceResult.resultCode.equals("0")) {
                 response.resultCode = 0;
-                response.returnObject = extractResponseBody(responses.getBody());
+                response.returnObject = priceResult;
             } else {
                 LogUtil.info(logprefix, location, "Request failed", "");
                 response.resultCode = -1;
+                response.resultString = priceResult.message;
             }
             LogUtil.info(logprefix, location, "Process finish", "");
 
@@ -109,15 +107,15 @@ public class GetPrice extends SyncDispatcher {
 //            LogUtil.info(logprefix, location, "Process finish", "");
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Exception error :", "", ex);
-            response.resultCode=-1;
+            response.resultCode = -1;
         }
         return response;
     }
 
-    private String generateRequestBody(){
+    private String generateRequestBody() {
         JsonObject jsonReq = new JsonObject();
-        jsonReq.addProperty("customerCode", username);
-        jsonReq.addProperty("password", passowrd);
+        jsonReq.addProperty("customerCode", this.customerCode);
+        jsonReq.addProperty("password", this.passowrd);
         jsonReq.addProperty("expressType", "EZ");
         jsonReq.addProperty("goodsType", order.getItemType().name());
         jsonReq.addProperty("pcs", order.getPieces());
@@ -132,17 +130,20 @@ public class GetPrice extends SyncDispatcher {
         JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
         String isSuccess = jsonResp.get("succ").getAsString();
         PriceResult priceResult = new PriceResult();
-        if (isSuccess == "true"){
+        if (isSuccess.equals("true")) {
             JsonObject dataObject = jsonResp.get("data").getAsJsonObject();
             String shippingFee = dataObject.get("shippingFee").getAsString();
-            LogUtil.info(logprefix, location, "Payment Amount for JnT:"+ shippingFee, "");
+            LogUtil.info(logprefix, location, "Payment Amount for JnT:" + shippingFee, "");
             BigDecimal bd = new BigDecimal(Double.parseDouble(shippingFee));
             bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
-            priceResult.price=bd;
+            priceResult.price = bd;
+            priceResult.resultCode = "0";
+
         } else {
-            BigDecimal bd = new BigDecimal(0.00);
-            bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
-            priceResult.price= bd;
+
+            priceResult.resultCode = "-1";
+            priceResult.message = jsonResp.get("msg").getAsString();
+
         }
         return priceResult;
     }

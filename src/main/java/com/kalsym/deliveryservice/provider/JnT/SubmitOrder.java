@@ -126,8 +126,8 @@ public class SubmitOrder extends SyncDispatcher {
         Date startPickScheduleDate = null;
         Date endPickScheduleDate = null;
         try {
-            startPickScheduleDate = simpleDateFormat.parse(order.getPickup().getPickupDate() + " " + order.getPickup().getPickupTime());
-            endPickScheduleDate = simpleDateFormat.parse(order.getPickup().getEndPickupDate() + " " + order.getPickup().getEndPickupTime());
+            startPickScheduleDate = simpleDateFormat.parse(order.getPickup().getPickupDate() + " " + order.getPickup().getPickupTime() + ":00");
+            endPickScheduleDate = simpleDateFormat.parse(order.getPickup().getEndPickupDate() + " " + order.getPickup().getEndPickupTime() + ":00");
         } catch (ParseException e) {
             e.printStackTrace();
         }

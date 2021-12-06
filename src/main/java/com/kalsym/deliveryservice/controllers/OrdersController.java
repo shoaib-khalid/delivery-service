@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -98,6 +99,9 @@ public class OrdersController {
 
     @Autowired
     DeliveryServiceChargeRepository deliveryMarkupPriceRepository;
+
+    @Autowired
+    StoreOrderRepository storeOrderRepository;
 
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
@@ -1020,16 +1024,31 @@ public class OrdersController {
         DeliveryOrder order = deliveryOrdersRepository.findByOrderId(orderId);
         LogUtil.info(logprefix, location, "Order ", order.toString());
 
+
         if (order != null) {
             ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
             ProcessResult processResult = process.GetAirwayBill();
             if (processResult.resultCode == 0) {
+                String invoiceId = storeOrderRepository.getInvoiceId(orderId);
+                Provider provider = providerRepository.getOne(order.getDeliveryProviderId());
+
                 AirwayBillResult airwayBillResult = (AirwayBillResult) processResult.returnObject;
+
                 LogUtil.info(logprefix, location, "Consignment Response  FILE : ", airwayBillResult.consignmentNote.toString());
                 try {
-                    Files.write(Paths.get(folderPath + order.getOrderId() + ".pdf"), airwayBillResult.consignmentNote);
-                    LogUtil.info(logprefix, location, folderPath + order.getOrderId() + ".pdf", "");
-                    order.setAirwayBillURL(airwayBillHost + order.getOrderId() + ".pdf");
+                    Date date = new Date();
+                    String path = folderPath + date.getMonth() + "-" + (date.getYear() + 1900);
+                    File directory = new File(path);
+                    if (!directory.exists()) {
+                        directory.mkdir();
+                        // If you require it to make the entire directory path including parents,
+                        // use directory.mkdirs(); here instead.
+                    }
+
+                    String filename = provider.getName() + "_" + invoiceId + "_" + order.getSpOrderId() + ".pdf";
+                    Files.write(Paths.get(path + "/" + filename), airwayBillResult.consignmentNote);
+                    LogUtil.info(logprefix, location, path + filename, "");
+                    order.setAirwayBillURL(airwayBillHost + filename);
 //                    order.setAirwayBillURL(folderPath + order.getOrderId() + ".pdf");
 //                    order.setUpdatedDate(new Date().toString());
                     deliveryOrdersRepository.save(order);
