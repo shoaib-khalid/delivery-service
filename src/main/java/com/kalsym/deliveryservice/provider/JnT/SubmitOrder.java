@@ -110,7 +110,13 @@ public class SubmitOrder extends SyncDispatcher {
         if (statusCode == 200) {
             response.resultCode = 0;
             LogUtil.info(logprefix, location, "JnT Response for Submit Order: " + responses.getBody(), "");
-            response.returnObject = extractResponseBody(responses.getBody());
+            SubmitOrderResult result = extractResponseBody(responses.getBody());
+            if (result.isSuccess) {
+                response.returnObject = extractResponseBody(responses.getBody());
+            }
+            else {
+                response.returnObject = extractResponseBody(responses.getBody());
+            }
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
             response.resultCode = -1;
@@ -126,8 +132,12 @@ public class SubmitOrder extends SyncDispatcher {
         Date startPickScheduleDate = null;
         Date endPickScheduleDate = null;
         try {
-            startPickScheduleDate = simpleDateFormat.parse(order.getPickup().getPickupDate() + " " + order.getPickup().getPickupTime() + ":00");
-            endPickScheduleDate = simpleDateFormat.parse(order.getPickup().getEndPickupDate() + " " + order.getPickup().getEndPickupTime() + ":00");
+            if (order.getPickup().getPickupDate() != null) {
+                startPickScheduleDate = simpleDateFormat.parse(order.getPickup().getPickupDate() + " " + order.getPickup().getPickupTime() + ":00");
+            }
+            if (order.getPickup().getEndPickupDate() != null) {
+                endPickScheduleDate = simpleDateFormat.parse(order.getPickup().getEndPickupDate() + " " + order.getPickup().getEndPickupTime() + ":00");
+            }
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -161,8 +171,12 @@ public class SubmitOrder extends SyncDispatcher {
         details.addProperty("expresstype", "EZ");
         details.addProperty("goodType", order.getItemType().name());
         details.addProperty("servicetype", "1");
-        details.addProperty("sendstarttime", startPickScheduleDate.toString());
-        details.addProperty("sendendtime", endPickScheduleDate.toString());
+        if (startPickScheduleDate != null) {
+            details.addProperty("sendstarttime", startPickScheduleDate.toString());
+        }
+        if (endPickScheduleDate != null) {
+            details.addProperty("sendendtime", endPickScheduleDate.toString());
+        }
         details.addProperty("offerFeeFlag", order.isInsurance());
         detailsArray.add(details);
         jsonReq.add("detail", detailsArray);
@@ -193,7 +207,10 @@ public class SubmitOrder extends SyncDispatcher {
 
                 orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
                 submitOrderResult.orderCreated = orderCreated;
+                submitOrderResult.isSuccess = true;
             } else {
+                submitOrderResult.isSuccess = false;
+                submitOrderResult.message = detailsData.get("msg").getAsString();
                 LogUtil.info(logprefix, location, "Request failed", "");
             }
         } catch (Exception ex) {

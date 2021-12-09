@@ -56,7 +56,7 @@ public class SubmitOrder extends SyncDispatcher {
     public ProcessResult process() {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
-
+        System.err.println("test "+order.getDeliveryProviderId());
         RestTemplate restTemplate = new RestTemplate();
         HashMap httpHeader = new HashMap();
         httpHeader.put("Content-Type", "application/json");
@@ -79,6 +79,7 @@ public class SubmitOrder extends SyncDispatcher {
     }
 
     private String generateBody() {
+
         JsonObject jsonRequest = new JsonObject();
         jsonRequest.addProperty("userName", username);
         jsonRequest.addProperty("password", password);
@@ -129,26 +130,26 @@ public class SubmitOrder extends SyncDispatcher {
                 LogUtil.info(logprefix, location, "Consignment note for TCS: " + extractedCN, "");
             } else if (code.equals("0400")) {
 
-                submitOrderResult.providerId = orderCreated.getDeliveryProviderId();
+                submitOrderResult.providerId = order.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
                 submitOrderResult.message = message;
 
                 LogUtil.info(logprefix, location, "TCS: Bad Request / Custom validation message. Message: " + message, "");
             } else if (code.equals("0404")) {
-                submitOrderResult.providerId = orderCreated.getDeliveryProviderId();
+                submitOrderResult.providerId = order.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
                 submitOrderResult.message = message;
 
                 LogUtil.info(logprefix, location, "TCS: Data Not Found.", "");
             } else if (code.equals("0408")) {
-                submitOrderResult.providerId = orderCreated.getDeliveryProviderId();
+                submitOrderResult.providerId = order.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
                 submitOrderResult.message = message;
 
                 LogUtil.info(logprefix, location, "TCS: The server is taking too long to respond, please try later.", "");
             } else {
                 LogUtil.info(logprefix, location, "TCS: An internal error has occurred.", "");
-                submitOrderResult.providerId = orderCreated.getDeliveryProviderId();
+                submitOrderResult.providerId = order.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
                 submitOrderResult.message = message;
 
