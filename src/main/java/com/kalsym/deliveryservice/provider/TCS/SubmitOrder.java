@@ -28,11 +28,10 @@ public class SubmitOrder extends SyncDispatcher {
     private String logprefix;
     private String location = "TCSSubmitOrder";
 
-    private String costCenterCode;
     private String clientId;
 
     private String username;
-    private String password ;
+    private String password;
 
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
@@ -48,7 +47,6 @@ public class SubmitOrder extends SyncDispatcher {
         this.order = order;
         this.username = (String) config.get("username");
         this.password = (String) config.get("password");
-        this.costCenterCode = (String) config.get("costCenterCode");
         this.clientId = (String) config.get("clientId");
     }
 
@@ -56,8 +54,6 @@ public class SubmitOrder extends SyncDispatcher {
     public ProcessResult process() {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
-        System.err.println("test "+order.getDeliveryProviderId());
-        RestTemplate restTemplate = new RestTemplate();
         HashMap httpHeader = new HashMap();
         httpHeader.put("Content-Type", "application/json");
         httpHeader.put("X-IBM-Client-Id", clientId);
@@ -83,7 +79,7 @@ public class SubmitOrder extends SyncDispatcher {
         JsonObject jsonRequest = new JsonObject();
         jsonRequest.addProperty("userName", username);
         jsonRequest.addProperty("password", password);
-        jsonRequest.addProperty("costCenterCode", costCenterCode);
+        jsonRequest.addProperty("costCenterCode", order.getPickup().getCostCenterCode());
         jsonRequest.addProperty("consigneeName", order.getPickup().getPickupContactName());
         jsonRequest.addProperty("consigneeAddress", order.getPickup().getPickupAddress());
         jsonRequest.addProperty("consigneeMobNo", order.getPickup().getPickupContactPhone());
@@ -94,7 +90,7 @@ public class SubmitOrder extends SyncDispatcher {
         jsonRequest.addProperty("pieces", 1);
         jsonRequest.addProperty("codAmount", order.getShipmentValue());
         jsonRequest.addProperty("customerReferenceNo", order.getOrderId());
-        jsonRequest.addProperty("services", "O");
+        jsonRequest.addProperty("services", "O"); // incase future need this need to handle
         jsonRequest.addProperty("fragile", "yes");
         jsonRequest.addProperty("remarks", order.getPickup().getRemarks());
         if (order.isInsurance() == true) {

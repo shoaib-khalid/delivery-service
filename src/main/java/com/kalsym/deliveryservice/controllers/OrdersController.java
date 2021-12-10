@@ -562,7 +562,6 @@ public class OrdersController {
 
         Delivery delivery = new Delivery();
 
-
         pickup.setPickupContactName(quotation.getPickupContactName());
         pickup.setPickupContactPhone(quotation.getPickupContactPhone());
         pickup.setPickupAddress(quotation.getPickupAddress());
@@ -573,6 +572,14 @@ public class OrdersController {
         pickup.setPickupDate(schedule.getStartPickScheduleDate());
         pickup.setPickupTime(schedule.getStartPickScheduleTime());
         pickup.setPickupCity(quotation.getPickupCity());
+
+        StoreResponseData store = symplifiedService.getStore(quotation.getStoreId());
+
+        if (store.getRegionCountryId().equals("PAK")) {
+            DeliveryZoneCity zoneCity = deliveryZoneCityRepository.findByCityContains(store.getCity());
+            pickup.setCostCenterCode(zoneCity.getCostCenterCode());
+        }
+
         orderDetails.setPickup(pickup);
 
 

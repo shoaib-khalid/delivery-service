@@ -1,4 +1,13 @@
 ##################################################
+# Version v.2.2.17 | 10-December-2021
+##################################################
+### Code Changes:
+
+1. Submit order fixed cost center code value 
+2. Delivery Zone City Add Cost Center Code column
+   ALTER TABLE symplified.delivery_zone_city ADD costCenterCode varchar(100) NULL;
+
+##################################################
 # Version v.2.2.16 | 09-December-2021
 ##################################################
 ### Code Changes:
