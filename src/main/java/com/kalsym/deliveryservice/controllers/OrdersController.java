@@ -205,7 +205,6 @@ public class OrdersController {
                 deliveryOrder.setDeliveryPostcode(orderDetails.getDelivery().getDeliveryPostcode());
                 deliveryOrder.setDeliveryContactName(orderDetails.getDelivery().getDeliveryContactName());
                 deliveryOrder.setDeliveryContactPhone(orderDetails.getDelivery().getDeliveryContactPhone());
-                System.err.println("Pickup Contact Number :" + contactName + " Number " + phone);
 
                 deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
                 deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
@@ -243,7 +242,7 @@ public class OrdersController {
             orderDetails.setItemType(stores.getItemType());
             orderDetails.setProductCode(stores.getItemType().name());
             orderDetails.setPieces(2);
-//            System.err.println(orderDetails.getPieces());
+
             //Provider Query
             try {
                 StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
@@ -576,8 +575,10 @@ public class OrdersController {
         StoreResponseData store = symplifiedService.getStore(quotation.getStoreId());
 
         if (store.getRegionCountryId().equals("PAK")) {
-            DeliveryZoneCity zoneCity = deliveryZoneCityRepository.findByCityContains(store.getCity());
-            pickup.setCostCenterCode(zoneCity.getCostCenterCode());
+            StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
+            if (storeDeliverySp != null) {
+                pickup.setCostCenterCode(storeDeliverySp.getStoreCostCenterCode());
+            }
         }
 
         orderDetails.setPickup(pickup);
@@ -649,7 +650,7 @@ public class OrdersController {
             deliveryQuotationRepository.save(quotation);
             response.setMessage(processResult.resultString);
             //fail to get price
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         }
     }
 
@@ -908,7 +909,6 @@ public class OrdersController {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
         String systemTransactionId = StringUtility.CreateRefID("DL");
-        System.err.println(type + country);
 
 
         LogUtil.info(logprefix, location, "", "");
@@ -930,7 +930,6 @@ public class OrdersController {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
-        System.out.println("OrderId : " + orderId);
 
         DeliveryOrder order = deliveryOrdersRepository.findByOrderId(orderId);
 

@@ -30,4 +30,6 @@ public class StoreDeliverySp {
     @JoinColumn(name = "deliverySpId", insertable = false, updatable = false)
     @Fetch(FetchMode.JOIN)
     private Provider provider;
+
+    private String storeCostCenterCode;
 }

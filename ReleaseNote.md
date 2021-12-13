@@ -1,3 +1,14 @@
+##############################################################################################
+# Version v.2.2.18 | 13-December-2021
+###############################################################################################
+### Code Changes:
+
+1. Bug fixes for BORZO delivery provider for get price return if return invalid phone, address,
+    out of coverage
+2. ALTER TABLE symplified.store_delivery_sp ADD storeCostCenterCode varchar(100) NULL;
+   1. added the cost center code for Pakistan Store in store delivery sp table 
+3. Update the delivery sp table change delivery sp name for "Mr Speedy" to "BORZO"
+
 ##################################################
 # Version v.2.2.17 | 10-December-2021
 ##################################################

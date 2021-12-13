@@ -64,14 +64,20 @@ public class GetPrice extends SyncDispatcher {
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.getprice_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
         if (httpResult.resultCode == 0) {
             JsonObject jsonReponse = new Gson().fromJson(httpResult.responseString, JsonObject.class);
-            if (jsonReponse.get("is_successful").getAsBoolean()) {
+//            System.err.println("paeameters warrings :" + jsonReponse.get("warnings").getAsJsonArray());
+            if (jsonReponse.get("parameter_warnings").isJsonNull()) {
                 LogUtil.info(logprefix, location, "Request successful", "");
                 response.resultCode = 0;
                 response.returnObject = extractResponseBody(httpResult.responseString);
             } else {
+                String invalidResponse = extractErrorValue(jsonReponse.get("parameter_warnings").getAsJsonObject());
+                PriceResult result = new PriceResult();
+                LogUtil.info(logprefix, location, "Request failed", invalidResponse);
+
+                result.message = invalidResponse;
+                result.isError = true;
                 response.resultCode = -1;
-                response.returnObject = extractResponseBody(httpResult.responseString);
-                response.resultString = jsonReponse.get("parameter_warnings").getAsString();
+                response.returnObject = result;
             }
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
@@ -129,6 +135,23 @@ public class GetPrice extends SyncDispatcher {
         bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
         priceResult.price = bd;
         return priceResult;
+    }
+
+    private String extractErrorValue(JsonObject response) {
+        JsonObject points = response.getAsJsonArray("points").get(1).getAsJsonObject();
+        if (points.has("contact_person")) {
+            JsonObject contact = points.getAsJsonObject("contact_person");
+            System.err.println("CONTACT " + contact.has("phone"));
+            if (contact.has("phone")) {
+                return "ERR_INVALID_PHONE_NUMBER";
+            } else {
+                return "ERR_INVALID_CONTACT_PERSON_DETAILS";
+            }
+        } else if (points.has("address")) {
+            return "ERR_ADDRESS_NOT_FOUND";
+        } else {
+            return "ERR_OUT_OF_SERVICE_AREA";
+        }
     }
 
 
