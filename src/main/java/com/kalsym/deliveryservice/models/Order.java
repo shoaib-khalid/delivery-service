@@ -9,6 +9,8 @@ import com.kalsym.deliveryservice.models.enums.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.validation.Valid;
+
 /**
  *
  * @author user
@@ -20,9 +22,7 @@ public class Order {
    Integer merchantId;
    String productCode;
    Integer deliveryProviderId;
-   
-   ItemType itemType;           
-   
+   ItemType itemType;
    Double totalWeightKg;
    String transactionId;
    String orderId;
@@ -33,5 +33,7 @@ public class Order {
    String storeId;
    String cartId;
    Pickup pickup;
+   @Valid
    Delivery delivery;
+   String regionCountry;
 }

@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -106,6 +108,8 @@ public class OrdersController {
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
                                                 @Valid @RequestBody Order orderDetails) {
+
+
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -118,13 +122,12 @@ public class OrdersController {
 
         LogUtil.info(logprefix, location, "Store Details : ", stores.toString());
 
-        LogUtil.info(logprefix, location, "", "");
-
         StoreResponseData store = symplifiedService.getStore(orderDetails.getStoreId());
+        orderDetails.setRegionCountry(store.getRegionCountryId());
+
 
         //PICKUP ADDRESS
         Pickup pickup = new Pickup();
-        //FIXME : Uncomment this when add the J&T
         //If Store Is PAKISTAN SEARCH DB
         if (store.getRegionCountryId().equals("PAK")) {
             DeliveryZoneCity zoneCity = deliveryZoneCityRepository.findByCityContains(store.getCity());
@@ -135,7 +138,6 @@ public class OrdersController {
             } catch (Exception ex) {
                 orderDetails.getDelivery().setDeliveryZone("null");
             }
-
         }
 
 
@@ -163,21 +165,17 @@ public class OrdersController {
         //More Details For Delivery
 
         orderDetails.setInsurance(false);
-//        orderDetails.setItemType(stores.getItemType());
         if (weight == null) {
             orderDetails.setTotalWeightKg(1.0);
         } else {
             orderDetails.setTotalWeightKg(weight);
         }
-//        orderDetails.setProductCode(stores.getItemType().name());
+
         orderDetails.getDelivery().setDeliveryAddress(deliveryAddress);
 
-        String phone = orderDetails.getPickup().getPickupContactPhone();
-        String contactName = orderDetails.getPickup().getPickupContactName();
         String deliveryType = stores.getType();
 
         // Self delivery
-
         if (stores.getType().equalsIgnoreCase("self")) {
             DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), orderDetails.getDelivery().getDeliveryState());
             PriceResult priceResult = new PriceResult();
@@ -1017,7 +1015,7 @@ public class OrdersController {
     }
 
 
-    @GetMapping(path = {"/getAirwayBill/{orderId}"}, name = "get-airwaybill-delivery")
+    @GetMapping(path = {"/getAirwayBill/{orderId}"}, name = "get-airwayBill-delivery")
     public ResponseEntity<HttpReponse> getAirwayBill(HttpServletRequest request,
                                                      @PathVariable("orderId") String orderId) {
 
@@ -1068,7 +1066,7 @@ public class OrdersController {
                 } catch (IOException e) {
                     LogUtil.info(logprefix, location, "Consignment Response ", airwayBillResult.consignmentNote.toString());
                     response.setMessage(e.getMessage());
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -1076,6 +1074,19 @@ public class OrdersController {
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Map<String, String> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        return errors;
     }
 
 }

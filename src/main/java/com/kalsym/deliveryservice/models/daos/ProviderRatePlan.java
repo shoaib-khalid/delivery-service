@@ -15,6 +15,7 @@ import javax.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
@@ -28,6 +29,7 @@ import org.hibernate.annotations.FetchMode;
 @Setter
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@ToString
 public class ProviderRatePlan implements Serializable {
     @EmbeddedId ProviderRatePlanId id;
     String marginType;
