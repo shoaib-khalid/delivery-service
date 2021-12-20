@@ -935,6 +935,8 @@ public class OrdersController {
         if (order != null) {
             if (order.getDriverId() != null) {
                 if (order.getRiderName() == null) {
+                    LogUtil.info(logprefix, location, "Request Rider Details From Provider  ","");
+
                     ProcessRequest process = new ProcessRequest(order.getSystemTransactionId(), order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
                     ProcessResult processResult = process.GetDriverDetails();
                     if (processResult.resultCode == 0) {
@@ -956,6 +958,8 @@ public class OrdersController {
                         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
                     }
                 } else {
+                    LogUtil.info(logprefix, location, "Query Rider Details From DB  ","");
+
                     Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
                     RiderDetails riderDetails = new RiderDetails();
                     riderDetails.setName(order.getRiderName());
@@ -1077,18 +1081,18 @@ public class OrdersController {
         }
     }
 
-//    @ResponseStatus(HttpStatus.BAD_REQUEST)
-//    @ExceptionHandler(MethodArgumentNotValidException.class)
-//    public Map<String, String> handleValidationExceptions(
-//            MethodArgumentNotValidException ex) {
-//        Map<String, String> errors = new HashMap<>();
-//        ex.getBindingResult().getAllErrors().forEach((error) -> {
-//            String fieldName = ((FieldError) error).getField();
-//            String errorMessage = error.getDefaultMessage();
-//            errors.put(fieldName, errorMessage);
-//        });
-//        return errors;
-//    }
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Map<String, String> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        return errors;
+    }
 
 }
 

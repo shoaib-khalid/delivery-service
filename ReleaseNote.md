@@ -1,4 +1,12 @@
 ##############################################################################################
+# Version v.2.2.21 | 21-December-2021
+###############################################################################################
+### Code Changes:
+
+1. Bug fixed if front end return null value to get price
+
+
+##############################################################################################
 # Version v.2.2.20 | 20-December-2021
 ###############################################################################################
 ### Code Changes:
@@ -25,9 +33,9 @@
    1. added the cost center code for Pakistan Store in store delivery sp table 
 3. Update the delivery sp table change delivery sp name for "Mr Speedy" to "BORZO"
 
-##################################################
+##############################################################################################
 # Version v.2.2.17 | 10-December-2021
-##################################################
+##############################################################################################
 ### Code Changes:
 
 1. Submit order fixed cost center code value 
@@ -155,27 +163,27 @@ field in delivery quotation table
 1. Bug Fixed Get Rider Details.
 2. Move the query rider details to during callback
 
-Version v.2.1.7
--------------------------
-Date:18-Nov-2021
-Developer:Kumar
+##################################################
+# Version v.2.1.7 | 18-Nov-2021
+##################################################
+### Code Changes:
 
 1. Bug Fixed Remove Latest Patch DB Parameter
 
 
-Version v.2.1.6
--------------------------
-Date:18-Nov-2021
-Developer:Kumar
+##################################################
+#Version v.2.1.6 | 18-Nov-2021
+##################################################
+### Code Changes:
 
 1. Production Server Bug Fixed (get rider details)
 2. Callback Lalamove status bug fixed
 3. Removed latest changes after version 2.2.0
 
-Version v.2.2.4
--------------------------
-Date:17-Nov-2021
-Developer:Kumar
+##################################################
+#Version v.2.2.4 | 17-Nov-2021
+##################################################
+### Code Changes:
 
 1. Tcs Bug Fixed
 
@@ -186,17 +194,18 @@ delivery_quotation
 3. deliveryZone varchar(100)
 4. pickupZone varchar(100)
 
-Version v.2.2.3
--------------------------
-Date:17-Nov-2021
-Developer:Kumar
+##################################################
+#Version v.2.2.3 | 17-Nov-2021
+##################################################
+### Code Changes:
 
 1. Get Rider Details Bug Fixed
 
-Version v.2.2.2
--------------------------
-Date:17-Nov-2021
-Developer:Kumar
+##################################################
+#Version v.2.2.2 | 17-Nov-2021
+##################################################
+### Code Changes:
+
 
 1. MarkupPrice added for delivery during get quotation
 
@@ -216,17 +225,18 @@ CREATE TABLE `delivery_service_charge` (
 
 2. Integrated TCS print airway bill
 
-Version v.2.2.1
--------------------------
-Date:15-Nov-2021
-Developer:Kumar
+##################################################
+#Version v.2.2.1 | 15-Nov-2021
+##################################################
+### Code Changes:
+
 
 1. Airway Bill For Jnt Upload Into Server Part Done
 
-Version v.2.2.0
--------------------------
-Date:12-Nov-2021
-Developer:Kumar
+##################################################
+#Version v.2.2.0 | 12-Nov-2021
+##################################################
+### Code Changes:
 
 1. Added New TCS Provider Integration
 DB:
@@ -253,62 +263,61 @@ CREATE TABLE `delivery_zone_price` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3
 
-Version v.2.1.5
--------------------------
-Date:11-Nov-2021
-Developer:Kumar
+
+##################################################
+#Version v.2.1.5 | 11-Nov-2021
+##################################################
+### Code Changes:
 
 1. Added New Parameter in Confirm Delivery Endpoint
 2. JnT Provider Merger to Staging K875 with AirwayBill(testing)
 
-Version v.2.1.3
--------------------------
-Date:10-Nov-2021
-Developer:Kumar
+##################################################
+#Version v.2.1.3 | 10-Nov-2021
+##################################################
+### Code Changes:
 
 1. Added New Endpoint to query delivery provider details
 
-Version v.2.1.2
--------------------------
-Date:09-Nov-2021
-Developer:Kumar
+##################################################
+#Version v.2.1.2 | 09-Nov-2021
+##################################################
+### Code Changes:
 
 1. Added Authentication In Swagger Ui
 
-Version v.2.1.1
--------------------------
-Date:02-Nov-2021
-Developer:Kumar
+##################################################
+#Version v.2.1.1 | 02-Nov-2021
+##################################################
+### Code Changes:
 
 1. New Endpoint For Get Driver Details with Consignment Note Url - added Delivery Provider Info
 
-Version v.2.1.0
--------------------------
-Date:02-Nov-2021
-Developer:Kumar
+##################################################
+#Version v.2.1.0 | 02-Nov-2021
+##################################################
+### Code Changes:
 
 1. New Endpoint For Get Driver Details with Consignment Note Url
 
-Version v.2.0.15
--------------------------
-Date:07-Oct-2021
-Developer:Kumar
+##################################################
+#Version v.2.0.15 | 07-Oct-2021
+##################################################
+### Code Changes:
 
 1. Bug Fixed
 
-
-Version v.2.0.12
--------------------------
-Date:07-Oct-2021
-Developer:Kumar
+##################################################
+#Version v.2.0.12 | 07-Oct-2021
+##################################################
+### Code Changes:
 
 1. Fixed bug for user authentication in (Session Filter Class)
 2. Move delivery item type under "ADHOC" validation check
 
-
-Version v.1.0-FINAL
--------------------------
-Date:22-March-2021
-Developer:Taufik
+##################################################
+#Version v.1.0-FINAL |  22-March-2021
+##################################################
+### Code Changes:
 
 Final version after internal demo on 19-March-2021
