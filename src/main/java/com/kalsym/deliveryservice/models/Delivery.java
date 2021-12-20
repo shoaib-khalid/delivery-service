@@ -17,23 +17,23 @@ import javax.validation.constraints.NotNull;
 @Getter
 @Setter
 public class Delivery {
-    @NotBlank(message = "deliveryAddress is mandatory")
+//    @NotBlank(message = "deliveryAddress is mandatory")
     String deliveryAddress;
-    @NotBlank(message = "deliveryPostcode is mandatory")
+//    @NotBlank(message = "deliveryPostcode is mandatory")
     String deliveryPostcode;
-    @NotBlank(message = "deliveryState is mandatory")
+//    @NotBlank(message = "deliveryState is mandatory")
     String deliveryState;
-    @NotBlank(message = "deliveryCity is mandatory")
+//    @NotBlank(message = "deliveryCity is mandatory")
     String deliveryCity;
 
-    @NotBlank(message = "deliveryCountry is mandatory")
+//    @NotBlank(message = "deliveryCountry is mandatory")
     String deliveryCountry;
 
-    @NotBlank(message = "deliveryContactName is mandatory")
+//    @NotBlank(message = "deliveryContactName is mandatory")
     String deliveryContactName;
-    @NotBlank(message = "deliveryContactPhone is mandatory")
+//    @NotBlank(message = "deliveryContactPhone is mandatory")
     String deliveryContactPhone;
-    @NotBlank(message = "deliveryContactEmail is mandatory")
+//    @NotBlank(message = "deliveryContactEmail is mandatory")
     String deliveryContactEmail;
     String deliveryZone;
 }
