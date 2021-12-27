@@ -8,6 +8,7 @@ import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.HttpResult;
+import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 
 import java.util.HashMap;
@@ -57,30 +58,29 @@ public class TCSGenerateCostCenterCode extends SyncDispatcher {
         String requestBody = generateBody();
         System.err.println("Testing" + store.toString());
 
-        HttpResult httpResult = new HttpResult();
-//        = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, costCentreCode, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
-        JsonObject test = new JsonObject();
-        JsonObject inside = new JsonObject();
-        JsonObject another = new JsonObject();
-        inside.addProperty("code", "0200");
-        inside.addProperty("status", "SUCCESS");
-        inside.addProperty("message", "The operation was successful");
-        inside.addProperty("requestTime", "20211224150140646");
-        inside.addProperty("responseTime", "20211224145535310");
-        another.addProperty("result", "Your Cost Center Code is: awan-tech");
-        test.add("returnStatus", inside);
-        test.add("costCenterCodeReply", another);
+        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, costCentreCode, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
+//        JsonObject test = new JsonObject();
+//        JsonObject inside = new JsonObject();
+//        JsonObject another = new JsonObject();
+//        inside.addProperty("code", "0200");
+//        inside.addProperty("status", "SUCCESS");
+//        inside.addProperty("message", "The operation was successful");
+//        inside.addProperty("requestTime", "20211224150140646");
+//        inside.addProperty("responseTime", "20211224145535310");
+//        another.addProperty("result", "Your Cost Center Code is: awan-tech");
+//        test.add("returnStatus", inside);
+//        test.add("costCenterCodeReply", another);
 
-        httpResult.responseString = test.toString();
-        httpResult.resultCode = 200;
-//        if (httpResult.httpResponseCode == 200) {
+//        httpResult.responseString = test.toString();
+//        httpResult.resultCode = 200;
+        if (httpResult.httpResponseCode == 200) {
         response.resultCode = 0;
         LogUtil.info(logprefix, location, "TCS Response for Submit Order: " + httpResult.responseString, "");
         response.returnObject = extractResponseBody(httpResult.responseString);
-//        } else {
-//            LogUtil.info(logprefix, location, "Request failed", "");
-//            response.resultCode = -1;
-//        }
+        } else {
+            LogUtil.info(logprefix, location, "Request failed", "");
+            response.resultCode = -1;
+        }
         LogUtil.info(logprefix, location, "Process finish", "");
 
         return response;
