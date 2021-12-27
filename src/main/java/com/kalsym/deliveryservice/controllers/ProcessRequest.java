@@ -41,7 +41,9 @@ public class ProcessRequest {
     LocationIdResult locationIdResult;
     DriverDetailsResult driverDetailsResult;
     AirwayBillResult airwayBillResult;
+    AdditionalInfoResult additionalInfoResult;
     Object requestBody;
+    Store store;
     SequenceNumberRepository sequenceNumberRepository;
     @Autowired
     DeliveryQuotationRepository deliveryQuotationRepository;
@@ -78,6 +80,19 @@ public class ProcessRequest {
                           ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository) {
         this.sysTransactionId = sysTransactionId;
         this.requestBody = requestBody;
+        this.logprefix = sysTransactionId;
+        this.location = "ProcessRequest";
+        this.providerRatePlanRepository = providerRatePlanRepository;
+        this.providerConfigurationRepository = providerConfigurationRepository;
+        this.providerRepository = providerRepository;
+        this.providerThreadRunning = 0;
+        this.priceResultList = new ArrayList<>();
+    }
+
+    public ProcessRequest(String sysTransactionId, Store requestBody, ProviderRatePlanRepository providerRatePlanRepository,
+                          ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository) {
+        this.sysTransactionId = sysTransactionId;
+        this.store = requestBody;
         this.logprefix = sysTransactionId;
         this.location = "ProcessRequest";
         this.providerRatePlanRepository = providerRatePlanRepository;
@@ -508,6 +523,47 @@ public class ProcessRequest {
     }
 
 
+    public ProcessResult GetAdditionalInfo() {
+        //get provider rate plan
+//        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
+        Provider provider = providerRepository.getOne(store.getProviderId());
+        List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(provider.getId());
+        HashMap config = new HashMap();
+        for (int j = 0; j < providerConfigList.size(); j++) {
+            String fieldName = providerConfigList.get(j).getId().getConfigField();
+            String fieldValue = providerConfigList.get(j).getConfigValue();
+            config.put(fieldName, fieldValue);
+        }
+        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, store, "GetAdditionalInfo", sequenceNumberRepository);
+        dthread.start();
+
+
+        try {
+            Thread.sleep(100);
+        } catch (Exception ex) {
+        }
+
+        while (providerThreadRunning > 0) {
+            try {
+                Thread.sleep(500);
+            } catch (Exception ex) {
+            }
+            //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
+        }
+
+        ProcessResult response = new ProcessResult();
+        if (additionalInfoResult.resultCode == 0) {
+            response.resultCode = 0;
+            response.returnObject = additionalInfoResult;
+        } else {
+            response.resultCode = -1;
+            response.returnObject = additionalInfoResult;
+        }
+        LogUtil.info(logprefix, location, "GetAirwayBill finish. resultCode:" + response.resultCode, " airwayBillResult count:" + airwayBillResult);
+        return response;
+    }
+
+
     public synchronized void addPriceResult(PriceResult priceResult) {
         priceResultList.add(priceResult);
     }
@@ -554,6 +610,10 @@ public class ProcessRequest {
 
     public synchronized void setAirwayBillResult(AirwayBillResult airwayBillResult) {
         this.airwayBillResult = airwayBillResult;
+    }
+
+    public synchronized void setAdditionalInfoResult(AdditionalInfoResult additionalInfoResult) {
+        this.additionalInfoResult = additionalInfoResult;
     }
 
 

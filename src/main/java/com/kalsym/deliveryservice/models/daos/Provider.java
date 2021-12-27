@@ -52,5 +52,7 @@ public class Provider implements Serializable {
     String providerImage;
     @JsonIgnore
     String driverDetailsClassName;
+    @JsonIgnore
+    String additionalQueryClassName;
 //    String regionCountryId;
 }

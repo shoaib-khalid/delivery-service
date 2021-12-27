@@ -4,7 +4,9 @@ import com.kalsym.deliveryservice.controllers.ProcessRequest;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.daos.Provider;
+import com.kalsym.deliveryservice.models.daos.Store;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
+import com.kalsym.deliveryservice.service.utility.Response.StoreResponseData;
 import com.kalsym.deliveryservice.utils.LogUtil;
 
 import java.lang.reflect.Constructor;
@@ -21,6 +23,7 @@ public class ProviderThread extends Thread implements Runnable {
     private final Provider provider;
     private final Order order;
     private final DeliveryOrder deliveryOrder;
+    private final Store store;
     private final String spOrderId;
     private final HashMap providerConfig;
     private ProcessRequest caller;
@@ -40,6 +43,7 @@ public class ProviderThread extends Thread implements Runnable {
         this.spOrderId = null;
         this.sequenceNumberRepository = sequenceNumberRepository;
         this.deliveryOrder = null;
+        this.store = null;
     }
 
     public ProviderThread(ProcessRequest caller, String sysTransactionId,
@@ -52,6 +56,7 @@ public class ProviderThread extends Thread implements Runnable {
         this.functionName = functionName;
         this.order = null;
         this.deliveryOrder = null;
+        this.store = null;
     }
 
     public ProviderThread(ProcessRequest caller, String sysTransactionId,
@@ -65,6 +70,7 @@ public class ProviderThread extends Thread implements Runnable {
         this.spOrderId = null;
         this.order = null;
         this.deliveryOrder = null;
+        this.store = null;
 
     }
 
@@ -78,6 +84,7 @@ public class ProviderThread extends Thread implements Runnable {
         this.spOrderId = null;
         this.order = order;
         this.deliveryOrder = null;
+        this.store = null;
 
     }
 
@@ -93,7 +100,24 @@ public class ProviderThread extends Thread implements Runnable {
         this.functionName = functionName;
         this.spOrderId = null;
         this.sequenceNumberRepository = sequenceNumberRepository;
+        this.store = null;
     }
+
+    public ProviderThread(ProcessRequest caller, String sysTransactionId,
+                          Provider provider, HashMap providerConfig, Store store, String functionName,
+                          SequenceNumberRepository sequenceNumberRepository) {
+        this.sysTransactionId = sysTransactionId;
+        this.provider = provider;
+        this.order = null;
+        this.providerConfig = providerConfig;
+        this.caller = caller;
+        this.functionName = functionName;
+        this.spOrderId = null;
+        this.sequenceNumberRepository = sequenceNumberRepository;
+        this.deliveryOrder = null;
+        this.store = store;
+    }
+
 
     /* (non-Javadoc)
      * @see java.lang.Runnable#run()
@@ -138,6 +162,9 @@ public class ProviderThread extends Thread implements Runnable {
             } else if (functionName.equalsIgnoreCase("GetAirwayBill")) {
                 className = provider.getAirwayBillClassName();
                 LogUtil.info(logprefix, location, "GetAirwayBill class name for SP ID:" + provider.getId() + " -> " + className, "");
+            } else if (functionName.equalsIgnoreCase("GetAdditionalInfo")) {
+                className = provider.getAdditionalQueryClassName();
+                LogUtil.info(logprefix, location, "GetAdditionalInfo class name for SP ID:" + provider.getId() + " -> " + className, "");
             }
             Class classObject = Class.forName(className);
             DispatchRequest reqFactoryObj = null;
@@ -153,11 +180,12 @@ public class ProviderThread extends Thread implements Runnable {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, requestBody, this.sysTransactionId);
                 } else if (functionName.equalsIgnoreCase("GetPickupDate") || functionName.equalsIgnoreCase("GetPickupTime") || functionName.equalsIgnoreCase("GetLocationId")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId);
-                }else if (functionName.equalsIgnoreCase("GetDriverDetails")) {
+                } else if (functionName.equalsIgnoreCase("GetDriverDetails")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
-                }
-                else if (functionName.equalsIgnoreCase("GetAirwayBill")) {
+                } else if (functionName.equalsIgnoreCase("GetAirwayBill")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
+                } else if (functionName.equalsIgnoreCase("GetAdditionalInfo")) {
+                    reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, store, this.sysTransactionId, this.sequenceNumberRepository);
                 } else {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository);
                 }
@@ -219,6 +247,10 @@ public class ProviderThread extends Thread implements Runnable {
                 AirwayBillResult airwayBillResult = (AirwayBillResult) response.returnObject;
                 airwayBillResult.providerId = provider.getId();
                 caller.setAirwayBillResult(airwayBillResult);
+            } else if (functionName.equalsIgnoreCase("GetAdditionalInfo")) {
+                AdditionalInfoResult additionalInfoResult = (AdditionalInfoResult) response.returnObject;
+                additionalInfoResult.providerId = provider.getId();
+                caller.setAdditionalInfoResult(additionalInfoResult);
             }
             LogUtil.info(logprefix, location, "Response code:" + response.resultCode + " string:" + response.resultString + " returnObject:" + response.returnObject, "");
         } catch (Exception exp) {

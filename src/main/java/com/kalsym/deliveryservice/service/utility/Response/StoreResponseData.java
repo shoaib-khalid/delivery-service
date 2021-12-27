@@ -32,6 +32,7 @@ public class StoreResponseData {
     String regionCountryId;
     String regionCountryStateId;
     String vehicleType;
+    int providerId;
 
     @Override
     public String toString() {

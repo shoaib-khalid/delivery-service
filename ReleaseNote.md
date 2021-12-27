@@ -1,4 +1,14 @@
 ##############################################################################################
+# Version v.2.3.0 | 27-December-2021
+###############################################################################################
+### Code Changes:
+
+1.Added new endpoint to create the Cost Center Code for Pakistan Store
+    ALTER TABLE symplified.store ADD costCenterCode varchar(100) NULL;
+    ALTER TABLE symplified.delivery_sp ADD additionalQueryClassName varchar(100) NULL;
+
+
+##############################################################################################
 # Version v.2.2.21 | 21-December-2021
 ###############################################################################################
 ### Code Changes:

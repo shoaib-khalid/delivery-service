@@ -105,6 +105,9 @@ public class OrdersController {
     @Autowired
     StoreOrderRepository storeOrderRepository;
 
+    @Autowired
+    StoreRepository storeRepository;
+
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
                                                 @Valid @RequestBody Order orderDetails) {
@@ -336,7 +339,9 @@ public class OrdersController {
                                 Calendar calendar3 = Calendar.getInstance();
                                 calendar3.setTime(end);
                                 calendar3.add(Calendar.DATE, 1);
-
+                                LogUtil.info(systemTransactionId, location, "CHECK TIME :  " + String.valueOf(calendar1.getTime().after(calendar2.getTime()) && calendar1.getTime().before(calendar3.getTime())), "");
+                                LogUtil.info(systemTransactionId, location, "Start TIME :  " + String.valueOf(calendar2.getTime()), "System Time : " + calendar1.getTime());
+                                LogUtil.info(systemTransactionId, location, "End Time :  " + String.valueOf(calendar3.getTime()), "System Time : " + calendar1.getTime());
                                 if (calendar1.getTime().after(calendar2.getTime()) && calendar1.getTime().before(calendar3.getTime())) {
                                     Double totalPrice = Double.parseDouble(list.price.toString()) + deliveryServiceCharge.getServiceFee().doubleValue();
                                     deliveryOrder.setAmount(totalPrice);
@@ -570,12 +575,11 @@ public class OrdersController {
         pickup.setPickupTime(schedule.getStartPickScheduleTime());
         pickup.setPickupCity(quotation.getPickupCity());
 
-        StoreResponseData store = symplifiedService.getStore(quotation.getStoreId());
+        Store store = storeRepository.getOne(quotation.getStoreId());
 
         if (store.getRegionCountryId().equals("PAK")) {
-            StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
-            if (storeDeliverySp != null) {
-                pickup.setCostCenterCode(storeDeliverySp.getStoreCostCenterCode());
+            if (store.getCostCenterCode() != null) {
+                pickup.setCostCenterCode(store.getCostCenterCode());
             }
         }
 
@@ -935,7 +939,7 @@ public class OrdersController {
         if (order != null) {
             if (order.getDriverId() != null) {
                 if (order.getRiderName() == null) {
-                    LogUtil.info(logprefix, location, "Request Rider Details From Provider  ","");
+                    LogUtil.info(logprefix, location, "Request Rider Details From Provider  ", "");
 
                     ProcessRequest process = new ProcessRequest(order.getSystemTransactionId(), order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
                     ProcessResult processResult = process.GetDriverDetails();
@@ -958,7 +962,7 @@ public class OrdersController {
                         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
                     }
                 } else {
-                    LogUtil.info(logprefix, location, "Query Rider Details From DB  ","");
+                    LogUtil.info(logprefix, location, "Query Rider Details From DB  ", "");
 
                     Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
                     RiderDetails riderDetails = new RiderDetails();
