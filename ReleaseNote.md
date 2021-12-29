@@ -1,11 +1,19 @@
 ##############################################################################################
+# Version v.2.3.1 | 29-December-2021
+###############################################################################################
+### Code Changes:
+
+1.Bug Fixed Callback Lalamove- Fixed -( lalamove callbak get rider id become null when order become cancel)
+
+##############################################################################################
 # Version v.2.3.0 | 27-December-2021
 ###############################################################################################
 ### Code Changes:
 
 1.Added new endpoint to create the Cost Center Code for Pakistan Store
     ALTER TABLE symplified.store ADD costCenterCode varchar(100) NULL;
-    ALTER TABLE symplified.delivery_sp ADD additionalQueryClassName varchar(100) NULL;
+    ALTER TABLE symplified.delivery_sp ADD additionalQueryClassName varchar(100) NULL; add this value = ("com.kalsym.deliveryservice.provider.TCS.TCSGenerateCostCenterCode")
+
 
 
 ##############################################################################################

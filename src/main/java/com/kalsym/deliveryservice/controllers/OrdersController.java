@@ -877,6 +877,7 @@ public class OrdersController {
                 String res;
                 // change from order status codes to delivery status codes.
                 if (status.equals("PICKED_UP")) {
+                    deliveryOrder.setDriverId(deliveryId);
                     orderStatus = "BEING_DELIVERED";
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                     getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
@@ -889,7 +890,6 @@ public class OrdersController {
                 }
 
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
-                deliveryOrder.setDriverId(deliveryId);
                 deliveryOrdersRepository.save(deliveryOrder);
             } else {
                 LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
