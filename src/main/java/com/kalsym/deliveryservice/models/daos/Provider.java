@@ -13,6 +13,7 @@ import lombok.Setter;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.*;
 import java.io.Serializable;
 
 /**
@@ -47,7 +48,10 @@ public class Provider implements Serializable {
     String pickupTimeClassname;
     @JsonIgnore
     String locationIdClassname;
+    @JsonIgnore
+    String airwayBillClassName;
     String providerImage;
     @JsonIgnore
     String driverDetailsClassName;
+    String regionCountryId;
 }

@@ -56,7 +56,6 @@ public class ProviderThread extends Thread implements Runnable {
         this.functionName = functionName;
         this.order = null;
         this.deliveryOrder = null;
-
     }
 
     public ProviderThread(ProcessRequest caller, String sysTransactionId,
@@ -140,6 +139,9 @@ public class ProviderThread extends Thread implements Runnable {
             } else if (functionName.equalsIgnoreCase("GetDriverDetails")) {
                 className = provider.getDriverDetailsClassName();
                 LogUtil.info(logprefix, location, "GetLocationId class name for SP ID:" + provider.getId() + " -> " + className, "");
+            } else if (functionName.equalsIgnoreCase("GetAirwayBill")) {
+                className = provider.getAirwayBillClassName();
+                LogUtil.info(logprefix, location, "GetAirwayBill class name for SP ID:" + provider.getId() + " -> " + className, "");
             }
             Class classObject = Class.forName(className);
             DispatchRequest reqFactoryObj = null;
@@ -155,7 +157,10 @@ public class ProviderThread extends Thread implements Runnable {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, requestBody, this.sysTransactionId);
                 } else if (functionName.equalsIgnoreCase("GetPickupDate") || functionName.equalsIgnoreCase("GetPickupTime") || functionName.equalsIgnoreCase("GetLocationId")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId);
-                } else if (functionName.equalsIgnoreCase("GetDriverDetails")) {
+                }else if (functionName.equalsIgnoreCase("GetDriverDetails")) {
+                    reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
+                }
+                else if (functionName.equalsIgnoreCase("GetAirwayBill")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
                 } else {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository);
@@ -214,8 +219,11 @@ public class ProviderThread extends Thread implements Runnable {
                 DriverDetailsResult driverDetailsResult = (DriverDetailsResult) response.returnObject;
                 driverDetailsResult.providerId = provider.getId();
                 caller.setDriverDetailsResult(driverDetailsResult);
+            } else if (functionName.equalsIgnoreCase("GetAirwayBill")) {
+                LocationIdResult locationIdResult = (LocationIdResult) response.returnObject;
+                locationIdResult.providerId = provider.getId();
+                caller.setLocationIdResult(locationIdResult);
             }
-
             LogUtil.info(logprefix, location, "Response code:" + response.resultCode + " string:" + response.resultString + " returnObject:" + response.returnObject, "");
         } catch (Exception exp) {
             LogUtil.error(logprefix, location, "Error in awaiting. Will not continue with other SP ", "", exp);

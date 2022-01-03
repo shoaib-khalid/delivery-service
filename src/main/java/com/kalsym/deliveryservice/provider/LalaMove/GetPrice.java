@@ -3,7 +3,7 @@ package com.kalsym.deliveryservice.provider.LalaMove;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
-import com.kalsym.deliveryservice.models.lalamove.getprice.*;
+import com.kalsym.deliveryservice.models.RequestBodies.lalamoveGetPrice.*;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
@@ -135,10 +135,10 @@ public class GetPrice extends SyncDispatcher {
 
 
     private GetPrices generateRequestBody() {
-        List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
+        List<Delivery> deliveries = new ArrayList<>();
 
         deliveries.add(
-                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
+                new Delivery(
                         1,
                         new Contact(order.getDelivery().getDeliveryContactName(), order.getDelivery().getDeliveryContactPhone()),
                         ""

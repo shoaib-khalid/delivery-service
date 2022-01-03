@@ -1,10 +1,8 @@
 package com.kalsym.deliveryservice.controllers;
 
 import com.google.gson.Gson;
-import com.kalsym.deliveryservice.models.Delivery;
-import com.kalsym.deliveryservice.models.HttpReponse;
-import com.kalsym.deliveryservice.models.Order;
-import com.kalsym.deliveryservice.models.Pickup;
+import com.google.gson.JsonObject;
+import com.kalsym.deliveryservice.models.*;
 import com.kalsym.deliveryservice.models.daos.*;
 import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
@@ -18,15 +16,24 @@ import com.kalsym.deliveryservice.utils.LogUtil;
 import com.kalsym.deliveryservice.utils.StringUtility;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.*;
+import org.springframework.http.converter.ByteArrayHttpMessageConverter;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.xml.bind.DatatypeConverter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DateFormat;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -68,7 +75,7 @@ public class OrdersController {
     DeliveryOptionRepository deliveryOptionRepository;
 
     @Autowired
-    StoreDeliverySpRepository storeDeliveryTypeRepository;
+    StoreDeliverySpRepository storeDeliverySpRepository;
 
     @Autowired
     RegionCountryStateRepository regionCountryStateRepository;
@@ -81,6 +88,15 @@ public class OrdersController {
 
     @Autowired
     DeliveryServiceChargeRepository deliveryMarkupPriceRepository;
+
+    @Autowired
+    DeliveryZoneCityRepository deliveryZoneCityRepository;
+
+    @Autowired
+    DeliveryZonePriceRepository deliveryZonePriceRepository;
+
+    @Autowired
+    StoreDeliveryDetailRepository storeDeliveryDetailRepository;
 
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
@@ -105,13 +121,12 @@ public class OrdersController {
         Pickup pickup = new Pickup();
         //FIXME : Uncomment this when add the J&T
         //If Store Is PAKISTAN SEARCH DB
-       /* if (store.getRegionCountryId().equals("PAK")) {
+        if (store.getRegionCountryId().equals("PAK")) {
             DeliveryZoneCity zoneCity = deliveryZoneCityRepository.findByCityContains(store.getCity());
             pickup.setPickupZone(zoneCity.getZone());
             DeliveryZoneCity deliveryZone = deliveryZoneCityRepository.findByCityContains(orderDetails.getDelivery().getDeliveryCity());
             orderDetails.getDelivery().setDeliveryZone(deliveryZone.getZone());
         }
-*/
         if (stores.getMaxOrderQuantityForBike() <= 10) {
             pickup.setVehicleType(VehicleType.MOTORCYCLE);
             LogUtil.info(logprefix, location, "Vehicle Type less than 10 : ", pickup.getVehicleType().name());
@@ -219,10 +234,12 @@ public class OrdersController {
         } else {
             orderDetails.setItemType(stores.getItemType());
             orderDetails.setProductCode(stores.getItemType().name());
+            orderDetails.setPieces(2);
+//            System.err.println(orderDetails.getPieces());
             //Provider Query
             try {
-                StoreDeliverySp storeDeliverySp = storeDeliveryTypeRepository.findByStoreId(store.getId());
-                orderDetails.setDeliveryProviderId(storeDeliverySp.getDeliverySpId());
+                StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
+                orderDetails.setDeliveryProviderId(storeDeliverySp.getProvider().getId());
             } catch (Exception ex) {
                 LogUtil.info(systemTransactionId, location, "Exception if store sp is null  : " + ex.getMessage(), "");
 
@@ -505,7 +522,7 @@ public class OrdersController {
 
     @PostMapping(path = {"/confirmDelivery/{refId}/{orderId}"}, name = "orders-confirm-delivery")
     public ResponseEntity<HttpReponse> submitOrder(HttpServletRequest request,
-                                                   @PathVariable("refId") long refId, @PathVariable("orderId") String orderId) {
+                                                   @PathVariable("refId") long refId, @PathVariable("orderId") String orderId, @Valid @RequestBody Schedule schedule) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -515,6 +532,7 @@ public class OrdersController {
         LogUtil.info(logprefix, location, "", "");
         DeliveryQuotation quotation = deliveryQuotationRepository.getOne(refId);
         LogUtil.info(systemTransactionId, location, "Quotation : ", quotation.toString());
+        LogUtil.info(systemTransactionId, location, "schedule : ", schedule.toString());
         Order orderDetails = new Order();
         orderDetails.setCustomerId(quotation.getCustomerId());
         if (!quotation.getItemType().isEmpty()) {
@@ -525,27 +543,26 @@ public class OrdersController {
         orderDetails.setProductCode(quotation.getProductCode());
         orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
         orderDetails.setShipmentValue(quotation.getAmount());
-
+        orderDetails.setOrderId(orderId);
 
         Pickup pickup = new Pickup();
-//        if (quotation.getPickupContactName() != null) {
         pickup.setPickupContactName(quotation.getPickupContactName());
-//        } else {
-//            pickup.setPickupContactName("");
-//        }
-//        if (quotation.getPickupContactPhone() != null) {
         pickup.setPickupContactPhone(quotation.getPickupContactPhone());
-//        } else {
-//            pickup.setPickupContactPhone("");
-//        }
         pickup.setPickupAddress(quotation.getPickupAddress());
+        pickup.setPickupPostcode(quotation.getPickupPostcode());
         pickup.setVehicleType(VehicleType.valueOf(quotation.getVehicleType()));
+        pickup.setEndPickupDate(schedule.getEndPickScheduleDate());
+        pickup.setEndPickupTime(schedule.getEndPickScheduleTime());
+        pickup.setPickupDate(schedule.getStartPickScheduleDate());
+        pickup.setPickupTime(schedule.getStartPickScheduleTime());
         orderDetails.setPickup(pickup);
+
 
         Delivery delivery = new Delivery();
         delivery.setDeliveryAddress(quotation.getDeliveryAddress());
         delivery.setDeliveryContactName(quotation.getDeliveryContactName());
         delivery.setDeliveryContactPhone(quotation.getDeliveryContactPhone());
+        delivery.setDeliveryPostcode(quotation.getDeliveryPostcode());
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());
 
@@ -870,6 +887,7 @@ public class OrdersController {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
         String systemTransactionId = StringUtility.CreateRefID("DL");
+        System.err.println(type + country);
 
 
         LogUtil.info(logprefix, location, "", "");
@@ -884,7 +902,6 @@ public class OrdersController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
 
     @GetMapping(path = {"/getDeliveryRiderDetails/{orderId}"}, name = "delivery-rider-details")
     public ResponseEntity<HttpReponse> getDeliveryRiderDetails(HttpServletRequest request,
@@ -924,218 +941,105 @@ public class OrdersController {
     }
 
 
-    //TODO: REMOVE BELOW LINE NOT USING ANYMORE. REFERENCE PURPOSE FOR LALAMOVE
-
-   /* @PostMapping(path = "/setDeliveryPrice", name = "set-delivery-price")
-    public ResponseEntity<HttpReponse> setDeliveryPrice(HttpServletRequest request,
-                                                        @Valid @RequestBody DeliveryOption deliveryOption) {
+    @GetMapping(path = {"/getDeliveryProviderDetails/{providerId}"}, name = "delivery-provider-details")
+    public ResponseEntity<HttpReponse> getDeliveryProviderDetails(HttpServletRequest request,
+                                                                  @PathVariable("providerId") String providerId) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
-
-        LogUtil.info(logprefix, location, "", "");
-        String state = deliveryOption.getState();
-        String storeId = deliveryOption.getStoreId();
-        Float price = deliveryOption.getPrice();
-
-        System.err.println("State: " + state + ", storeId: " + storeId + ", Price: " + price);
-
-        DeliveryOptions newDeliveryOption = new DeliveryOptions();
-        newDeliveryOption.setStoreId(storeId);
-        newDeliveryOption.setToState(state);
-        newDeliveryOption.setDelivery_price(price);
-
-        deliveryOptionRepository.save(newDeliveryOption);
-
-        response.setSuccessStatus(HttpStatus.OK);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-
-    @GetMapping(path = {"/test"}, name = "test-lalamove-response")
-    public ResponseEntity<String> testLalamove() throws NoSuchAlgorithmException, InvalidKeyException {
-
-        String secretKey = "7p0CJjVxlfEpg/EJWi/y9+6pMBK9yvgYzVeOUKSYZl4/IztYSh6ZhdcdpRpB15ty";
-        String apiKey = "6e4e7adb5797632e54172dc2dd2ca748";
-        String BASE_URL = "https://rest.sandbox.lalamove.com";
-        String ENDPOINT_URL = "/v2/quotations";
-        String METHOD = "POST";
-        Mac mac = Mac.getInstance("HmacSHA256");
-        SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
-        mac.init(secret_key);
-        List<Stop> stops = new ArrayList<>();
-        stops.add(new Stop(
-                new Location("3.048593", "101.671568"),
-                new Addresses(
-                        new MsMY("Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia",
-                                "MY_KUL")
-                )));
-        stops.add(new Stop(
-                new Location("2.754873", "101.703744"),
-                new Addresses(
-                        new MsMY("64000 Sepang, Selangor, Malaysia",
-                                "MY_KUL"))));
-        List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
-        deliveries.add(
-                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
-                        1,
-                        new Contact("Shen Ong", "0376886555"),
-                        "Remarks for drop-off point (#1)."
-                )
-        );
-        GetPrices requestBody = new GetPrices(
-                "MOTORCYCLE",
-                new ArrayList<String>(),
-                stops,
-                new Contact("Chris Wong", "0376886555"),
-                deliveries
-        );
-
-        GetPrices req = new GetPrices();
-        req.serviceType = "MOTORCYCLE";
-        req.specialRequests = null;
-        Stop s1 = new Stop();
-        s1.addresses = new Addresses(
-                new MsMY("Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia",
-                        "MY_KUL")
-        );
-        Stop s2 = new Stop();
-        s2.addresses = new Addresses(
-                new MsMY("Jalan Raja, Kuala Lumpur City Centre, 50050 Kuala Lumpur, Federal Territory of Kuala Lumpur, Malaysia",
-                        "MY_KUL"));
-        List<Stop> stopList = new ArrayList<>();
-        stopList.add(s1);
-        stopList.add(s2);
-
-        req.stops = stopList;
-        req.requesterContact = new Contact("Chris Wong", "0376886555");
-        req.deliveries = deliveries;
-
-        //JSONObject bodyJson = new JSONObject("{\"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"}]}");
-        JSONObject bodyJson = new JSONObject(new Gson().toJson(req));
-        String timeStamp = String.valueOf(System.currentTimeMillis());
-        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + ENDPOINT_URL + "\r\n\r\n" + bodyJson.toString();
-        byte[] byteSig = mac.doFinal(rawSignature.getBytes());
-        String signature = DatatypeConverter.printHexBinary(byteSig);
-        signature = signature.toLowerCase();
-
-        String authToken = apiKey + ":" + timeStamp + ":" + signature;
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Content-Type", "application/json");
-        headers.set("Authorization", "hmac " + authToken);
-        headers.set("X-LLM-Country", "MY_KUL");
-        HttpEntity<String> request = new HttpEntity(bodyJson.toString(), headers);
-        ResponseEntity<String> response = restTemplate.exchange(BASE_URL + ENDPOINT_URL, HttpMethod.POST, request, String.class);
-        System.out.println(response);
-        return response;
-    }
-
-
-    @PostMapping(path = {"/lalamove/{order-id}"}, name = "get-server-time")
-    public ResponseEntity<String> getHashValue(HttpServletRequest request,
-                                               @PathVariable("order-id") String orderId) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        String logprefix = request.getRequestURI() + " ";
-        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
-        HttpReponse response = new HttpReponse(request.getRequestURI());
-
-        String secretKey = "7p0CJjVxlfEpg/EJWi/y9+6pMBK9yvgYzVeOUKSYZl4/IztYSh6ZhdcdpRpB15ty";
-        String apiKey = "6e4e7adb5797632e54172dc2dd2ca748";
-        String domainUrl = " https://rest.sandbox.lalamove.com/";
-        String getpriceUrl = "v2/quotations";
-        int connectTimeout = 30000;
-        int waitTimeout = 35000;
-
-        try {
-
-            OkHttpClient client = new OkHttpClient();
-            MediaType mediaType = MediaType.parse("application/json");
-            com.squareup.okhttp.RequestBody body = com.squareup.okhttp.RequestBody.create(mediaType, "{\"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"}]}");
-            com.squareup.okhttp.Request test = new com.squareup.okhttp.Request.Builder()
-                    .url("https://rest.sandbox.lalamove.com/v2/quotations")
-                    .method("POST", body)
-                    .addHeader("Content-Type", "application/json")
-                    .addHeader("Authorization", "hmac 6e4e7adb5797632e54172dc2dd2ca748:1623835134368:49e42f899564814252d7b29af7f74bd37dbcd564f83078f290ea10b8e94902f0")
-                    .addHeader("X-LLM-Country", "MY_KUL")
-                    .build();
-            com.squareup.okhttp.Response res = client.newCall(test).execute();
-
-            System.err.println("Response " + res);
-
-            return ResponseEntity.status(HttpStatus.OK).body(response.toString());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        Provider provider = providerRepository.findOneById(Integer.valueOf(providerId));
+        if (provider != null) {
+            response.setData(provider);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } else {
+            LogUtil.info(logprefix, location, "", "provider not found ");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
 
 
-    @PostMapping(path = {"/lalamove/placeorder"}, name = "lalamove-place-order")
-    public ResponseEntity<String> placeOrder() throws NoSuchAlgorithmException, InvalidKeyException {
-        String BASE_URL = "https://rest.sandbox.lalamove.com";
-        String ENDPOINT_URL_QUOTATIONS = "/v2/quotations";
-        String ENDPOINT_URL_PLACEORDER = "/v2/orders";
-        String secretKey ="";
-        String apiKey ="";
+    @GetMapping(path = {"/getAirwayBill/{orderId}"}, name = "get-airwaybill-delivery")
+    public ResponseEntity<HttpReponse> getAirwayBill(HttpServletRequest request,
+                                                     @PathVariable("orderId") String orderId) {
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = new HttpReponse(request.getRequestURI());
+        String systemTransactionId = StringUtility.CreateRefID("DL");
+//TODO: Airway Bill
+
+        try {
+            JsonObject jsonReq = new JsonObject();
+            jsonReq.addProperty("billcode", "630020026924");
+            jsonReq.addProperty("account", "TEST");
+            jsonReq.addProperty("password", "TES123");
+            jsonReq.addProperty("customercode", "ITTEST0001");
+
+            LogUtil.info(logprefix, location, "REQUEST BODY OF JNT FOR GET PRICE : ", jsonReq.toString());
+
+            String data_digest = "630020026924";
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(data_digest.getBytes());
+            byte[] digest = md.digest();
+            String myHash = DatatypeConverter.printHexBinary(digest).toLowerCase();
+            System.err.println("SIGN " + myHash);
+
+            MultiValueMap<String, Object> postParameters = new LinkedMultiValueMap<>();
+            postParameters.add("logistics_interface", jsonReq);
+            postParameters.add("msg_type", "1");
+            postParameters.add("data_digest", myHash);
+            System.err.println("logistic " + jsonReq.toString());
+            System.err.println("data_t " + myHash);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Content-Type", "application/x-www-form-urlencoded");
 
 
-        List<com.kalsym.deliveryservice.models.lalamove.getprice.Delivery> deliveries = new ArrayList<>();
-        deliveries.add(
-                new com.kalsym.deliveryservice.models.lalamove.getprice.Delivery(
-                        1,
-                        new Contact("Irasakumar", "601162802728"),
-                        "Remarks for drop-off point (#1)."
-                )
-        );
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<String> requests = new HttpEntity(postParameters, headers);
+            ResponseEntity<String> responses = restTemplate.exchange("http://47.57.89.30/jandt_web/print/A4facelistAction!print.action", HttpMethod.POST, requests, String.class);
 
 
-        GetPrices req = new GetPrices();
-        req.serviceType = "MOTORCYCLE";
-        req.specialRequests = null;
-        Stop s1 = new Stop();
-        s1.addresses = new Addresses(
-                new MsMY("4, JALAN PRIMA 3/5, TAMAN PUCHONG PRIMA,47150,PUCHONG,Selangor",
-                        "MY_KUL")
-        );
-        Stop s2 = new Stop();
-        s2.addresses = new Addresses(
-                new MsMY("24, JALAN PRIMA 3/5, TAMAN PUCHONG PRIMA,47150,PUCHONG,Selangor",
-                        "MY_KUL"));
-        List<Stop> stopList = new ArrayList<>();
-        stopList.add(s1);
-        stopList.add(s2);
+            int statusCode = responses.getStatusCode().value();
+            LogUtil.info(logprefix, location, "Responses", responses.getBody());
+            byte[] bytes = responses.getBody().getBytes();
+            Files.write(Paths.get("C:\\fileDownload\\1210.pdf"), bytes, StandardOpenOption.CREATE);
 
-        req.stops = stopList;
-        req.requesterContact = new Contact("Cinema Online", "0133309331");
-        req.deliveries = deliveries;
+//            if (statusCode == 200) {
+//                responses.resultCode = 0;
+//                responses.returnObject = extractResponseBody(responses.getBody());
+//            } else {
+//                LogUtil.info(logprefix, location, "Request failed", "");
+//                responses.resultCode = -1;
+//            }
 
-        JSONObject bodyJson = new JSONObject(new Gson().toJson(req));
+            LogUtil.info(logprefix, location, "Process finish", "");
+        } catch (Exception ex) {
+            LogUtil.error(logprefix, location, "Exception error :", "", ex);
+        }
 
-        // ######### END PREPARING GETPRICE OBJECT FOR QUOTATION REQUEST #########
-
-        // BUILD HTTP REQUEST USING REST TEMPLATE
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
+        LogUtil.info(logprefix, location, "", "");
 
 
-        HttpEntity<String> quotationRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_QUOTATIONS, "POST", bodyJson, headers, secretKey, apiKey);   // ######### SEND REQUEST FOR QUOTATION #########
-        ResponseEntity<String> quotationResponse = restTemplate.exchange(BASE_URL + ENDPOINT_URL_QUOTATIONS, HttpMethod.POST, quotationRequest, String.class);  // ######### RECEIVE QUOTATION INFORMATION #########
+//        DeliveryOrder order = deliveryOrdersRepository.findBySpOrderId(orderId);
+//
+//        if(order != null){
+//            ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+//            ProcessResult processResult = process.GetAirwayBill();
+//
+//        }
 
-        // ######### BUILD QUOTATION OBJECT FOR PLACEORDER REQUEST #########
-        QuotedTotalFee quotation = new QuotedTotalFee();
-        JSONObject quotationBody = new JSONObject(quotationResponse.getBody());
-        quotation.setAmount("7.00");
-        quotation.setCurrency("MYR");
+//        RegionCountry regionCountry = regionCountryRepository.findByName(country);
+//        List<DeliverySpType> deliverySpType = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountry(type, country);
+//        if (deliverySpType != null) {
+//            response.setSuccessStatus(HttpStatus.OK);
+//            response.setData(deliverySpType);
+//            LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+//        } else {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+//        }
+    }
 
-        // ######### BUILD PLACEORDER REQUEST USING PREVIOUSLY USED GETPRICE OBJECT AND QUOTATION OBJECT #########
-        PlaceOrder placeOrder = new PlaceOrder(req, quotation);
-        JSONObject orderBody = new JSONObject(new Gson().toJson(placeOrder));
-        HttpEntity<String> orderRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_PLACEORDER, "POST", orderBody, headers, secretKey, apiKey);
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(BASE_URL + ENDPOINT_URL_PLACEORDER, HttpMethod.POST, orderRequest, String.class);
-        System.err.println("RESPONSE : " + responseEntity);// ######### RETURN ORDERREF/ORDERID #########
-        return responseEntity;
-    }*/
 
 }
+

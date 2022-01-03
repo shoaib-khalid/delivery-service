@@ -1,7 +1,6 @@
 package com.kalsym.deliveryservice.models.daos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.kalsym.deliveryservice.models.enums.ItemType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -46,10 +45,10 @@ public class DeliveryQuotation {
     Date validationPeriod;
     String storeId;
     String orderId;
-    String deliveryPostcode;
     String pickupPostcode;
     Double serviceFee;
-
+    String deliveryPostcode;
+    
     @Override
     public String toString() {
         return "DeliveryQuotation{" +
