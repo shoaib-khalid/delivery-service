@@ -36,4 +36,7 @@ public class Order {
    @Valid
    Delivery delivery;
    String regionCountry;
+   Boolean serviceType;
+   VehicleType vehicleType;
+
 }

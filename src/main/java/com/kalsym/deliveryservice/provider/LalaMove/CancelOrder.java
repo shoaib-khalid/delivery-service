@@ -11,14 +11,15 @@ import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import org.apache.tomcat.util.codec.binary.Base64;
+import org.json.JSONObject;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.HashMap;
@@ -63,40 +64,51 @@ public class CancelOrder extends SyncDispatcher {
     public ProcessResult process() {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
-        String transactionId = "";
-        String signature = "";
-        Date newDate = new Date();
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] encodedhash = digest.digest(
-                    systemTransactionId.getBytes(StandardCharsets.UTF_8));
-            String body = newDate.getTime() + "\r\n" + "PUT" + "/v2/orders/" + this.spOrderId + "/cancel";
-            transactionId = encodedhash.toString();
-            signature = hmac(body, secretKey);
+        String METHOD = "PUT";
+        String timeStamp = String.valueOf(System.currentTimeMillis());
+        Mac mac = null;
 
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | InvalidKeyException e) {
+        try {
+            mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
+            mac.init(secret_key);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
 
-        String token = apiKey + ":" + newDate.getTime() + ":" + signature;
+
+        JSONObject bodyJson = new JSONObject("{}");
+        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v2/orders/" + this.spOrderId + "/cancel" + "\r\n\r\n" + bodyJson.toString();
+        byte[] byteSig = mac.doFinal(rawSignature.getBytes());
+        String signature = DatatypeConverter.printHexBinary(byteSig);
+        signature = signature.toLowerCase();
+
+        String authToken = apiKey + ":" + timeStamp + ":" + signature;
 
         HashMap httpHeader = new HashMap();
         httpHeader.put("X-LLM-Country", "MY_KUL");
-        httpHeader.put("Content-Type", "application/json");
-        httpHeader.put("Authorization", "hmac " + token);
-        httpHeader.put("X-Request-ID", transactionId);
+        httpHeader.put("Content-Type", "application/json; charset=utf-8");
+        httpHeader.put("Authorization", "hmac " + authToken);
 
         String[] cancelUrl = this.cancelOrder_url.split(",");
         String url = cancelUrl[0] + spOrderId + cancelUrl[1];
 
-        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("PUT", this.systemTransactionId, (this.domainUrl + url), httpHeader, "", this.connectTimeout, this.waitTimeout);
-        if (httpResult.resultCode == 0) {
+        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("PUT", this.systemTransactionId, url, httpHeader, bodyJson.toString(), this.connectTimeout, this.waitTimeout);
+        CancelOrderResult cancelOrderResult = new CancelOrderResult();
+        if (httpResult.httpResponseCode == 200) {
             LogUtil.info(logprefix, location, "Request successful", "");
             response.resultCode = 0;
-            response.returnObject = extractResponseBody(httpResult.responseString);
+            cancelOrderResult.resultCode = 0;
+            cancelOrderResult.isSuccess = true;
+            response.returnObject = cancelOrderResult;
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
             response.resultCode = -1;
+            cancelOrderResult.resultCode = -1;
+            cancelOrderResult.isSuccess = false;
+            response.returnObject = extractResponseBody(httpResult.responseString);
         }
         LogUtil.info(logprefix, location, "Process finish", "");
         return response;
@@ -122,6 +134,8 @@ public class CancelOrder extends SyncDispatcher {
             orderCancelled.setSpOrderId(orderId);
             orderCancelled.setStatusDescription(message);
             orderCancelled.setCreatedDate(DateTimeUtil.currentTimestamp());
+            cancelOrderResult.resultCode = -1;
+            cancelOrderResult.isSuccess = true;
             cancelOrderResult.orderCancelled = orderCancelled;
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);

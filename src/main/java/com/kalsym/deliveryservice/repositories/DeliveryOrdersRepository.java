@@ -7,14 +7,17 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- *
  * @author Sarosh
  */
 @Repository
 public interface DeliveryOrdersRepository extends JpaRepository<DeliveryOrder, Long> {
 
-    public DeliveryOrder findByDeliveryProviderIdAndSpOrderId(Integer deliveryProviderId, String spOrderId );
+    public DeliveryOrder findByDeliveryProviderIdAndSpOrderId(Integer deliveryProviderId, String spOrderId);
+
     public DeliveryOrder findByOrderId(String orderId);
-    public DeliveryOrder findBySpOrderId( String spOrderId );
+
+    public DeliveryOrder findBySpOrderId(String spOrderId);
+
+    public List<DeliveryOrder> findBySystemStatus(Enum status);
 
 }

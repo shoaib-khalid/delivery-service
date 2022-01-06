@@ -46,6 +46,7 @@ public class DeliveryOrder {
     String vehicleType;
     String createdDate;
     String status;
+    Enum systemStatus;
     String statusDescription;
     String updatedDate;
     String orderId;
@@ -58,4 +59,6 @@ public class DeliveryOrder {
     String riderPhoneNo;
     String riderCarPlateNo;
     String airwayBillURL;
+    Long totalRequest;
+    Long deliveryQuotationId;
 }

@@ -1,4 +1,15 @@
 ##############################################################################################
+# Version v.2.3.3 | 06-January-2022
+###############################################################################################
+### Code Changes:
+- Testing Cron Job Order Cancel
+1.ALTER TABLE symplified.delivery_orders ADD systemStatus varchar(100) NULL; 
+2.ALTER TABLE symplified.delivery_orders ADD CONSTRAINT delivery_orders_FK FOREIGN KEY (systemStatus) REFERENCES symplified.delivery_completion_status(status);
+   ALTER TABLE symplified.delivery_orders ADD totalRequest BIGINT NULL;
+
+
+
+##############################################################################################
 # Version v.2.3.2 | 04-January-2022
 ###############################################################################################
 ### Code Changes:

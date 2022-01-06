@@ -113,8 +113,7 @@ public class SubmitOrder extends SyncDispatcher {
             SubmitOrderResult result = extractResponseBody(responses.getBody());
             if (result.isSuccess) {
                 response.returnObject = extractResponseBody(responses.getBody());
-            }
-            else {
+            } else {
                 response.returnObject = extractResponseBody(responses.getBody());
             }
         } else {
@@ -170,13 +169,19 @@ public class SubmitOrder extends SyncDispatcher {
         details.addProperty("payType", "PP_PM");
         details.addProperty("expresstype", "EZ");
         details.addProperty("goodType", order.getItemType().name());
-        details.addProperty("servicetype", "1");
-        if (startPickScheduleDate != null) {
-            details.addProperty("sendstarttime", startPickScheduleDate.toString());
+        if (!order.getServiceType()) {
+            LogUtil.info(logprefix, location, "This order is Pickup" , "");
+            details.addProperty("servicetype", "1");
+        } else {
+            LogUtil.info(logprefix, location, "This order is Dropoff" , "");
+            details.addProperty("servicetype", "6");
         }
-        if (endPickScheduleDate != null) {
-            details.addProperty("sendendtime", endPickScheduleDate.toString());
-        }
+//        if (startPickScheduleDate != null) {
+//            details.addProperty("sendstarttime", startPickScheduleDate.toString());
+//        }
+//        if (endPickScheduleDate != null) {
+//            details.addProperty("sendendtime", endPickScheduleDate.toString());
+//        }
         details.addProperty("offerFeeFlag", order.isInsurance());
         detailsArray.add(details);
         jsonReq.add("detail", detailsArray);

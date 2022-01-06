@@ -257,8 +257,14 @@ public class ProcessRequest {
         }
 
         ProcessResult response = new ProcessResult();
-        response.resultCode = 0;
-        response.returnObject = cancelOrderResult;
+        if (cancelOrderResult.resultCode == 0) {
+            response.resultCode = 0;
+            response.returnObject = cancelOrderResult;
+        }
+        else{
+            response.resultCode = -1;
+            response.returnObject = cancelOrderResult;
+        }
         LogUtil.info(logprefix, location, "CancelOrder finish. resultCode:" + response.resultCode, " cancelOrderResult:" + cancelOrderResult);
         return response;
     }
