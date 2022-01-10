@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Sarosh
@@ -18,6 +19,6 @@ public interface DeliveryOrdersRepository extends JpaRepository<DeliveryOrder, L
 
     public DeliveryOrder findBySpOrderId(String spOrderId);
 
-    public List<DeliveryOrder> findBySystemStatus(Enum status);
+    public List<DeliveryOrder> findBySystemStatus(String status);
 
 }

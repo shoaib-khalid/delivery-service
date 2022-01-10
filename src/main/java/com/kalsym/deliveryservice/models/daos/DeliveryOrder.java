@@ -46,7 +46,7 @@ public class DeliveryOrder {
     String vehicleType;
     String createdDate;
     String status;
-    Enum systemStatus;
+    String systemStatus;
     String statusDescription;
     String updatedDate;
     String orderId;
