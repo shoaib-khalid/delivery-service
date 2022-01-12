@@ -166,6 +166,10 @@ public class ProviderThread extends Thread implements Runnable {
                 className = provider.getAdditionalQueryClassName();
                 LogUtil.info(logprefix, location, "GetAdditionalInfo class name for SP ID:" + provider.getId() + " -> " + className, "");
             }
+            else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
+                className = provider.getAddPriorityClassName();
+                LogUtil.info(logprefix, location, "AddPriorityFee class name for SP ID:" + provider.getId() + " -> " + className, "");
+            }
             Class classObject = Class.forName(className);
             DispatchRequest reqFactoryObj = null;
             CountDownLatch latch = new CountDownLatch(1);
@@ -186,7 +190,10 @@ public class ProviderThread extends Thread implements Runnable {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
                 } else if (functionName.equalsIgnoreCase("GetAdditionalInfo")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, store, this.sysTransactionId, this.sequenceNumberRepository);
-                } else {
+                }else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
+                    reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
+                }
+                else {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository);
                 }
             } catch (Exception e) {
@@ -251,6 +258,11 @@ public class ProviderThread extends Thread implements Runnable {
                 AdditionalInfoResult additionalInfoResult = (AdditionalInfoResult) response.returnObject;
                 additionalInfoResult.providerId = provider.getId();
                 caller.setAdditionalInfoResult(additionalInfoResult);
+            }
+            else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
+                PriceResult priceResult = (PriceResult) response.returnObject;
+                priceResult.providerId = provider.getId();
+                caller.setPriceResultList(priceResult);
             }
             LogUtil.info(logprefix, location, "Response code:" + response.resultCode + " string:" + response.resultString + " returnObject:" + response.returnObject, "");
         } catch (Exception exp) {

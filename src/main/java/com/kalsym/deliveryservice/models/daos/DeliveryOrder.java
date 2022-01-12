@@ -15,6 +15,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.math.BigDecimal;
+
 /**
  *
  * @author user
@@ -61,4 +63,7 @@ public class DeliveryOrder {
     String airwayBillURL;
     Long totalRequest;
     Long deliveryQuotationId;
+
+    BigDecimal priorityFee;
+    BigDecimal deliveryFee;
 }

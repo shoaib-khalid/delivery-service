@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -136,15 +137,12 @@ public class OrdersController {
         String systemTransactionId = StringUtility.CreateRefID("DL");
 
 
-        DeliveryQuotation quotation = deliveryQuotationRepository.getOne(id);
-        LogUtil.info(logprefix, location, "Quotation ", quotation.toString());
+        response = deliveryService.getQuotaion(id);
+        LogUtil.info(logprefix, location, "Quotation ", response.getData().toString());
 
-        if (quotation != null) {
-            response.setData(quotation);
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
+
+        return ResponseEntity.status(response.getStatus()).body(response);
+
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/getpickupdate/{spId}/{postcode}", name = "orders-get-pickupdate")
@@ -959,6 +957,24 @@ public class OrdersController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+
+    @PostMapping(path = {"/addPriorityFee/{id}"}, name = "get-airwayBill-delivery")
+    public ResponseEntity<HttpReponse> getAirwayBill(HttpServletRequest request,
+                                                     @PathVariable("id") Long id) {
+
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = new HttpReponse(request.getRequestURI());
+        String systemTransactionId = StringUtility.CreateRefID("DL");
+
+        BigDecimal priorityFee = BigDecimal.valueOf(5.00);
+        System.err.println("PriorityFee : " + priorityFee);
+        deliveryService.addPriorityFee(id, priorityFee);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+
+    }
+
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)

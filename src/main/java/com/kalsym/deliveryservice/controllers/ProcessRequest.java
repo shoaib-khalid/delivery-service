@@ -29,7 +29,8 @@ public class ProcessRequest {
     ProviderConfigurationRepository providerConfigurationRepository;
     ProviderRepository providerRepository;
     int providerThreadRunning;
-    List<PriceResult> priceResultList;
+    List<PriceResult> priceResultLists;
+    PriceResult priceResultList;
     List<DeliveryQuotation> deliveryQuotations;
 
     SubmitOrderResult submitOrderResult;
@@ -59,7 +60,7 @@ public class ProcessRequest {
         this.providerConfigurationRepository = providerConfigurationRepository;
         this.providerRepository = providerRepository;
         this.providerThreadRunning = 0;
-        this.priceResultList = new ArrayList<>();
+        this.priceResultLists = new ArrayList<>();
         this.sequenceNumberRepository = sequenceNumberRepository;
     }
 
@@ -73,7 +74,7 @@ public class ProcessRequest {
         this.providerConfigurationRepository = providerConfigurationRepository;
         this.providerRepository = providerRepository;
         this.providerThreadRunning = 0;
-        this.priceResultList = new ArrayList<>();
+        this.priceResultLists = new ArrayList<>();
     }
 
     public ProcessRequest(String sysTransactionId, Object requestBody, ProviderRatePlanRepository providerRatePlanRepository,
@@ -86,7 +87,7 @@ public class ProcessRequest {
         this.providerConfigurationRepository = providerConfigurationRepository;
         this.providerRepository = providerRepository;
         this.providerThreadRunning = 0;
-        this.priceResultList = new ArrayList<>();
+        this.priceResultLists = new ArrayList<>();
     }
 
     public ProcessRequest(String sysTransactionId, Store requestBody, ProviderRatePlanRepository providerRatePlanRepository,
@@ -99,7 +100,7 @@ public class ProcessRequest {
         this.providerConfigurationRepository = providerConfigurationRepository;
         this.providerRepository = providerRepository;
         this.providerThreadRunning = 0;
-        this.priceResultList = new ArrayList<>();
+        this.priceResultLists = new ArrayList<>();
     }
 
     public ProcessResult GetPrice() {
@@ -147,14 +148,14 @@ public class ProcessRequest {
         }
 
         ProcessResult response = new ProcessResult();
-        if (priceResultList.size() != 0) {
+        if (priceResultLists.size() != 0) {
             response.resultCode = 0;
-            response.returnObject = priceResultList;
+            response.returnObject = priceResultLists;
         } else {
             response.resultCode = -1;
-            response.returnObject = priceResultList;
+            response.returnObject = priceResultLists;
         }
-        LogUtil.info(logprefix, location, "GetPrices finish. resultCode:" + response.resultCode, " priceResult count:" + priceResultList.size());
+        LogUtil.info(logprefix, location, "GetPrices finish. resultCode:" + response.resultCode, " priceResult count:" + priceResultLists.size());
         return response;
     }
 
@@ -260,8 +261,7 @@ public class ProcessRequest {
         if (cancelOrderResult.resultCode == 0) {
             response.resultCode = 0;
             response.returnObject = cancelOrderResult;
-        }
-        else{
+        } else {
             response.resultCode = -1;
             response.returnObject = cancelOrderResult;
         }
@@ -569,9 +569,53 @@ public class ProcessRequest {
         return response;
     }
 
+    public ProcessResult addPriorityFee() {
+        //get provider rate plan
+//        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
+        Provider provider = providerRepository.getOne(deliveryOrder.getDeliveryProviderId());
+        List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(provider.getId());
+        HashMap config = new HashMap();
+        for (int j = 0; j < providerConfigList.size(); j++) {
+            String fieldName = providerConfigList.get(j).getId().getConfigField();
+            String fieldValue = providerConfigList.get(j).getConfigValue();
+            config.put(fieldName, fieldValue);
+        }
+        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, deliveryOrder, "AddPriorityFee", sequenceNumberRepository);
+        dthread.start();
+
+
+        try {
+            Thread.sleep(100);
+        } catch (Exception ex) {
+        }
+
+        while (providerThreadRunning > 0) {
+            try {
+                Thread.sleep(500);
+            } catch (Exception ex) {
+            }
+            //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
+        }
+
+        ProcessResult response = new ProcessResult();
+        if (priceResultList.resultCode == 0) {
+            response.resultCode = 0;
+            response.returnObject = additionalInfoResult;
+        } else {
+            response.resultCode = -1;
+            response.returnObject = additionalInfoResult;
+        }
+        LogUtil.info(logprefix, location, "AddPriorityFee finish. resultCode:" + response.resultCode, " AddPriorityFee count:" + airwayBillResult);
+        return response;
+    }
+
 
     public synchronized void addPriceResult(PriceResult priceResult) {
-        priceResultList.add(priceResult);
+        priceResultLists.add(priceResult);
+    }
+
+    public synchronized void setPriceResultList(PriceResult priceResult) {
+        this.priceResultList = priceResult;
     }
 
     public synchronized void setSubmitOrderResult(SubmitOrderResult orderResult) {
