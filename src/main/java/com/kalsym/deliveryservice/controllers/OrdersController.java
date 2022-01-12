@@ -3,7 +3,6 @@ package com.kalsym.deliveryservice.controllers;
 import com.google.gson.Gson;
 import com.kalsym.deliveryservice.models.*;
 import com.kalsym.deliveryservice.models.daos.*;
-import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
 import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
 import com.kalsym.deliveryservice.provider.*;
@@ -493,7 +492,7 @@ public class OrdersController {
                     deliveryOrder.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
                     deliveryOrder.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
                     deliveryOrder.setStatus(orderCreated.getStatus());
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
 
                     deliveryOrdersRepository.save(deliveryOrder);
                     quotation.setSpOrderId(orderCreated.getSpOrderId());
@@ -660,20 +659,20 @@ public class OrdersController {
                 String res;
                 // change from order status codes to delivery status codes.
                 if (status.equals("new")) {
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                 } else if (status.equals("available")) {
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                 } else if (status.equals("active")) {
                     orderStatus = "BEING_DELIVERED";
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("finished")) {
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.DELIVERED_TO_CUSTOMER.name());
+//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.DELIVERED_TO_CUSTOMER.name());
                     orderStatus = "DELIVERED_TO_CUSTOMER";
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("canceled")) {
                     orderStatus = "REJECTED_BY_STORE";
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
+//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 }
 
@@ -748,15 +747,19 @@ public class OrdersController {
                 String res;
                 // change from order status codes to delivery status codes.
                 if (status.equals("ASSIGNING_DRIVER")) {
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                 } else if (status.equals("ON_GOING")) {
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
-                    getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
+                    if (deliveryOrder.getDriverId() == null) {
+                        deliveryOrder.setDriverId(deliveryId);
+                    } else if (!deliveryOrder.getDriverId().equals(deliveryId)) {
+                        deliveryOrder.setDriverId(deliveryId);
+                        deliveryOrder.setRiderName(null);
+                    }
+//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
                 } else if (status.equals("PICKED_UP")) {
                     deliveryOrder.setDriverId(deliveryId);
                     orderStatus = "BEING_DELIVERED";
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
-                    getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
                 } else if (status.equals("COMPLETED")) {
                     orderStatus = "DELIVERED_TO_CUSTOMER";
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
@@ -766,6 +769,8 @@ public class OrdersController {
                 }
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                 deliveryOrdersRepository.save(deliveryOrder);
+                getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
+
             } else {
                 LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
 
