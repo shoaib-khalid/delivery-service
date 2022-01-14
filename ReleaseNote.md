@@ -1,7 +1,34 @@
-ALTER TABLE symplified.delivery_sp ADD addPriorityClassName varchar(100) NULL;
+##############################################################################################
+# Version v.2.3.6 | 14-January-2022
+###############################################################################################
+### Code Changes:
 
+Added New Endpoint - Add Priority Fee
+
+ALTER TABLE symplified.delivery_sp ADD addPriorityClassName varchar(100) NULL; 
+    ( for lalamove provider add this "com.kalsym.deliveryservice.provider.LalaMove.AddPriorityFee" )
+    
 ALTER TABLE symplified.delivery_orders ADD deliveryFee DECIMAL(15,2) NULL;
 ALTER TABLE symplified.delivery_orders ADD priorityFee DECIMAL(15,2) NULL;
+
+CREATE TABLE `delivery_completion_status` (
+`status` varchar(100) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+`status_description` varchar(100) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+PRIMARY KEY (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3
+
+INSERT INTO symplified.delivery_completion_status (status,status_description) VALUES
+('ASSIGNING_RIDER','Looking for rider '),
+('AWAITING_PICKUP','Awaiting for rider to pickup the order'),
+('BEING_DELIVERED','Rider on the way delivery the order'),
+('CANCELED','Order has been Cancel'),
+('COMPLETED','Order Delivery To Customer'),
+('DELIVERED_TO_CUSTOMER','Delivered to customer'),
+('EXPIRED','Cannot find the rider after 1 hour'),
+('NEW_ORDER','Submit new order to delivery provider'),
+('REJECTED','Rider rejected the order');
+
+
 
 ##############################################################################################
 # Version v.2.3.5 | 12-January-2022
