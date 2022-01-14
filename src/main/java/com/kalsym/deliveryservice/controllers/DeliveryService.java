@@ -518,7 +518,7 @@ public class DeliveryService {
                 deliveryOrder.setStoreId(orderDetails.getStoreId());
                 deliveryOrder.setSystemTransactionId(systemTransactionId);
                 deliveryOrder.setOrderId(orderId);
-//                deliveryOrder.setDeliveryQuotationId(quotation.getId());
+                deliveryOrder.setDeliveryQuotationId(quotation.getId());
 
                 DeliveryOrder orderCreated = submitOrderResult.orderCreated;
                 deliveryOrder.setCreatedDate(orderCreated.getCreatedDate());
@@ -528,8 +528,8 @@ public class DeliveryService {
                 deliveryOrder.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
                 deliveryOrder.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
                 deliveryOrder.setStatus(orderCreated.getStatus());
-//                deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
-//                deliveryOrder.setTotalRequest(1L);
+                deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                deliveryOrder.setTotalRequest(1L);
                 deliveryOrdersRepository.save(deliveryOrder);
                 quotation.setSpOrderId(orderCreated.getSpOrderId());
                 quotation.setOrderId(orderId);
@@ -546,8 +546,8 @@ public class DeliveryService {
                 deliveryOrderOption.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
                 deliveryOrderOption.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
                 deliveryOrderOption.setStatus(orderCreated.getStatus());
-//                deliveryOrderOption.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
-//                deliveryOrderOption.setTotalRequest(deliveryOrderOption.getTotalRequest() + 1);
+                deliveryOrderOption.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                deliveryOrderOption.setTotalRequest(deliveryOrderOption.getTotalRequest() + 1);
                 deliveryOrdersRepository.save(deliveryOrderOption);
 
                 quotation.setSpOrderId(orderCreated.getSpOrderId());
