@@ -18,7 +18,7 @@ public interface DeliveryOrdersRepository extends JpaRepository<DeliveryOrder, L
     public DeliveryOrder findByOrderId(String orderId);
 
     public DeliveryOrder findBySpOrderId(String spOrderId);
-//
-//    public List<DeliveryOrder> findBySystemStatus(String status);
+
+    public List<DeliveryOrder> findBySystemStatus(String status);
 
 }
