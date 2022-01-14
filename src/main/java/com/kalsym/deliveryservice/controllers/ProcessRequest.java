@@ -572,15 +572,15 @@ public class ProcessRequest {
     public ProcessResult addPriorityFee() {
         //get provider rate plan
 //        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
-        Provider provider = providerRepository.getOne(deliveryOrder.getDeliveryProviderId());
-        List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(provider.getId());
+        Optional<Provider> provider = providerRepository.findById(deliveryOrder.getDeliveryProviderId());
+        List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(provider.get().getId());
         HashMap config = new HashMap();
         for (int j = 0; j < providerConfigList.size(); j++) {
             String fieldName = providerConfigList.get(j).getId().getConfigField();
             String fieldValue = providerConfigList.get(j).getConfigValue();
             config.put(fieldName, fieldValue);
         }
-        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, deliveryOrder, "AddPriorityFee", sequenceNumberRepository);
+        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider.get(), config, deliveryOrder, "AddPriorityFee", sequenceNumberRepository);
         dthread.start();
 
 
@@ -600,12 +600,12 @@ public class ProcessRequest {
         ProcessResult response = new ProcessResult();
         if (priceResultList.resultCode == 0) {
             response.resultCode = 0;
-            response.returnObject = additionalInfoResult;
+            response.returnObject = priceResultList;
         } else {
             response.resultCode = -1;
-            response.returnObject = additionalInfoResult;
+            response.returnObject = priceResultList;
         }
-        LogUtil.info(logprefix, location, "AddPriorityFee finish. resultCode:" + response.resultCode, " AddPriorityFee count:" + airwayBillResult);
+        LogUtil.info(logprefix, location, "AddPriorityFee finish. resultCode:" + response.resultCode, " AddPriorityFee count:" + priceResultList);
         return response;
     }
 

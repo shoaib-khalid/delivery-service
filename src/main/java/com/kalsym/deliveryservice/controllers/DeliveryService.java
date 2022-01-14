@@ -789,7 +789,7 @@ public class DeliveryService {
 
         Optional<DeliveryOrder> order = deliveryOrdersRepository.findById(id);
         order.get().setPriorityFee(priorityFee);
-        System.err.println("PriorityFee : " +  order.get().getPriorityFee());
+        LogUtil.info(systemTransactionId, location, "PriorityFee : ", String.valueOf(order.get().getPriorityFee()));
 
 
         ProcessRequest process = new ProcessRequest(systemTransactionId, order.get(), providerRatePlanRepository, providerConfigurationRepository, providerRepository);

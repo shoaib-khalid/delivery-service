@@ -261,6 +261,7 @@ public class ProviderThread extends Thread implements Runnable {
             }
             else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
                 PriceResult priceResult = (PriceResult) response.returnObject;
+                System.err.println("PRINT ID HERE " +provider.getId());
                 priceResult.providerId = provider.getId();
                 caller.setPriceResultList(priceResult);
             }
