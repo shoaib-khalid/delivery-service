@@ -54,5 +54,7 @@ public class Provider implements Serializable {
     String driverDetailsClassName;
     @JsonIgnore
     String additionalQueryClassName;
+    @JsonIgnore
+    String addPriorityClassName; ;
 //    String regionCountryId;
 }

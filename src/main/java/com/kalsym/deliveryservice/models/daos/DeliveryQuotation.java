@@ -23,39 +23,38 @@ public class DeliveryQuotation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
-    String itemType;
-    Long spId;
-    String customerId;
-    String productCode;
-    String pickupAddress;
-    String deliveryAddress;
-    String systemTransactionId;
-    String pickupContactName;
-    String pickupContactPhone;
-    String deliveryContactName;
-    String deliveryContactPhone;
-    Integer deliveryProviderId;
-    String spOrderId;
-    String spOrderName;
-    String vehicleType;
-    Date createdDate;
-    String status;
-    String cartId;
-    String statusDescription;
-    Date updatedDate;
-    Double totalWeightKg;
-    Double amount;
-    Date validationPeriod;
-    String storeId;
-    String orderId;
-    String pickupPostcode;
-    String deliveryPostcode;
-    Double serviceFee;
-
-    String pickupCity;
-    String deliveryCity;
-    String pickupZone;
-    String deliveryZone;
+    private Long id;
+    private String itemType;
+    private Integer spId;
+    private String customerId;
+    private String productCode;
+    private String pickupAddress;
+    private String deliveryAddress;
+    private String systemTransactionId;
+    private String pickupContactName;
+    private String pickupContactPhone;
+    private String deliveryContactName;
+    private String deliveryContactPhone;
+    private Integer deliveryProviderId;
+    private String spOrderId;
+    private String spOrderName;
+    private String vehicleType;
+    private Date createdDate;
+    private String status;
+    private String cartId;
+    private String statusDescription;
+    private Date updatedDate;
+    private Double totalWeightKg;
+    private Double amount;
+    private Date validationPeriod;
+    private String storeId;
+    private String orderId;
+    private String pickupPostcode;
+    private String deliveryPostcode;
+    private Double serviceFee;
+    private String pickupCity;
+    private String deliveryCity;
+    private String pickupZone;
+    private String deliveryZone;
 
 }

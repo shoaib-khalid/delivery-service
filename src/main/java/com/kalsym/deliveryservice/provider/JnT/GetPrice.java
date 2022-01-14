@@ -84,7 +84,7 @@ public class GetPrice extends SyncDispatcher {
             int statusCode = responses.getStatusCode().value();
             LogUtil.info(logprefix, location, "Responses", responses.getBody());
             PriceResult priceResult = extractResponseBody(responses.getBody());
-            if (priceResult.resultCode.equals("0")) {
+            if (priceResult.resultCode == 0) {
                 response.resultCode = 0;
                 response.returnObject = priceResult;
             } else {
@@ -137,11 +137,11 @@ public class GetPrice extends SyncDispatcher {
             BigDecimal bd = new BigDecimal(Double.parseDouble(shippingFee));
             bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
             priceResult.price = bd;
-            priceResult.resultCode = "0";
+            priceResult.resultCode = 0;
 
         } else {
 
-            priceResult.resultCode = "-1";
+            priceResult.resultCode = -1;
             priceResult.message = jsonResp.get("msg").getAsString();
 
         }

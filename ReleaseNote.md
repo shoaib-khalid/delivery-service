@@ -1,3 +1,8 @@
+ALTER TABLE symplified.delivery_sp ADD addPriorityClassName varchar(100) NULL;
+
+ALTER TABLE symplified.delivery_orders ADD deliveryFee DECIMAL(15,2) NULL;
+ALTER TABLE symplified.delivery_orders ADD priorityFee DECIMAL(15,2) NULL;
+
 ##############################################################################################
 # Version v.2.3.5 | 12-January-2022
 ###############################################################################################

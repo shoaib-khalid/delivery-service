@@ -15,6 +15,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.math.BigDecimal;
+
 /**
  *
  * @author user
@@ -46,7 +48,7 @@ public class DeliveryOrder {
     String vehicleType;
     String createdDate;
     String status;
-//    String systemStatus;
+    String systemStatus;
     String statusDescription;
     String updatedDate;
     String orderId;
@@ -59,6 +61,10 @@ public class DeliveryOrder {
     String riderPhoneNo;
     String riderCarPlateNo;
     String airwayBillURL;
-//    Long totalRequest;
-//    Long deliveryQuotationId;
+
+    Long totalRequest;
+    Long deliveryQuotationId;
+
+    BigDecimal priorityFee;
+    BigDecimal deliveryFee;
 }
