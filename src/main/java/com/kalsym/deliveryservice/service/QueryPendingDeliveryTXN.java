@@ -13,6 +13,7 @@ import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.SubmitOrderResult;
 import com.kalsym.deliveryservice.repositories.DeliveryOrdersRepository;
 import com.kalsym.deliveryservice.repositories.DeliveryQuotationRepository;
+import com.kalsym.deliveryservice.service.utility.SymplifiedService;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -32,6 +33,8 @@ public class QueryPendingDeliveryTXN {
     DeliveryService deliveryService;
     @Autowired
     DeliveryQuotationRepository deliveryQuotationRepository;
+    @Autowired
+    SymplifiedService symplifiedService;
 
     @Scheduled(cron = "${delivery-service:0 0/05 * * * ?}")
     public void dailyScheduler() throws ParseException {
@@ -42,12 +45,11 @@ public class QueryPendingDeliveryTXN {
         List<DeliveryOrder> deliveryOrders = deliveryOrdersRepository.findBySystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
         for (DeliveryOrder o : deliveryOrders) {
             LogUtil.info("QueryPendingDeliveryTXN", location, "Request Cancel", "");
-//            HttpReponse response = deliveryService.getQuotaion(6055L);
-//            DeliveryQuotation quotation = (DeliveryQuotation) response.getData();
-
 
             HttpReponse result = deliveryService.cancelOrder(o.getId());
             if (o.getTotalRequest() < 2) {
+                LogUtil.info("QueryPendingDeliveryTXN", location, "First Request Five After Minutes Place Order", "");
+
                 Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(o.getDeliveryQuotationId());
 
                 Order order = new Order();
@@ -83,6 +85,8 @@ public class QueryPendingDeliveryTXN {
                 deliveryService.placeOrder(o.getOrderId(), request.get(), submitDelivery);
 
             } else if (o.getTotalRequest() < 3) {
+                LogUtil.info("QueryPendingDeliveryTXN", location, "Second Request After Ten Minutes Place Order", "");
+
                 Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(o.getDeliveryQuotationId());
 
                 Order order = new Order();
@@ -120,8 +124,9 @@ public class QueryPendingDeliveryTXN {
                 BigDecimal priorityFee = BigDecimal.valueOf((request.get().getAmount() * 50) / 100);
                 deliveryService.addPriorityFee(submitOrderResult.orderCreated.getId(), priorityFee);
 
-            }
-            else if (o.getTotalRequest() < 4) {
+            } else if (o.getTotalRequest() < 4) {
+                LogUtil.info("QueryPendingDeliveryTXN", location, "Third Request After Fifteen Minutes Place Order", "");
+
                 Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(o.getDeliveryQuotationId());
 
                 Order order = new Order();
@@ -158,6 +163,9 @@ public class QueryPendingDeliveryTXN {
                 SubmitOrderResult submitOrderResult = (SubmitOrderResult) placeOrder.getData();
                 BigDecimal priorityFee = BigDecimal.valueOf((request.get().getAmount() * 100) / 100);
                 deliveryService.addPriorityFee(submitOrderResult.orderCreated.getId(), priorityFee);
+
+                String orderStatus = "REQUEST_DELIVERY_FAILED";
+                String res = symplifiedService.updateOrderStatus(o.getOrderId(), orderStatus);
 
             }
         }
