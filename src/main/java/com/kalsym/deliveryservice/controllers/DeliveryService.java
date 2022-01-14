@@ -736,6 +736,7 @@ public class DeliveryService {
                 deliveryOrder.setStatus(orderCreated.getStatus());
                 deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                 deliveryOrder.setTotalRequest(1L);
+                deliveryOrder.setDeliveryFee(BigDecimal.valueOf(quotation.getAmount()));
                 deliveryOrdersRepository.save(deliveryOrder);
                 quotation.setSpOrderId(orderCreated.getSpOrderId());
                 quotation.setOrderId(orderId);

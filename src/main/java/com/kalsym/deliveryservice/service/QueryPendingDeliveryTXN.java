@@ -33,7 +33,7 @@ public class QueryPendingDeliveryTXN {
     @Autowired
     DeliveryQuotationRepository deliveryQuotationRepository;
 
-    @Scheduled(fixedRate = 50000)
+    @Scheduled(cron = "${delivery-service:0 0/05 * * * ?}")
     public void dailyScheduler() throws ParseException {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 
