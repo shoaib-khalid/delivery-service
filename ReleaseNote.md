@@ -1,4 +1,14 @@
 ##############################################################################################
+# Version v.2.3.11 | 19-January-2022
+###############################################################################################
+### Code Changes:
+
+Improved - Bug fixed testing - Reasign rider if still cannot assign rider. return failed
+                               status to order-service
+                             - added rider status to -get rider details
+                             - priority fee handle 2 decimal place
+
+##############################################################################################
 # Version v.2.3.10 | 19-January-2022
 ###############################################################################################
 ### Code Changes:

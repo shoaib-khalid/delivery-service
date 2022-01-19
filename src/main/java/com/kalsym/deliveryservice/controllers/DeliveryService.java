@@ -530,6 +530,7 @@ public class DeliveryService {
                 deliveryOrder.setStatus(orderCreated.getStatus());
                 deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                 deliveryOrder.setTotalRequest(1L);
+                deliveryOrder.setDeliveryFee(BigDecimal.valueOf(quotation.getAmount()));
                 deliveryOrdersRepository.save(deliveryOrder);
                 quotation.setSpOrderId(orderCreated.getSpOrderId());
                 quotation.setOrderId(orderId);
@@ -548,6 +549,7 @@ public class DeliveryService {
                 deliveryOrderOption.setStatus(orderCreated.getStatus());
                 deliveryOrderOption.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                 deliveryOrderOption.setTotalRequest(deliveryOrderOption.getTotalRequest() + 1);
+                deliveryOrderOption.setDeliveryFee(BigDecimal.valueOf(quotation.getAmount()));
                 deliveryOrdersRepository.save(deliveryOrderOption);
 
                 quotation.setSpOrderId(orderCreated.getSpOrderId());

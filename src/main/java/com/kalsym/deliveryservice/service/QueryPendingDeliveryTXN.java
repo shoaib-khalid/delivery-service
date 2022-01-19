@@ -58,7 +58,7 @@ public class QueryPendingDeliveryTXN {
                 order.setCartId(quotation.get().getCartId());
                 order.setStoreId(quotation.get().getStoreId());
                 String[] address = quotation.get().getDeliveryAddress().split(quotation.get().getDeliveryPostcode().concat(","));
-                delivery.setDeliveryAddress(address[0]);
+                delivery.setDeliveryAddress(address[0].substring(0, address[0].length() - 1));
                 delivery.setDeliveryCity(quotation.get().getDeliveryCity());
                 String[] state = address[1].split(",");
                 delivery.setDeliveryState(state[1]);
@@ -96,7 +96,7 @@ public class QueryPendingDeliveryTXN {
                 order.setCartId(quotation.get().getCartId());
                 order.setStoreId(quotation.get().getStoreId());
                 String[] address = quotation.get().getDeliveryAddress().split(quotation.get().getDeliveryPostcode().concat(","));
-                delivery.setDeliveryAddress(address[0]);
+                delivery.setDeliveryAddress(address[0].substring(0, address[0].length() - 1));
                 delivery.setDeliveryCity(quotation.get().getDeliveryCity());
                 String[] state = address[1].split(",");
                 delivery.setDeliveryState(state[1]);
@@ -123,6 +123,7 @@ public class QueryPendingDeliveryTXN {
                 HttpReponse placeOrder = deliveryService.placeOrder(o.getOrderId(), request.get(), submitDelivery);
                 SubmitOrderResult submitOrderResult = (SubmitOrderResult) placeOrder.getData();
                 BigDecimal priorityFee = BigDecimal.valueOf((request.get().getAmount() * 50) / 100);
+                priorityFee = priorityFee.setScale(2, BigDecimal.ROUND_HALF_UP);
                 deliveryService.addPriorityFee(submitOrderResult.orderCreated.getId(), priorityFee);
 
             } else if (o.getTotalRequest() < 4) {
@@ -137,7 +138,7 @@ public class QueryPendingDeliveryTXN {
                 order.setCartId(quotation.get().getCartId());
                 order.setStoreId(quotation.get().getStoreId());
                 String[] address = quotation.get().getDeliveryAddress().split(quotation.get().getDeliveryPostcode().concat(","));
-                delivery.setDeliveryAddress(address[0]);
+                delivery.setDeliveryAddress(address[0].substring(0, address[0].length() - 1));
                 delivery.setDeliveryCity(quotation.get().getDeliveryCity());
                 String[] state = address[1].split(",");
                 delivery.setDeliveryState(state[1]);
@@ -164,10 +165,10 @@ public class QueryPendingDeliveryTXN {
                 HttpReponse placeOrder = deliveryService.placeOrder(o.getOrderId(), request.get(), submitDelivery);
                 SubmitOrderResult submitOrderResult = (SubmitOrderResult) placeOrder.getData();
                 BigDecimal priorityFee = BigDecimal.valueOf((request.get().getAmount() * 100) / 100);
+                priorityFee = priorityFee.setScale(2, BigDecimal.ROUND_HALF_UP);
                 deliveryService.addPriorityFee(submitOrderResult.orderCreated.getId(), priorityFee);
 
-            }
-            else if (o.getTotalRequest() < 5) {
+            } else if (o.getTotalRequest() < 5) {
                 LogUtil.info("QueryPendingDeliveryTXN", location, "Third Request After Fifteen Minutes Place Order", "");
                 HttpReponse result = deliveryService.cancelOrder(o.getId());
 

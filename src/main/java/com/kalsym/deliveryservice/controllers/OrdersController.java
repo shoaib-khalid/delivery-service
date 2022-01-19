@@ -834,6 +834,7 @@ public class OrdersController {
                         riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
                         riderDetails.setProvider(provider);
                         riderDetails.setAirwayBill(order.getAirwayBillURL());
+                        riderDetails.setRiderStatus(order.getSystemStatus());
                         response.setData(riderDetails);
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     } else {
@@ -850,6 +851,7 @@ public class OrdersController {
                     riderDetails.setOrderNumber(order.getSpOrderId());
                     riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
                     riderDetails.setProvider(provider);
+                    riderDetails.setRiderStatus(order.getSystemStatus());
                     riderDetails.setAirwayBill(order.getAirwayBillURL());
                     response.setData(riderDetails);
                     return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -861,6 +863,7 @@ public class OrdersController {
                 riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
                 riderDetails.setProvider(provider);
                 riderDetails.setAirwayBill(order.getAirwayBillURL());
+                riderDetails.setRiderStatus(order.getSystemStatus());
                 response.setData(riderDetails);
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             } else {
@@ -873,6 +876,7 @@ public class OrdersController {
                 riderDetails.setOrderNumber(order.getSpOrderId());
                 riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
                 riderDetails.setProvider(provider);
+                riderDetails.setRiderStatus(order.getSystemStatus());
                 riderDetails.setAirwayBill(order.getAirwayBillURL());
                 response.setData(riderDetails);
                 return ResponseEntity.status(HttpStatus.OK).body(response);

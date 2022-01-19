@@ -20,4 +20,5 @@ public class RiderDetails {
     String orderNumber;
     Provider provider;
     String airwayBill;
+    String riderStatus;
 }
