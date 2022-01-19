@@ -46,10 +46,10 @@ public class QueryPendingDeliveryTXN {
         for (DeliveryOrder o : deliveryOrders) {
             LogUtil.info("QueryPendingDeliveryTXN", location, "Request Cancel", "");
 
-            HttpReponse result = deliveryService.cancelOrder(o.getId());
             if (o.getTotalRequest() < 2) {
                 LogUtil.info("QueryPendingDeliveryTXN", location, "First Request Five After Minutes Place Order", "");
 
+                HttpReponse result = deliveryService.cancelOrder(o.getId());
                 Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(o.getDeliveryQuotationId());
 
                 Order order = new Order();
@@ -86,6 +86,7 @@ public class QueryPendingDeliveryTXN {
 
             } else if (o.getTotalRequest() < 3) {
                 LogUtil.info("QueryPendingDeliveryTXN", location, "Second Request After Ten Minutes Place Order", "");
+                HttpReponse result = deliveryService.cancelOrder(o.getId());
 
                 Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(o.getDeliveryQuotationId());
 
@@ -126,6 +127,7 @@ public class QueryPendingDeliveryTXN {
 
             } else if (o.getTotalRequest() < 4) {
                 LogUtil.info("QueryPendingDeliveryTXN", location, "Third Request After Fifteen Minutes Place Order", "");
+                HttpReponse result = deliveryService.cancelOrder(o.getId());
 
                 Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(o.getDeliveryQuotationId());
 
@@ -164,7 +166,12 @@ public class QueryPendingDeliveryTXN {
                 BigDecimal priorityFee = BigDecimal.valueOf((request.get().getAmount() * 100) / 100);
                 deliveryService.addPriorityFee(submitOrderResult.orderCreated.getId(), priorityFee);
 
-                String orderStatus = "REQUEST_DELIVERY_FAILED";
+            }
+            else if (o.getTotalRequest() < 5) {
+                LogUtil.info("QueryPendingDeliveryTXN", location, "Third Request After Fifteen Minutes Place Order", "");
+                HttpReponse result = deliveryService.cancelOrder(o.getId());
+
+                String orderStatus = "FAILED_FIND_DRIVER";
                 String res = symplifiedService.updateOrderStatus(o.getOrderId(), orderStatus);
 
             }
