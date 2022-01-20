@@ -3,6 +3,7 @@ package com.kalsym.deliveryservice.controllers;
 import com.google.gson.Gson;
 import com.kalsym.deliveryservice.models.*;
 import com.kalsym.deliveryservice.models.daos.*;
+import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
 import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
 import com.kalsym.deliveryservice.provider.*;
@@ -753,16 +754,19 @@ public class OrdersController {
                         deliveryOrder.setDriverId(deliveryId);
                         deliveryOrder.setRiderName(null);
                     }
-//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
                 } else if (status.equals("PICKED_UP")) {
                     deliveryOrder.setDriverId(deliveryId);
                     orderStatus = "BEING_DELIVERED";
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("COMPLETED")) {
                     orderStatus = "DELIVERED_TO_CUSTOMER";
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
                     orderStatus = "REJECTED_BY_STORE";
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 }
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
