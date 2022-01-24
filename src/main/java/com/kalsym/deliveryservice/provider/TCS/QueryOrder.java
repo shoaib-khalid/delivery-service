@@ -47,7 +47,7 @@ public class QueryOrder extends SyncDispatcher {
 
         //TODO : ADD IN DB DETAILS
         this.baseUrl = (String) config.get("domainUrl");
-        this.queryOrder_url = (String) config.get("queryOrder_url");
+        this.queryOrder_url = (String) config.get("queryorder_url");
         this.secretKey = (String) config.get("secretKey");
         this.apiKey = "x1Wbjv";
         this.endpointUrl = (String) config.get("place_orderUrl");
@@ -58,7 +58,6 @@ public class QueryOrder extends SyncDispatcher {
 
         this.username = (String) config.get("username");
         this.password = (String) config.get("password");
-
         this.clientId = (String) config.get("clientId");
 
     }

@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -178,6 +179,28 @@ public class QueryPendingDeliveryTXN {
             }
         }
 
+    }
+
+
+    @Scheduled(cron = "${pending-transaction:0 0/30 * * * ?}")
+    public void QueryPendingTransaction() throws ParseException {
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+
+        LogUtil.info("QueryPendingTXN", location, "QUERY PENDING TXN", "");
+        List<String> status = new ArrayList<>();
+        status.add(DeliveryCompletionStatus.COMPLETED.name());
+        status.add(DeliveryCompletionStatus.CANCELED.name());
+        status.add(DeliveryCompletionStatus.EXPIRED.name());
+
+        List<DeliveryOrder> deliveryOrders = deliveryOrdersRepository.findByStatusNotIn(status);
+        for (DeliveryOrder order : deliveryOrders) {
+            LogUtil.info("QueryPendingTXN", location, "Order Id : " + order.getOrderId(), "");
+            System.err.println("Query Pending Transaction : " + order.getOrderId());
+            deliveryService.queryOrder(order.getId());
+
+            LogUtil.info("QueryPendingTXN Status ", location, "Order Id : " + order.getOrderId() + " Order Status : " + order.getSystemStatus(), "");
+
+        }
     }
 
 

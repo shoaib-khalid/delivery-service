@@ -63,10 +63,10 @@ public class SubmitOrder extends SyncDispatcher {
 
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
-        String requestBody = generateRequestBody();
+        JsonObject requestBody = generateRequestBody();
 //        LogUtil.info(logprefix, location, "JnT request body for Submit Order requestBody : " + requestBody, "");
 
-        String data_digest = requestBody.concat(this.apiKey);
+        String data_digest = requestBody.toString().concat(this.apiKey);
 //        LogUtil.info(logprefix, location, "JnT request body for Submit Order data_digest : " + data_digest, "");
 
         String encode_key = "";
@@ -124,7 +124,7 @@ public class SubmitOrder extends SyncDispatcher {
         return response;
     }
 
-    private String generateRequestBody() {
+    private JsonObject generateRequestBody() {
 
         String pattern = "yyyy-MM-dd hh:mm:ss";
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
@@ -162,6 +162,7 @@ public class SubmitOrder extends SyncDispatcher {
 //        } else {
 //            details.addProperty("qty", order.getPieces().toString());
 //        }
+        order.setServiceType(true);
         details.addProperty("weight", order.getTotalWeightKg().toString());
         details.addProperty("item_name", order.getProductCode());
         details.addProperty("goodsdesc", order.getShipmentContent());
@@ -186,7 +187,7 @@ public class SubmitOrder extends SyncDispatcher {
         detailsArray.add(details);
         jsonReq.add("detail", detailsArray);
 
-        return jsonReq.toString();
+        return jsonReq;
     }
 
     private SubmitOrderResult extractResponseBody(String respString) {

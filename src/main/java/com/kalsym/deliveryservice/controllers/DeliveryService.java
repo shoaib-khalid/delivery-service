@@ -5,10 +5,7 @@ import com.kalsym.deliveryservice.models.daos.*;
 import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
 import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
-import com.kalsym.deliveryservice.provider.CancelOrderResult;
-import com.kalsym.deliveryservice.provider.PriceResult;
-import com.kalsym.deliveryservice.provider.ProcessResult;
-import com.kalsym.deliveryservice.provider.SubmitOrderResult;
+import com.kalsym.deliveryservice.provider.*;
 import com.kalsym.deliveryservice.repositories.*;
 import com.kalsym.deliveryservice.service.utility.Response.StoreDeliveryResponseData;
 import com.kalsym.deliveryservice.service.utility.Response.StoreResponseData;
@@ -18,6 +15,7 @@ import com.kalsym.deliveryservice.utils.StringUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -490,6 +488,8 @@ public class DeliveryService {
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());
 
+        StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
+
         //generate transaction id
         LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
         ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository);
@@ -528,7 +528,14 @@ public class DeliveryService {
                 deliveryOrder.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
                 deliveryOrder.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
                 deliveryOrder.setStatus(orderCreated.getStatus());
-                deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                String deliveryType = stores.getType();
+                if (deliveryType.contains("ADHOC")) {
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                }
+                else{
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.NEW_ORDER.name());
+
+                }
                 deliveryOrder.setTotalRequest(1L);
                 deliveryOrder.setDeliveryFee(BigDecimal.valueOf(quotation.getAmount()));
                 deliveryOrdersRepository.save(deliveryOrder);
@@ -807,6 +814,47 @@ public class DeliveryService {
         }
 
         return response;
+    }
+
+    public HttpReponse queryOrder(Long orderId) {
+
+        String logprefix = "Delivery Service - Query Order";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+
+        HttpReponse response = new HttpReponse();
+
+        //generate transaction id
+        String systemTransactionId = StringUtility.CreateRefID("DL");
+        LogUtil.info(systemTransactionId, location, " Find delivery order for orderId:" + orderId, "");
+        Optional<DeliveryOrder> orderDetails = deliveryOrdersRepository.findById(orderId);
+        if (orderDetails.isPresent()) {
+            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails.get(), providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+            ProcessResult processResult = process.QueryOrder();
+            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+
+            if (processResult.resultCode == 0) {
+                //successfully get status from provider
+                response.setSuccessStatus(HttpStatus.OK);
+                QueryOrderResult queryOrderResult = (QueryOrderResult) processResult.returnObject;
+                DeliveryOrder orderFound = queryOrderResult.orderFound;
+                orderDetails.get().setStatus(orderFound.getStatus());
+                orderDetails.get().setSystemStatus(orderFound.getSystemStatus());
+                orderDetails.get().setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
+                deliveryOrdersRepository.save(orderDetails.get());
+                response.setData(orderDetails);
+                response.setStatus(HttpStatus.OK.value());
+                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
+                return response;
+            } else {
+                //fail to get status
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                return response;
+            }
+        } else {
+            LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for orderId:" + orderId, "");
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            return response;
+        }
     }
 
 }

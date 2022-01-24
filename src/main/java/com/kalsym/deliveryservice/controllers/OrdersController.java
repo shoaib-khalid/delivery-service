@@ -452,6 +452,7 @@ public class OrdersController {
                 delivery.setDeliveryCity(quotation.getDeliveryCity());
                 orderDetails.setDelivery(delivery);
                 orderDetails.setCartId(quotation.getCartId());
+                orderDetails.setServiceType(true);
 
                 //generate transaction id
                 LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " "
@@ -481,6 +482,7 @@ public class OrdersController {
                     deliveryOrder.setStoreId(orderDetails.getStoreId());
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
                     deliveryOrder.setOrderId(o.getOrderId());
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.NEW_ORDER.name());
 
                     SubmitOrderResult submitOrderResult = (SubmitOrderResult) processResult.returnObject;
                     DeliveryOrder orderCreated = submitOrderResult.orderCreated;
@@ -562,34 +564,8 @@ public class OrdersController {
 
         LogUtil.info(logprefix, location, "", "");
 
-        //generate transaction id
-        String systemTransactionId = StringUtility.CreateRefID("DL");
-        LogUtil.info(systemTransactionId, location, " Find delivery order for orderId:" + orderId, "");
-        Optional<DeliveryOrder> orderDetails = deliveryOrdersRepository.findById(orderId);
-        if (orderDetails.isPresent()) {
-            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails.get(), providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-            ProcessResult processResult = process.QueryOrder();
-            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
-
-            if (processResult.resultCode == 0) {
-                //successfully get status from provider
-                response.setSuccessStatus(HttpStatus.OK);
-                QueryOrderResult queryOrderResult = (QueryOrderResult) processResult.returnObject;
-                DeliveryOrder orderFound = queryOrderResult.orderFound;
-                orderDetails.get().setStatus(orderFound.getStatus());
-                orderDetails.get().setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
-                deliveryOrdersRepository.save(orderDetails.get());
-                response.setData(orderDetails);
-                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
-                return ResponseEntity.status(HttpStatus.OK).body(response);
-            } else {
-                //fail to get status
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-            }
-        } else {
-            LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for orderId:" + orderId, "");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
+        response = deliveryService.queryOrder(orderId);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/queryQuotation/{order-id}", name = "orders-query-order")
@@ -947,6 +923,7 @@ public class OrdersController {
                     String filename = provider.getName() + "_" + invoiceId + "_" + order.getSpOrderId() + ".pdf";
                     Files.write(Paths.get(path + "/" + filename), airwayBillResult.consignmentNote);
                     LogUtil.info(logprefix, location, path + filename, "");
+                    System.err.println("MONTH :" + date.getMonth());
                     String fileUrl = airwayBillHost + date.getMonth() + "-" + (date.getYear() + 1900) + "/" + filename;
                     order.setAirwayBillURL(fileUrl);
 //                    order.setAirwayBillURL(folderPath + order.getOrderId() + ".pdf");
