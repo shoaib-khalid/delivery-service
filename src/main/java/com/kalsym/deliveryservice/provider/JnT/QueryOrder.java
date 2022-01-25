@@ -5,15 +5,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
-import com.kalsym.deliveryservice.provider.Gdex.VehicleType;
+import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.QueryOrderResult;
-import com.kalsym.deliveryservice.provider.SubmitOrderResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
-import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
-import com.kalsym.deliveryservice.utils.DateTimeUtil;
-import com.kalsym.deliveryservice.utils.HttpResult;
-import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -24,7 +19,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.xml.bind.DatatypeConverter;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -46,9 +40,11 @@ public class QueryOrder extends SyncDispatcher {
     private String sslVersion = "SSL";
     private String logprefix;
     private String location = "JnTSubmitOrder";
+    private String password;
     private String secretKey;
-    private String apiKey;
     private String spOrderId;
+    private String username;
+    private String msgType;
     private String driverId;
     private String shareLink;
     private String status;
@@ -60,9 +56,11 @@ public class QueryOrder extends SyncDispatcher {
         LogUtil.info(logprefix, location, "JnT SubmitOrder class initiliazed!!", "");
 
         this.baseUrl = (String) config.get("domainUrl");
-        this.queryOrder_url = "http://47.57.89.30/common/track/trackings";
+        this.queryOrder_url = (String) config.get("queryOrder_url");
+        this.username = (String) config.get("username");
+        this.password = (String) config.get("password");
         this.secretKey = (String) config.get("secretKey");
-        this.apiKey = "x1Wbjv";
+        this.msgType = (String) config.get("msgType");
         this.endpointUrl = (String) config.get("place_orderUrl");
         this.connectTimeout = Integer.parseInt((String) config.get("queryorder_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("queryorder_wait_timeout"));
@@ -80,7 +78,7 @@ public class QueryOrder extends SyncDispatcher {
         String requestBody = generateRequestBody();
         LogUtil.info(logprefix, location, "JnT request body for Query Order: " + requestBody, "");
         // data signature part
-        String data_digest = requestBody + "ffe62df84bb3d8e4b1eaa2c22775014d";
+        String data_digest = requestBody + this.secretKey;
         String encode_key = "";
         // encryption
         try {
@@ -97,8 +95,8 @@ public class QueryOrder extends SyncDispatcher {
         MultiValueMap<String, Object> postParameters = new LinkedMultiValueMap<>();
         postParameters.add("logistics_interface", requestBody);
         postParameters.add("data_digest", encode_key);
-        postParameters.add("msg_type", "TRACK");
-        postParameters.add("eccompanyid", "TEST");
+        postParameters.add("msg_type", this.msgType);
+        postParameters.add("eccompanyid", this.username);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/x-www-form-urlencoded");
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(postParameters, headers);
@@ -132,7 +130,7 @@ public class QueryOrder extends SyncDispatcher {
     private String generateRequestBody() {
         JsonObject jsonReq = new JsonObject();
         jsonReq.addProperty("queryType", 1);
-        jsonReq.addProperty("language","2");
+        jsonReq.addProperty("language", "2");
         jsonReq.addProperty("queryCodes", spOrderId);
 
         return jsonReq.toString();
@@ -147,14 +145,32 @@ public class QueryOrder extends SyncDispatcher {
             JsonObject dataFirstObject = data.get(0).getAsJsonObject();
             JsonArray details = dataFirstObject.get("details").getAsJsonArray();
             if (details.size() > 0) {
-                status = details.get(0).getAsJsonObject().get("scanStatus").getAsString();
-            } else {
-                JsonObject orderDetail = dataFirstObject.get("orderDetail").getAsJsonObject();
-                status = orderDetail.get("orderstatus").getAsString();
+                status = details.get(0).getAsJsonObject().get("scanstatus").getAsString();
             }
+
             DeliveryOrder orderFound = new DeliveryOrder();
             orderFound.setSpOrderId(spOrderId);
             orderFound.setStatus(status);
+            if (status.equals("Picked Up")) {
+                orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+            }
+            else if (status.equals("On Hold")) {
+                orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+            }
+            else if (status.equals("Departure")) {
+                orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+            }
+            else if(status.equals("Delivered")){
+                orderFound.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+            }
+            else if(status.equals("On Return")){
+                orderFound.setSystemStatus(DeliveryCompletionStatus.FAILED.name());
+            }
+            else {
+                orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+            }
+
+
             queryOrderResult.orderFound = orderFound;
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);

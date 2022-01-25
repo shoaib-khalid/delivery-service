@@ -36,5 +36,6 @@ public class Pickup {
    boolean isTrolleyRequired;
    String remarks;
    String pickupZone;
+   String costCenterCode;
    
 }

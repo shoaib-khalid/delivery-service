@@ -23,5 +23,6 @@ public class DeliveryZoneCity implements Serializable{
     @Id
     private String city;
     private String zone;
+    private String costCenterCode;
 
 }

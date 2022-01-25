@@ -14,4 +14,6 @@ import java.util.List;
 public interface ProviderConfigurationRepository extends JpaRepository<ProviderConfiguration, String> {
 
     public List<ProviderConfiguration> findByIdSpId(Integer spId);
+
+//    ProviderConfiguration findBySpIdAndConfigField(Integer spId, String parameterValue);
 }

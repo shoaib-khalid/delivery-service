@@ -57,8 +57,10 @@ public class OrderCallback extends SyncDispatcher {
         try {
             String status = jsonBody.get("delivery").getAsJsonObject().get("status").getAsString();
             String spOrderId = jsonBody.get("delivery").getAsJsonObject().get("order_id").getAsString();
+            String driverId = jsonBody.get("delivery").getAsJsonObject().get("courier").getAsJsonObject().get("courier_id").getAsString();
             callbackResult.spOrderId=spOrderId;
             callbackResult.status=status;
+            callbackResult.driverId = driverId;
             LogUtil.info(logprefix, location, "SpOrderId:"+spOrderId+" Status:"+status, "");
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);

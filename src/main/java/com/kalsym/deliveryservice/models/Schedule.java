@@ -21,4 +21,5 @@ public class Schedule {
                 ", endPickScheduleTime='" + endPickScheduleTime + '\'' +
                 '}';
     }
+
 }

@@ -19,7 +19,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import javax.xml.bind.DatatypeConverter;
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -31,38 +31,31 @@ import java.util.concurrent.CountDownLatch;
 
 public class SubmitOrder extends SyncDispatcher {
 
-    private final String baseUrl;
-    private final String endpointUrl;
     private final String submitOrder_url;
     private final int connectTimeout;
     private final int waitTimeout;
     private final String systemTransactionId;
     private Order order;
-    private HashMap productMap;
-    private String atxProductCode = "";
-    private String sessionToken;
-    private String sslVersion = "SSL";
     private String logprefix;
     private String location = "JnTSubmitOrder";
-    private String secretKey;
     private String apiKey;
     private String username;
+    private String passowrd;
+    private String cuscode;
 
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
         logprefix = systemTransactionId;
         this.systemTransactionId = systemTransactionId;
         LogUtil.info(logprefix, location, "JnT SubmitOrder class initiliazed!!", "");
-
-        this.baseUrl = (String) config.get("domainUrl");
         this.submitOrder_url = (String) config.get("submitOrder_url");
-        this.secretKey = (String) config.get("secretKey");
         this.apiKey = (String) config.get("apiKey");
-        this.endpointUrl = (String) config.get("place_orderUrl");
+        this.cuscode = (String) config.get("cuscode");
         this.connectTimeout = Integer.parseInt((String) config.get("submitorder_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("submitorder_wait_timeout"));
-        productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
+        this.username = (String) config.get("username");
+        this.passowrd = (String) config.get("password");
     }
 
     @Override
@@ -70,29 +63,42 @@ public class SubmitOrder extends SyncDispatcher {
 
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
-//        HashMap httpHeader = new HashMap();
-//        httpHeader.put("User-Token", this.submitOrder_token);
-//        httpHeader.put("Subscription-Key", this.submitorder_key);
-//        httpHeader.put("Content-Type", "application/json-patch+json");
-//        httpHeader.put("Connection", "close");
-        String requestBody = generateRequestBody();
-        LogUtil.info(logprefix, location, "JnT request body for Submit Order: " + requestBody, "");
-        String data_digest = requestBody + apiKey;
+        JsonObject requestBody = generateRequestBody();
+//        LogUtil.info(logprefix, location, "JnT request body for Submit Order requestBody : " + requestBody, "");
+
+        String data_digest = requestBody.toString().concat(this.apiKey);
+//        LogUtil.info(logprefix, location, "JnT request body for Submit Order data_digest : " + data_digest, "");
+
         String encode_key = "";
         try {
+
             MessageDigest md = MessageDigest.getInstance("MD5");
-            md.update(data_digest.getBytes());
-            byte[] digest = md.digest();
-            String myHash = DatatypeConverter.printHexBinary(digest).toLowerCase();
-            String base64Key = Base64.getEncoder().encodeToString(myHash.getBytes());
+            // digest() method is called to calculate message digest
+            //  of an input digest() return array of byte
+            byte[] messageDigest = md.digest(data_digest.getBytes());
+
+            // Convert byte array into signum representation
+            BigInteger no = new BigInteger(1, messageDigest);
+
+            // Convert message digest into hex value
+            String hashtext = no.toString(16);
+            while (hashtext.length() < 32) {
+                hashtext = "0" + hashtext;
+            }
+
+            String base64Key = Base64.getEncoder().encodeToString(hashtext.getBytes());
             encode_key = base64Key;
             LogUtil.info(logprefix, location, "encode_key :", encode_key);
+
+
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalArgumentException(e);
         }
         MultiValueMap<String, Object> postParameters = new LinkedMultiValueMap<>();
         postParameters.add("data_param", requestBody);
         postParameters.add("data_sign", encode_key);
+        LogUtil.info(logprefix, location, "JnT Request body for Submit Order  : " + postParameters, "");
+
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/x-www-form-urlencoded");
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(postParameters, headers);
@@ -104,74 +110,43 @@ public class SubmitOrder extends SyncDispatcher {
         if (statusCode == 200) {
             response.resultCode = 0;
             LogUtil.info(logprefix, location, "JnT Response for Submit Order: " + responses.getBody(), "");
-            response.returnObject = extractResponseBody(responses.getBody());
+            SubmitOrderResult result = extractResponseBody(responses.getBody());
+            if (result.isSuccess) {
+                response.returnObject = extractResponseBody(responses.getBody());
+            } else {
+                response.returnObject = extractResponseBody(responses.getBody());
+            }
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
             response.resultCode = -1;
         }
         LogUtil.info(logprefix, location, "Process finish", "");
-
-//        String urlParameters  = "data_param=" + requestBody + "&data_sign="+ encode_key;
-//        byte[] postData = urlParameters.getBytes( StandardCharsets.UTF_8 );
-//        int postDataLength = postData.length;
-//        String request = "http://47.57.89.30/blibli/order/createOrder";
-//        InputStream stream = null;
-//        try {
-//            URL url = new URL(request);
-//            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-//            conn.setDoOutput(true);
-//            conn.setInstanceFollowRedirects(false);
-//            conn.setRequestMethod("POST");
-//            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-//            conn.setRequestProperty("charset", "utf-8");
-//            conn.setRequestProperty("Content-Length", Integer.toString(postDataLength));
-//            conn.setUseCaches(false);
-//            DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
-//            wr.write(postData);
-//            wr.flush();
-//            stream = conn.getInputStream();
-//            BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"), 8);
-//            String result = reader.readLine();
-//            conn.getResponseCode();
-//            LogUtil.info(logprefix, location, "Jnt Result: " + result, "");
-////            return result;
-//        } catch (Exception ex) {
-//            LogUtil.error(logprefix, location, "Error extracting result", "", ex);
-//        }
-        // how to send the request using x-www-form-urlencoded
-//        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.submitOrder_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
-//        if (httpResult.resultCode==0) {
-//            LogUtil.info(logprefix, location, "Request successful", "");
-//            response.resultCode=0;
-//            response.returnObject=httpResult.responseString; // need to implement extractResponseBody here
-//        } else {
-//            LogUtil.info(logprefix, location, "Request failed", "");
-//            response.resultCode=-1;
-//        }
-//        LogUtil.info(logprefix, location, "Process finish", "");*/
         return response;
     }
 
-    private String generateRequestBody() {
+    private JsonObject generateRequestBody() {
 
         String pattern = "yyyy-MM-dd hh:mm:ss";
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
         Date startPickScheduleDate = null;
         Date endPickScheduleDate = null;
         try {
-            startPickScheduleDate = simpleDateFormat.parse(order.getPickup().getPickupDate() + " " + order.getPickup().getPickupTime());
-            endPickScheduleDate = simpleDateFormat.parse(order.getPickup().getEndPickupDate() + " " + order.getPickup().getEndPickupTime());
+            if (order.getPickup().getPickupDate() != null) {
+                startPickScheduleDate = simpleDateFormat.parse(order.getPickup().getPickupDate() + " " + order.getPickup().getPickupTime() + ":00");
+            }
+            if (order.getPickup().getEndPickupDate() != null) {
+                endPickScheduleDate = simpleDateFormat.parse(order.getPickup().getEndPickupDate() + " " + order.getPickup().getEndPickupTime() + ":00");
+            }
         } catch (ParseException e) {
             e.printStackTrace();
         }
-
 
         JsonObject jsonReq = new JsonObject();
         JsonArray detailsArray = new JsonArray();
         JsonObject details = new JsonObject();
         details.addProperty("username", this.username);
-        details.addProperty("api_key", this.apiKey);
-        details.addProperty("cuscode", systemTransactionId);
+        details.addProperty("api_key", this.passowrd);
+        details.addProperty("cuscode", this.cuscode);
         details.addProperty("orderid", systemTransactionId);
         details.addProperty("shipper_contact", order.getPickup().getPickupContactName());
         details.addProperty("shipper_name", order.getPickup().getPickupContactName());
@@ -187,21 +162,32 @@ public class SubmitOrder extends SyncDispatcher {
 //        } else {
 //            details.addProperty("qty", order.getPieces().toString());
 //        }
+        order.setServiceType(true);
         details.addProperty("weight", order.getTotalWeightKg().toString());
-        details.addProperty("item_name", "");
+        details.addProperty("item_name", order.getProductCode());
         details.addProperty("goodsdesc", order.getShipmentContent());
         details.addProperty("goodsvalue", order.getShipmentValue());
         details.addProperty("payType", "PP_PM");
-        details.addProperty("expressType", "");
+        details.addProperty("expresstype", "EZ");
         details.addProperty("goodType", order.getItemType().name());
-        details.addProperty("serviceType", "1");
-        details.addProperty("sendstarttime", startPickScheduleDate.toString());
-        details.addProperty("sendendtime", endPickScheduleDate.toString());
+        if (!order.getServiceType()) {
+            LogUtil.info(logprefix, location, "This order is Pickup" , "");
+            details.addProperty("servicetype", "1");
+        } else {
+            LogUtil.info(logprefix, location, "This order is Dropoff" , "");
+            details.addProperty("servicetype", "6");
+        }
+//        if (startPickScheduleDate != null) {
+//            details.addProperty("sendstarttime", startPickScheduleDate.toString());
+//        }
+//        if (endPickScheduleDate != null) {
+//            details.addProperty("sendendtime", endPickScheduleDate.toString());
+//        }
         details.addProperty("offerFeeFlag", order.isInsurance());
         detailsArray.add(details);
         jsonReq.add("detail", detailsArray);
 
-        return jsonReq.toString();
+        return jsonReq;
     }
 
     private SubmitOrderResult extractResponseBody(String respString) {
@@ -227,8 +213,10 @@ public class SubmitOrder extends SyncDispatcher {
 
                 orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
                 submitOrderResult.orderCreated = orderCreated;
-            }
-            else{
+                submitOrderResult.isSuccess = true;
+            } else {
+                submitOrderResult.isSuccess = false;
+                submitOrderResult.message = detailsData.get("msg").getAsString();
                 LogUtil.info(logprefix, location, "Request failed", "");
             }
         } catch (Exception ex) {

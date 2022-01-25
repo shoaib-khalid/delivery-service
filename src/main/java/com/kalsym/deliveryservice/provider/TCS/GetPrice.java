@@ -1,7 +1,6 @@
 package com.kalsym.deliveryservice.provider.TCS;
 
 import com.kalsym.deliveryservice.models.Order;
-import com.kalsym.deliveryservice.models.daos.DeliveryZoneCity;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
@@ -20,7 +19,7 @@ public class GetPrice extends SyncDispatcher {
     private final int connectTimeout;
     private final int waitTimeout;
     private final String systemTransactionId;
-//    private final Integer providerId;
+    //    private final Integer providerId;
     @Autowired
     private DeliveryZoneCityRepository deliveryZoneCityRepository;
     private Order order;
@@ -59,48 +58,70 @@ public class GetPrice extends SyncDispatcher {
         String zonePickup = order.getPickup().getPickupZone();
         String zoneDelivery = order.getDelivery().getDeliveryZone();
 
+
         Double lastMileLogistics;
         Double fuelCharges;
         Double gst;
         Double totalCharge = 0.00;
 
+        System.out.println(" CHECK STATEMENT = " + pickupCity.equals("null"));
+        System.out.println(" CHECK STATEMENT = " + deliveryCity.equals("null"));
+        System.out.println(" CHECK STATEMENT = " + zonePickup.equals("null"));
+        System.out.println(" CHECK STATEMENT = " + zoneDelivery.equals("null"));
+
+
         Double weight = order.getTotalWeightKg();
-        if (pickupCity.equals(deliveryCity)) {
-            if (weight <= 0.5) {
-                lastMileLogistics = 120.00;
-            } else if (weight > 0.5 && weight == 1) {
-                lastMileLogistics = 130.00;
-            } else {
-                lastMileLogistics = 130 * weight;
-            }
+        if (!zonePickup.equals("null") && !zoneDelivery.equals("null") && !pickupCity.equals("null") && !deliveryCity.equals("null")) {
+            if (pickupCity.equals(deliveryCity)) {
+                if (weight <= 0.5) {
+                    lastMileLogistics = 120.00;
+                } else if (weight > 0.5 && weight == 1) {
+                    lastMileLogistics = 130.00;
+                } else {
+                    lastMileLogistics = 130 * weight;
+                }
 
-        } else if (zonePickup.equals(zoneDelivery)) {
-            if (weight <= 0.5) {
-                lastMileLogistics = 170.00;
-            } else if (weight > 0.5 && weight == 1) {
-                lastMileLogistics = 180.00;
+            } else if (zonePickup.equals(zoneDelivery)) {
+
+                if (weight <= 0.5) {
+                    lastMileLogistics = 170.00;
+                } else if (weight > 0.5 && weight == 1) {
+                    lastMileLogistics = 180.00;
+                } else {
+                    lastMileLogistics = 180 * weight;
+                }
             } else {
-                lastMileLogistics = 180 * weight;
+
+                if (weight <= 0.5) {
+                    lastMileLogistics = 210.00;
+                } else if (weight > 0.5 && weight == 1) {
+                    lastMileLogistics = 270.00;
+                } else {
+                    lastMileLogistics = 270 * weight;
+                }
             }
+            fuelCharges = (lastMileLogistics * 20) / 100;
+            gst = (lastMileLogistics * 16) / 100;
+            totalCharge = lastMileLogistics + fuelCharges + gst;
+
+            PriceResult priceResult = new PriceResult();
+            BigDecimal bd = new BigDecimal(totalCharge);
+            bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+            priceResult.price = bd;
+            priceResult.pickupCity = pickupCity;
+            priceResult.deliveryCity = deliveryCity;
+            priceResult.pickupZone = zonePickup;
+            priceResult.deliveryZone = zoneDelivery;
+            response.resultCode = 0;
+            response.returnObject = priceResult;
+
         } else {
-            if (weight <= 0.5) {
-                lastMileLogistics = 210.00;
-            } else if (weight > 0.5 && weight == 1) {
-                lastMileLogistics = 270.00;
-            } else {
-                lastMileLogistics = 270 * weight;
-            }
+            PriceResult result = new PriceResult();
+            result.message = "ERR_OUT_OF_SERVICE_AREA";
+            result.isError = true;
+            response.returnObject = result;
+            response.resultCode = -1;
         }
-        fuelCharges = (lastMileLogistics * 20) / 100;
-        gst = (lastMileLogistics * 16) / 100;
-        totalCharge = lastMileLogistics + fuelCharges + gst;
-        PriceResult priceResult = new PriceResult();
-        BigDecimal bd = new BigDecimal(totalCharge);
-        bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
-        priceResult.price = bd;
-        response.resultCode = 0;
-        response.returnObject = priceResult;
-
         return response;
     }
    /* public ProcessResult process() {

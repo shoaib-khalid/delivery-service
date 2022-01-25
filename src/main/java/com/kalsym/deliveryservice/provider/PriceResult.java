@@ -24,5 +24,12 @@ public class PriceResult {
     public String deliveryType;
     public String providerImage;
     @JsonIgnore
-    public String resultCode;
+    public int resultCode;
+    public BigDecimal priorityFee;
+
+    //only for pakistan
+    public String pickupCity;
+    public String deliveryCity;
+    public String pickupZone;
+    public String deliveryZone;
 }

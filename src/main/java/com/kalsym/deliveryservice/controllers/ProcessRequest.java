@@ -29,7 +29,8 @@ public class ProcessRequest {
     ProviderConfigurationRepository providerConfigurationRepository;
     ProviderRepository providerRepository;
     int providerThreadRunning;
-    List<PriceResult> priceResultList;
+    List<PriceResult> priceResultLists;
+    PriceResult priceResultList;
     List<DeliveryQuotation> deliveryQuotations;
 
     SubmitOrderResult submitOrderResult;
@@ -40,7 +41,10 @@ public class ProcessRequest {
     GetPickupTimeResult pickupTimeResult;
     LocationIdResult locationIdResult;
     DriverDetailsResult driverDetailsResult;
+    AirwayBillResult airwayBillResult;
+    AdditionalInfoResult additionalInfoResult;
     Object requestBody;
+    Store store;
     SequenceNumberRepository sequenceNumberRepository;
     @Autowired
     DeliveryQuotationRepository deliveryQuotationRepository;
@@ -56,7 +60,7 @@ public class ProcessRequest {
         this.providerConfigurationRepository = providerConfigurationRepository;
         this.providerRepository = providerRepository;
         this.providerThreadRunning = 0;
-        this.priceResultList = new ArrayList<>();
+        this.priceResultLists = new ArrayList<>();
         this.sequenceNumberRepository = sequenceNumberRepository;
     }
 
@@ -70,7 +74,7 @@ public class ProcessRequest {
         this.providerConfigurationRepository = providerConfigurationRepository;
         this.providerRepository = providerRepository;
         this.providerThreadRunning = 0;
-        this.priceResultList = new ArrayList<>();
+        this.priceResultLists = new ArrayList<>();
     }
 
     public ProcessRequest(String sysTransactionId, Object requestBody, ProviderRatePlanRepository providerRatePlanRepository,
@@ -83,13 +87,27 @@ public class ProcessRequest {
         this.providerConfigurationRepository = providerConfigurationRepository;
         this.providerRepository = providerRepository;
         this.providerThreadRunning = 0;
-        this.priceResultList = new ArrayList<>();
+        this.priceResultLists = new ArrayList<>();
+    }
+
+    public ProcessRequest(String sysTransactionId, Store requestBody, ProviderRatePlanRepository providerRatePlanRepository,
+                          ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository) {
+        this.sysTransactionId = sysTransactionId;
+        this.store = requestBody;
+        this.logprefix = sysTransactionId;
+        this.location = "ProcessRequest";
+        this.providerRatePlanRepository = providerRatePlanRepository;
+        this.providerConfigurationRepository = providerConfigurationRepository;
+        this.providerRepository = providerRepository;
+        this.providerThreadRunning = 0;
+        this.priceResultLists = new ArrayList<>();
     }
 
     public ProcessResult GetPrice() {
         //get provider rate plan  
         LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
-        List<ProviderRatePlan> providerRatePlanList = providerRatePlanRepository.findByIdProductCode(order.getProductCode());
+//        List<ProviderRatePlan> providerRatePlanList = providerRatePlanRepository.findByIdProductCode(order.getProductCode());
+        List<ProviderRatePlan> providerRatePlanList = providerRatePlanRepository.findByIdProductCodeAndRegionId(order.getProductCode().toLowerCase(), order.getRegionCountry());
         if (order.getDeliveryProviderId() == null) {
             for (int i = 0; i < providerRatePlanList.size(); i++) {
                 List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(providerRatePlanList.get(i).getProvider().getId());
@@ -130,14 +148,14 @@ public class ProcessRequest {
         }
 
         ProcessResult response = new ProcessResult();
-        if (priceResultList.size() != 0) {
+        if (priceResultLists.size() != 0) {
             response.resultCode = 0;
-            response.returnObject = priceResultList;
+            response.returnObject = priceResultLists;
         } else {
             response.resultCode = -1;
-            response.returnObject = priceResultList;
+            response.returnObject = priceResultLists;
         }
-        LogUtil.info(logprefix, location, "GetPrices finish. resultCode:" + response.resultCode, " priceResult count:" + priceResultList.size());
+        LogUtil.info(logprefix, location, "GetPrices finish. resultCode:" + response.resultCode, " priceResult count:" + priceResultLists.size());
         return response;
     }
 
@@ -202,6 +220,7 @@ public class ProcessRequest {
             response.resultCode = 0;
         } else {
             response.resultCode = -1;
+            response.resultString = submitOrderResult.message;
             LogUtil.info(logprefix, location, "Fail to create order", "");
         }
 
@@ -239,8 +258,13 @@ public class ProcessRequest {
         }
 
         ProcessResult response = new ProcessResult();
-        response.resultCode = 0;
-        response.returnObject = cancelOrderResult;
+        if (cancelOrderResult.resultCode == 0) {
+            response.resultCode = 0;
+            response.returnObject = cancelOrderResult;
+        } else {
+            response.resultCode = -1;
+            response.returnObject = cancelOrderResult;
+        }
         LogUtil.info(logprefix, location, "CancelOrder finish. resultCode:" + response.resultCode, " cancelOrderResult:" + cancelOrderResult);
         return response;
     }
@@ -461,16 +485,16 @@ public class ProcessRequest {
         }
 
         ProcessResult response = new ProcessResult();
-        response.resultCode = 0;
-        response.returnObject = driverDetailsResult ;
-        LogUtil.info(logprefix, location, "GetLocationId finish. resultCode:" + response.resultCode, " driverDetailsResult count:" + driverDetailsResult);
+        response.resultCode = driverDetailsResult.resultCode;
+        response.returnObject = driverDetailsResult;
+        LogUtil.info(logprefix, location, "GetDriverDetails finish. resultCode:" + response.resultCode, " driverDetailsResult count:" + driverDetailsResult);
         return response;
     }
 
     public ProcessResult GetAirwayBill() {
         //get provider rate plan
 //        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
-        Provider provider = providerRepository.getOne(order.getDeliveryProviderId());
+        Provider provider = providerRepository.getOne(deliveryOrder.getDeliveryProviderId());
 
 
         List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(provider.getId());
@@ -480,7 +504,7 @@ public class ProcessRequest {
             String fieldValue = providerConfigList.get(j).getConfigValue();
             config.put(fieldName, fieldValue);
         }
-        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetAirwayBill", sequenceNumberRepository);
+        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, deliveryOrder, "GetAirwayBill", sequenceNumberRepository);
         dthread.start();
 
 
@@ -499,14 +523,99 @@ public class ProcessRequest {
 
         ProcessResult response = new ProcessResult();
         response.resultCode = 0;
-        response.returnObject = locationIdResult;
-        LogUtil.info(logprefix, location, "GetLocationId finish. resultCode:" + response.resultCode, " locationIdResult count:" + locationIdResult);
+        response.returnObject = airwayBillResult;
+        LogUtil.info(logprefix, location, "GetAirwayBill finish. resultCode:" + response.resultCode, " airwayBillResult count:" + airwayBillResult);
+        return response;
+    }
+
+
+    public ProcessResult GetAdditionalInfo() {
+        //get provider rate plan
+//        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
+        Provider provider = providerRepository.getOne(store.getProviderId());
+        List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(provider.getId());
+        HashMap config = new HashMap();
+        for (int j = 0; j < providerConfigList.size(); j++) {
+            String fieldName = providerConfigList.get(j).getId().getConfigField();
+            String fieldValue = providerConfigList.get(j).getConfigValue();
+            config.put(fieldName, fieldValue);
+        }
+        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, store, "GetAdditionalInfo", sequenceNumberRepository);
+        dthread.start();
+
+
+        try {
+            Thread.sleep(100);
+        } catch (Exception ex) {
+        }
+
+        while (providerThreadRunning > 0) {
+            try {
+                Thread.sleep(500);
+            } catch (Exception ex) {
+            }
+            //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
+        }
+
+        ProcessResult response = new ProcessResult();
+        if (additionalInfoResult.resultCode == 0) {
+            response.resultCode = 0;
+            response.returnObject = additionalInfoResult;
+        } else {
+            response.resultCode = -1;
+            response.returnObject = additionalInfoResult;
+        }
+        LogUtil.info(logprefix, location, "GetAirwayBill finish. resultCode:" + response.resultCode, " airwayBillResult count:" + airwayBillResult);
+        return response;
+    }
+
+    public ProcessResult addPriorityFee() {
+        //get provider rate plan
+//        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
+        Optional<Provider> provider = providerRepository.findById(deliveryOrder.getDeliveryProviderId());
+        List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(provider.get().getId());
+        HashMap config = new HashMap();
+        for (int j = 0; j < providerConfigList.size(); j++) {
+            String fieldName = providerConfigList.get(j).getId().getConfigField();
+            String fieldValue = providerConfigList.get(j).getConfigValue();
+            config.put(fieldName, fieldValue);
+        }
+        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider.get(), config, deliveryOrder, "AddPriorityFee", sequenceNumberRepository);
+        dthread.start();
+
+
+        try {
+            Thread.sleep(100);
+        } catch (Exception ex) {
+        }
+
+        while (providerThreadRunning > 0) {
+            try {
+                Thread.sleep(500);
+            } catch (Exception ex) {
+            }
+            //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
+        }
+
+        ProcessResult response = new ProcessResult();
+        if (priceResultList.resultCode == 0) {
+            response.resultCode = 0;
+            response.returnObject = priceResultList;
+        } else {
+            response.resultCode = -1;
+            response.returnObject = priceResultList;
+        }
+        LogUtil.info(logprefix, location, "AddPriorityFee finish. resultCode:" + response.resultCode, " AddPriorityFee count:" + priceResultList);
         return response;
     }
 
 
     public synchronized void addPriceResult(PriceResult priceResult) {
-        priceResultList.add(priceResult);
+        priceResultLists.add(priceResult);
+    }
+
+    public synchronized void setPriceResultList(PriceResult priceResult) {
+        this.priceResultList = priceResult;
     }
 
     public synchronized void setSubmitOrderResult(SubmitOrderResult orderResult) {
@@ -547,6 +656,14 @@ public class ProcessRequest {
 
     public synchronized void setDriverDetailsResult(DriverDetailsResult driverDetailsResult) {
         this.driverDetailsResult = driverDetailsResult;
+    }
+
+    public synchronized void setAirwayBillResult(AirwayBillResult airwayBillResult) {
+        this.airwayBillResult = airwayBillResult;
+    }
+
+    public synchronized void setAdditionalInfoResult(AdditionalInfoResult additionalInfoResult) {
+        this.additionalInfoResult = additionalInfoResult;
     }
 
 

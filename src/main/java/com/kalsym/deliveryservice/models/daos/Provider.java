@@ -13,7 +13,6 @@ import lombok.Setter;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.*;
 import java.io.Serializable;
 
 /**
@@ -53,5 +52,9 @@ public class Provider implements Serializable {
     String providerImage;
     @JsonIgnore
     String driverDetailsClassName;
-    String regionCountryId;
+    @JsonIgnore
+    String additionalQueryClassName;
+    @JsonIgnore
+    String addPriorityClassName; ;
+//    String regionCountryId;
 }

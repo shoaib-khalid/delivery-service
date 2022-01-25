@@ -36,7 +36,7 @@ public class DriverDetails extends SyncDispatcher {
     private String sessionToken;
     private String sslVersion = "SSL";
     private String logprefix;
-    private String location = "LalaMoveQueryOrder";
+    private String location = "LalaMoveQueryRiderDetails";
     private String secretKey;
     private String apiKey;
     private DeliveryOrder order;
@@ -54,8 +54,8 @@ public class DriverDetails extends SyncDispatcher {
         productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
         this.sslVersion = (String) config.get("ssl_version");
-        this.secretKey = (String) config.get("secretKey");
-        this.apiKey = (String) config.get("apiKey");
+        this.secretKey = (String) config.get("queryRiderDetails_secretKey");
+        this.apiKey = (String) config.get("queryRiderDetails_apikey");
     }
 
     @Override
@@ -65,27 +65,25 @@ public class DriverDetails extends SyncDispatcher {
         String transactionId = "";
         Mac mac = null;
         String METHOD = "GET";
-        spOrderId = "143768903055";
 
         try {
             mac = Mac.getInstance("HmacSHA256");
-            SecretKeySpec secret_key = new SecretKeySpec("H1vOco2bIznGUaEsOe4rH4ImAP+cFVzmROVkdw54hX1SzfFoF1klMbgFyTBceo0R".getBytes(), "HmacSHA256");
+            SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
             mac.init(secret_key);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
-        System.out.println("DELIVERY RIDER ID : " + order.getDriverId());
-        String url = "https://rest.lalamove.com/v2/orders/" + spOrderId + "/drivers/" + order.getDriverId();
+
+        String url = queryRiderDetails_url + order.getSpOrderId() + "/drivers/" + order.getDriverId();
         String timeStamp = String.valueOf(System.currentTimeMillis());
-        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v2/orders/" + spOrderId + "/drivers/" + order.getDriverId() + "\r\n\r\n";
+        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v2/orders/" + order.getSpOrderId() + "/drivers/" + order.getDriverId() + "\r\n\r\n";
         byte[] byteSig = mac.doFinal(rawSignature.getBytes());
         String signature = DatatypeConverter.printHexBinary(byteSig);
         signature = signature.toLowerCase();
 
-        String token = "5db99569ffae83621ca990e2589ca5d1" + ":" + timeStamp + ":" + signature;
-        System.out.println();
+        String token = apiKey + ":" + timeStamp + ":" + signature;
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -95,19 +93,27 @@ public class DriverDetails extends SyncDispatcher {
         headers.set("X-Request-ID", transactionId);
         HttpEntity<String> request = new HttpEntity(headers);
         System.err.println("url for orderDetails" + url);
-        ResponseEntity<String> responses = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
-        int statusCode = responses.getStatusCode().value();
-        LogUtil.info(logprefix, location, "Responses for driver details: ", responses.toString());
+        try {
+            ResponseEntity<String> responses = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+            int statusCode = responses.getStatusCode().value();
+            LogUtil.info(logprefix, location, "Responses for driver details: ", responses.toString());
 
-        if (statusCode == 200) {
-            LogUtil.info(logprefix, location, "Request successful", "");
-            response.resultCode = 0;
-            response.returnObject = extractResponseBody(responses.getBody());
-        } else {
-            LogUtil.info(logprefix, location, "Request failed", "");
-            response.resultCode = -1;
+            if (statusCode == 200) {
+                LogUtil.info(logprefix, location, "Request successful", "");
+                response.resultCode = 0;
+                response.returnObject = extractResponseBody(responses.getBody());
+            } else {
+                LogUtil.info(logprefix, location, "Request failed", "");
+                response.resultCode = -1;
+            }
+            LogUtil.info(logprefix, location, "Process finish", "");
+        } catch (Exception exception) {
+            System.err.println("url for orderDetails" + exception.getMessage());
+            DriverDetailsResult result = new DriverDetailsResult();
+            result.resultCode = -1;
+            response.returnObject = result;
+            response.resultString = exception.getMessage();
         }
-        LogUtil.info(logprefix, location, "Process finish", "");
         return response;
     }
 

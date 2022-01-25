@@ -13,6 +13,9 @@ import javax.persistence.GenerationType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
+
+import java.math.BigDecimal;
 
 /**
  *
@@ -24,6 +27,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@ToString
 public class DeliveryOrder {
     
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -44,6 +48,7 @@ public class DeliveryOrder {
     String vehicleType;
     String createdDate;
     String status;
+    String systemStatus;
     String statusDescription;
     String updatedDate;
     String orderId;
@@ -56,4 +61,10 @@ public class DeliveryOrder {
     String riderPhoneNo;
     String riderCarPlateNo;
     String airwayBillURL;
+
+    Long totalRequest;
+    Long deliveryQuotationId;
+
+    BigDecimal priorityFee;
+    BigDecimal deliveryFee;
 }

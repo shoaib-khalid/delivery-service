@@ -1,9 +1,11 @@
 package com.kalsym.deliveryservice.models.daos;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -14,73 +16,45 @@ import java.util.Date;
 @Setter
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@ToString
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class DeliveryQuotation {
 
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
-    String itemType;
-    Long spId;
-    String customerId;
-    String productCode;
-    String pickupAddress;
-    String deliveryAddress;
-    String systemTransactionId;
-    String pickupContactName;
-    String pickupContactPhone;
-    String deliveryContactName;
-    String deliveryContactPhone;
-    Integer deliveryProviderId;
-    String spOrderId;
-    String spOrderName;
-    String vehicleType;
-    Date createdDate;
-    String status;
-    String cartId;
-    String statusDescription;
-    Date updatedDate;
-    Double totalWeightKg;
-    Double amount;
-    Date validationPeriod;
-    String storeId;
-    String orderId;
-    String pickupPostcode;
-    Double serviceFee;
-    String deliveryPostcode;
-    
-    @Override
-    public String toString() {
-        return "DeliveryQuotation{" +
-                "id=" + id +
-                ", itemType='" + itemType + '\'' +
-                ", spId=" + spId +
-                ", customerId='" + customerId + '\'' +
-                ", productCode='" + productCode + '\'' +
-                ", pickupAddress='" + pickupAddress + '\'' +
-                ", deliveryAddress='" + deliveryAddress + '\'' +
-                ", systemTransactionId='" + systemTransactionId + '\'' +
-                ", pickupContactName='" + pickupContactName + '\'' +
-                ", pickupContactPhone='" + pickupContactPhone + '\'' +
-                ", deliveryContactName='" + deliveryContactName + '\'' +
-                ", deliveryContactPhone='" + deliveryContactPhone + '\'' +
-                ", deliveryProviderId=" + deliveryProviderId +
-                ", spOrderId='" + spOrderId + '\'' +
-                ", spOrderName='" + spOrderName + '\'' +
-                ", vehicleType='" + vehicleType + '\'' +
-                ", createdDate=" + createdDate +
-                ", status='" + status + '\'' +
-                ", cartId='" + cartId + '\'' +
-                ", statusDescription='" + statusDescription + '\'' +
-                ", updatedDate=" + updatedDate +
-                ", totalWeightKg=" + totalWeightKg +
-                ", amount=" + amount +
-                ", validationPeriod=" + validationPeriod +
-                ", storeId='" + storeId + '\'' +
-                ", orderId='" + orderId + '\'' +
-                ", deliveryPostcode='" + deliveryPostcode + '\'' +
-                ", pickupPostcode='" + pickupPostcode + '\'' +
-                ", serviceFee='" + serviceFee + '\'' +
-                '}';
-    }
+    private Long id;
+    private String itemType;
+    private Integer spId;
+    private String customerId;
+    private String productCode;
+    private String pickupAddress;
+    private String deliveryAddress;
+    private String systemTransactionId;
+    private String pickupContactName;
+    private String pickupContactPhone;
+    private String deliveryContactName;
+    private String deliveryContactPhone;
+    private Integer deliveryProviderId;
+    private String spOrderId;
+    private String spOrderName;
+    private String vehicleType;
+    private Date createdDate;
+    private String status;
+    private String cartId;
+    private String statusDescription;
+    private Date updatedDate;
+    private Double totalWeightKg;
+    private Double amount;
+    private Date validationPeriod;
+    private String storeId;
+    private String orderId;
+    private String pickupPostcode;
+    private String deliveryPostcode;
+    private Double serviceFee;
+    private String pickupCity;
+    private String deliveryCity;
+    private String pickupZone;
+    private String deliveryZone;
+
 }

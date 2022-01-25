@@ -34,19 +34,20 @@ public class QueryOrder extends SyncDispatcher {
     private String secretKey;
     private String apiKey;
     private String spOrderId;
-    private String driverId;
-    private String shareLink;
-    private String status;
+
+    private String username;
+    private String password ;
+    private String clientId ;
 
     public QueryOrder(CountDownLatch latch, HashMap config, String spOrderId, String systemTransactionId) {
         super(latch);
         logprefix = systemTransactionId;
         this.systemTransactionId = systemTransactionId;
-        LogUtil.info(logprefix, location, "JnT SubmitOrder class initiliazed!!", "");
+        LogUtil.info(logprefix, location, "TCS QueryOrder class initiliazed!!", "");
 
         //TODO : ADD IN DB DETAILS
         this.baseUrl = (String) config.get("domainUrl");
-        this.queryOrder_url = "https://api.tcscourier.com/sandbox/track/v1/shipments/detail";
+        this.queryOrder_url = (String) config.get("queryorder_url");
         this.secretKey = (String) config.get("secretKey");
         this.apiKey = "x1Wbjv";
         this.endpointUrl = (String) config.get("place_orderUrl");
@@ -54,6 +55,11 @@ public class QueryOrder extends SyncDispatcher {
         this.waitTimeout = Integer.parseInt((String) config.get("queryorder_wait_timeout"));
         productMap = (HashMap) config.get("productCodeMapping");
         this.spOrderId = spOrderId;
+
+        this.username = (String) config.get("username");
+        this.password = (String) config.get("password");
+        this.clientId = (String) config.get("clientId");
+
     }
 
     @Override
@@ -64,9 +70,9 @@ public class QueryOrder extends SyncDispatcher {
         RestTemplate restTemplate = new RestTemplate();
         HashMap httpHeader = new HashMap();
         httpHeader.put("Content-Type", "application/json");
-        httpHeader.put("X-IBM-Client-Id", "e6966d77-3b34-4594-b84d-612a66adb01d");
+        httpHeader.put("X-IBM-Client-Id", clientId);
 
-        String requestUrl = queryOrder_url + "?consignmentNo=" + spOrderId;
+        String requestUrl = queryOrder_url + "?userName=" + username+"&password="+password+"&referenceNo="+spOrderId;
 
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("GET", this.systemTransactionId, requestUrl, httpHeader, "", this.connectTimeout, this.waitTimeout);
         if (httpResult.httpResponseCode == 200) {
