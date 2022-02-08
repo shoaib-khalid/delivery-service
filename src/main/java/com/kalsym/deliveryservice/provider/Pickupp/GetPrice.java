@@ -3,22 +3,16 @@ package com.kalsym.deliveryservice.provider.Pickupp;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
-import com.kalsym.deliveryservice.models.RequestBodies.lalamoveGetPrice.GetPrices;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.HttpResult;
-import com.kalsym.deliveryservice.utils.HttpsPostConn;
+import com.kalsym.deliveryservice.utils.HttpsGetConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
-import org.json.JSONObject;
 
 import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import java.math.BigDecimal;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
@@ -34,10 +28,7 @@ public class GetPrice extends SyncDispatcher {
     private final String atxProductCode = "";
     private final String logprefix;
     private final String location = "PickuppGetPrice";
-    private final String secretKey;
-    private final String apiKey;
-    private String sessionToken;
-    private String sslVersion = "SSL";
+    private final String token;
 
 
     public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
@@ -47,13 +38,11 @@ public class GetPrice extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Pickupp GetPrices class initiliazed!!", "");
         this.getprice_url = (String) config.get("getprice_url");
         this.baseUrl = (String) config.get("domainUrl");
-        this.secretKey = (String) config.get("secretKey");
-        this.apiKey = (String) config.get("apiKey");
+        this.token = (String) config.get("token");
         this.connectTimeout = Integer.parseInt((String) config.get("getprice_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("getprice_wait_timeout"));
         productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
-        this.sslVersion = (String) config.get("ssl_version");
     }
 
 
@@ -61,45 +50,20 @@ public class GetPrice extends SyncDispatcher {
     public ProcessResult process() {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
-        String secretKey = this.secretKey;
-        String apiKey = this.apiKey;
+        String token = this.token;
         String ENDPOINT_URL = this.getprice_url;
         String METHOD = "POST";
         Mac mac = null;
 
+        String request = generateRequestBody(order);
 
-        String BASE_URL = this.baseUrl;
-        String ENDPOINT_URL_PLACEORDER = this.getprice_url;
-        System.err.println("BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER);
-        try {
-            mac = Mac.getInstance("HmacSHA256");
-            SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
-            mac.init(secret_key);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        }
+        String GETPRICE_URL = this.baseUrl + this.getprice_url + "?" + request;
+        LogUtil.info(logprefix, location, "REQUEST BODY FOR GET PRICE : ", GETPRICE_URL);
 
-        String request = generateRequestBody();
-        LogUtil.info(logprefix, location, "REQUEST BODY FOR GET PRICE : ", request.toString());
-
-        //JSONObject bodyJson = new JSONObject("{\"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"}]}");
-        JSONObject bodyJson = new JSONObject(new Gson().toJson(request));
-        String timeStamp = String.valueOf(System.currentTimeMillis());
-        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + ENDPOINT_URL + "\r\n\r\n" + bodyJson.toString();
-        byte[] byteSig = mac.doFinal(rawSignature.getBytes());
-        String signature = DatatypeConverter.printHexBinary(byteSig);
-        signature = signature.toLowerCase();
-
-        String authToken = apiKey + ":" + timeStamp + ":" + signature;
 
         HashMap httpHeader = new HashMap();
-        httpHeader.put("Content-Type", "application/json");
-        httpHeader.put("Authorization", "hmac " + authToken);
-        httpHeader.put("X-LLM-Country", "MY_KUL");
-
-        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, BASE_URL + ENDPOINT_URL, httpHeader, bodyJson.toString(), this.connectTimeout, this.waitTimeout);
+        httpHeader.put("Authorization", token);
+        HttpResult httpResult = HttpsGetConn.SendHttpsRequest("GET", this.systemTransactionId, GETPRICE_URL, httpHeader, this.connectTimeout, this.waitTimeout);
 
         if (httpResult.httpResponseCode == 200) {
             LogUtil.info(logprefix, location, "Request successful", "");
@@ -119,9 +83,30 @@ public class GetPrice extends SyncDispatcher {
         return response;
     }
 
-    private String generateRequestBody() {
-
-        return "";
+    private String generateRequestBody(Order order) {
+        String requestParam = "service_type=" + "express" + "&" +
+                "service_time=" + "120" + "&" +
+                "is_pickupp_care=" + "false" + "&" +
+                "pickup_address_line_1=" + "Kowloon,%20Hong%20Kong" + "&" +
+                "pickup_address_line_2=" + "&" +
+                "pickup_contact_person=" + "Cinema%20Online" + "&" +
+                "pickup_contact_phone=" + "01312312312" + "&" +
+                "pickup_contact_company=" + "03123123123" + "&" +
+                "pickup_zip_code=" + "999077" + "&" +
+                "pickup_city=" + "Kowloon%20City" + "&" +
+                "pickup_notes=" + "testing" + "&" +
+                "dropoff_address_line_1=" + order.getDelivery().getDeliveryAddress().replaceAll(" ", "%20") + "&" +
+                "dropoff_address_line_2=" + "&" +
+                "dropoff_contact_person=" + order.getDelivery().getDeliveryContactName().replaceAll(" ", "%20") + "&" +
+                "dropoff_contact_phone=" + order.getDelivery().getDeliveryContactPhone() + "&" +
+                "dropoff_zip_code=" + order.getDelivery().getDeliveryPostcode() + "&" +
+                "dropoff_city=" + order.getDelivery().getDeliveryCity() + "&" +
+                "width=" + "&" +
+                "height=" + "&" +
+                "length=" + "&" +
+                "weight=" + order.getTotalWeightKg() + "&" +
+                "region=" + "MY";
+        return requestParam;
     }
 
 
@@ -129,10 +114,10 @@ public class GetPrice extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Response: ", respString);
         JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
         LogUtil.info(logprefix, location, "Pickupp jsonResp: " + jsonResp, "");
-        String payAmount = jsonResp.get("totalFee").getAsString();
-        LogUtil.info(logprefix, location, "Payment Amount:" + payAmount, "");
+        JsonObject data = jsonResp.get("data").getAsJsonObject();
         PriceResult priceResult = new PriceResult();
-        BigDecimal bd = new BigDecimal(Double.parseDouble(payAmount));
+        BigDecimal bd = new BigDecimal(Double.parseDouble(data.get("price").getAsString()));
+        LogUtil.info(logprefix, location, "Payment Amount:" + bd, "");
         bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
         priceResult.price = bd;
         priceResult.isError = false;

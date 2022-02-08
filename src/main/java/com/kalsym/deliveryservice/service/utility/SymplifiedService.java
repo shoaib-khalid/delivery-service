@@ -1,10 +1,8 @@
 package com.kalsym.deliveryservice.service.utility;
 
 import com.kalsym.deliveryservice.service.utility.Response.*;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -74,6 +72,7 @@ public class SymplifiedService {
 
     public StoreDeliveryResponseData getStoreDeliveryDetails(String storeId) {
         String url = productServiceURL + "stores/" + storeId + "/deliverydetails";
+        System.err.println("URL CHECK : " + url);
         try {
             RestTemplate restTemplate = new RestTemplate();
 
@@ -132,7 +131,7 @@ public class SymplifiedService {
 
 
     public String updateOrderStatus(String orderId, String status) {
-        String url = order  + orderId + "/completion-status-updates";
+        String url = order + orderId + "/completion-status-updates";
         try {
             RestTemplate restTemplate = new RestTemplate();
 
