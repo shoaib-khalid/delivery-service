@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.kalsym.deliveryservice.models.*;
 import com.kalsym.deliveryservice.models.daos.*;
 import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
+import com.kalsym.deliveryservice.models.enums.DeliveryTypeRemarks;
 import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
 import com.kalsym.deliveryservice.provider.*;
@@ -868,15 +869,24 @@ public class OrdersController {
     }
 
 
-    @GetMapping(path = {"/getDeliveryProviderDetails/{providerId}"}, name = "delivery-provider-details")
+    @GetMapping(path = {"/getDeliveryProviderDetails/{providerId}/{quantity}"}, name = "delivery-provider-details")
     public ResponseEntity<HttpReponse> getDeliveryProviderDetails(HttpServletRequest request,
-                                                                  @PathVariable("providerId") String providerId) {
+                                                                  @PathVariable("providerId") String providerId, @PathVariable("quantity") Integer quantity) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
         Provider provider = providerRepository.findOneById(Integer.valueOf(providerId));
         if (provider != null) {
-            response.setData(provider);
+            if (quantity != null) {
+                if (quantity > provider.getMinimumOrderQuantity()) {
+                    provider.setRemarks(DeliveryTypeRemarks.PICKUP.getValue() + provider.getRemarks());
+                } else {
+                    provider.setRemarks(DeliveryTypeRemarks.DROPSHIP.getValue() + provider.getRemarks());
+                }
+                response.setData(provider);
+            } else {
+                response.setData(provider);
+            }
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
             LogUtil.info(logprefix, location, "", "provider not found ");
