@@ -111,6 +111,9 @@ public class OrdersController {
     QueryPendingDeliveryTXN queryPendingDeliveryTXN;
 
     @Autowired
+    DeliveryRemarksRepository deliveryRemarksDb;
+
+    @Autowired
     DeliveryService deliveryService;
 
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
@@ -871,17 +874,19 @@ public class OrdersController {
 
     @GetMapping(path = {"/getDeliveryProviderDetails/{providerId}/{quantity}"}, name = "delivery-provider-details")
     public ResponseEntity<HttpReponse> getDeliveryProviderDetails(HttpServletRequest request,
-                                                                  @PathVariable("providerId") String providerId, @PathVariable("quantity") Integer quantity) {
+                                                                  @PathVariable("providerId") String providerId, @PathVariable("quantity") String quantity) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
         Provider provider = providerRepository.findOneById(Integer.valueOf(providerId));
         if (provider != null) {
-            if (quantity != null) {
-                if (quantity > provider.getMinimumOrderQuantity()) {
-                    provider.setRemarks(DeliveryTypeRemarks.PICKUP.getValue() + provider.getRemarks());
+            if (!quantity.equals("null")) {
+                if (Integer.parseInt(quantity) > provider.getMinimumOrderQuantity()) {
+                    DeliveryRemarks deliveryRemarks = deliveryRemarksDb.findByDeliveryType(DeliveryTypeRemarks.PICKUP.name());
+                    provider.setRemarks(deliveryRemarks);
                 } else {
-                    provider.setRemarks(DeliveryTypeRemarks.DROPSHIP.getValue() + provider.getRemarks());
+                    DeliveryRemarks deliveryRemarks = deliveryRemarksDb.findByDeliveryType(DeliveryTypeRemarks.DROPSHIP.name());
+                    provider.setRemarks(deliveryRemarks);
                 }
                 response.setData(provider);
             } else {

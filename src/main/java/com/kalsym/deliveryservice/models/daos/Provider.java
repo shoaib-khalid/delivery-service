@@ -60,8 +60,9 @@ public class Provider implements Serializable {
     ;
     //    String regionCountryId;
     @JsonIgnore
-    Long minimumOrderQuantity;
+    Integer minimumOrderQuantity;
 
-    String remarks;
+    @Transient
+    DeliveryRemarks remarks;
     private Boolean scheduleDate;
 }

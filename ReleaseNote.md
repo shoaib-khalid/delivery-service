@@ -1,4 +1,30 @@
 ##############################################################################################
+# Version v.2.3.17 | 10-February-2022
+###############################################################################################
+### Code Changes:
+
+1. Get Delivery Provider details response updated. 
+
+ALTER TABLE symplified.delivery_sp MODIFY COLUMN remarks INT NULL;
+ALTER TABLE symplified.delivery_sp MODIFY COLUMN minimumOrderQuantity int NULL;
+
+
+CREATE TABLE symplified.delivery_remarks (
+id INT auto_increment NOT NULL,
+title varchar(100) NOT NULL,
+message varchar(500) NOT NULL,
+CONSTRAINT delivery_remarks_PK PRIMARY KEY (id)
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8
+COLLATE=utf8_general_ci;
+
+ALTER TABLE symplified.delivery_remarks MODIFY COLUMN id int auto_increment NOT NULL;
+ALTER TABLE symplified.delivery_remarks ADD deliveryType varchar(100) NOT NULL;
+
+
+
+##############################################################################################
 # Version v.2.3.16 | 09-February-2022
 ###############################################################################################
 ### Code Changes:
