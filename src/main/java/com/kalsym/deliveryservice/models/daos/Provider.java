@@ -61,7 +61,8 @@ public class Provider implements Serializable {
     //    String regionCountryId;
     @JsonIgnore
     Integer minimumOrderQuantity;
-
+    @JsonIgnore
+    Boolean remark;
     @Transient
     DeliveryRemarks remarks;
     private Boolean scheduleDate;
