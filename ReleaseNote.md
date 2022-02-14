@@ -1,4 +1,31 @@
 ##############################################################################################
+# Version v.2.3.19 | 14-February-2022
+###############################################################################################
+### Code Changes:
+
+1. Added new point for delivery type 
+
+CREATE TABLE symplified.delivery_main_type (
+id BIGINT auto_increment NOT NULL,
+`type` enum('SCHEDULED','ADHOC') NOT NULL,
+CONSTRAINT delivery_main_type_PK PRIMARY KEY (id)
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8
+COLLATE=utf8_general_ci;
+
+ALTER TABLE symplified.delivery_main_type MODIFY COLUMN `type` enum('SCHEDULED','ADHOC','EXPRESS','4HOURS','SAMEDAY','NEXTDAY','3-5DAYS') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+ALTER TABLE symplified.delivery_main_type ADD main_id BIGINT NULL;
+
+
+ALTER TABLE symplified.delivery_quotation CHANGE productCode `type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL;
+
+ALTER TABLE symplified.delivery_quotation DROP COLUMN spId;
+
+2. Get Price backend fixed the delivery vehicle type. 
+
+
+##############################################################################################
 # Version v.2.3.18 | 10-February-2022
 ###############################################################################################
 ### Code Changes:
@@ -90,7 +117,7 @@ Improved - Bug fixed testing - Reasign rider if still cannot assign rider. retur
 ### Code Changes:
 
 Improved - Bug fixed testing - cron run every five minutes
-- udpate order -service final call after place order
+- update order -service final call after place order
 
 ##############################################################################################
 # Version v.2.3.8 | 14-January-2022

@@ -38,5 +38,6 @@ public class Order {
    String regionCountry;
    Boolean serviceType;
    VehicleType vehicleType;
+   String shipType;
 
 }

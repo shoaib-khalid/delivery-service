@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Sarosh
@@ -68,29 +69,10 @@ public class OrdersController {
     SymplifiedService symplifiedService;
 
     @Autowired
-    DeliveryOptionRepository deliveryOptionRepository;
-
-    @Autowired
-    StoreDeliverySpRepository storeDeliverySpRepository;
-
-    @Autowired
-    RegionCountryStateRepository regionCountryStateRepository;
+    DeliveryMainTypeRepository deliveryMainTypeRepository;
 
     @Autowired
     DeliverySpTypeRepository deliverySpTypeRepository;
-
-    @Autowired
-    RegionCountryRepository regionCountryRepository;
-
-
-    @Autowired
-    DeliveryZoneCityRepository deliveryZoneCityRepository;
-
-    @Autowired
-    DeliveryZonePriceRepository deliveryZonePriceRepository;
-
-    @Autowired
-    StoreDeliveryDetailRepository storeDeliveryDetailRepository;
 
     @Value("${folderPath}")
     String folderPath;
@@ -99,16 +81,10 @@ public class OrdersController {
     String airwayBillHost;
 
     @Autowired
-    DeliveryServiceChargeRepository deliveryMarkupPriceRepository;
-
-    @Autowired
     StoreOrderRepository storeOrderRepository;
 
     @Autowired
     StoreRepository storeRepository;
-
-    @Autowired
-    QueryPendingDeliveryTXN queryPendingDeliveryTXN;
 
     @Autowired
     DeliveryRemarksRepository deliveryRemarksDb;
@@ -725,7 +701,7 @@ public class OrdersController {
                 String res;
                 // change from order status codes to delivery status codes.
                 if (status.equals("ASSIGNING_DRIVER")) {
-//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                 } else if (status.equals("ON_GOING")) {
                     if (deliveryOrder.getDriverId() == null) {
                         deliveryOrder.setDriverId(deliveryId);
@@ -979,6 +955,31 @@ public class OrdersController {
         BigDecimal priorityFee = BigDecimal.valueOf(5.00);
         System.err.println("PriorityFee : " + priorityFee);
         deliveryService.addPriorityFee(id, priorityFee);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+
+    }
+
+    @GetMapping(path = {"/getDeliveryType"}, name = "get-delivery-type")
+    public ResponseEntity<HttpReponse> getDeliveryType(HttpServletRequest request) {
+
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = new HttpReponse(request.getRequestURI());
+
+        List<DeliveryMainType> mainType = deliveryMainTypeRepository.findAll();
+        Set<DeliveryMainType> mainCategory = new HashSet<>();
+        for (DeliveryMainType c : mainType) {
+            if (c.getMainType() == null) {
+                mainCategory.add(c);
+            }
+        }
+
+        List<DeliveryMainType> sortedList = mainCategory.stream()
+                .sorted(Comparator.comparingLong(DeliveryMainType::getId))
+                .collect(Collectors.toList());
+
+
+        response.setData(sortedList);
         return ResponseEntity.status(HttpStatus.OK).body(response);
 
     }

@@ -173,7 +173,7 @@ public class SymplifiedService {
     }
 
 
-    public Double getTotalWeight(String cartId) {
+    public CartDetails getTotalWeight(String cartId) {
         String url = order + "carts/" + cartId + "/weight";
         try {
             RestTemplate restTemplate = new RestTemplate();
@@ -189,7 +189,7 @@ public class SymplifiedService {
             if (res != null) {
                 CartDetailsData cartDetails = (CartDetailsData) res.getBody();
                 logger.debug("Store orders group (liveChatOrdersGroupName) received: {}, against storeId: {}", cartDetails.getData());
-                return cartDetails.getData().getTotalWeight();
+                return cartDetails.getData();
             } else {
                 logger.warn("Cannot get storename against storeId: {}", cartId);
             }

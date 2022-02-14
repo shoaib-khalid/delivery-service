@@ -7,6 +7,7 @@ import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
 import com.kalsym.deliveryservice.provider.*;
 import com.kalsym.deliveryservice.repositories.*;
+import com.kalsym.deliveryservice.service.utility.Response.CartDetails;
 import com.kalsym.deliveryservice.service.utility.Response.StoreDeliveryResponseData;
 import com.kalsym.deliveryservice.service.utility.Response.StoreResponseData;
 import com.kalsym.deliveryservice.service.utility.SymplifiedService;
@@ -15,7 +16,6 @@ import com.kalsym.deliveryservice.utils.StringUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -87,9 +87,6 @@ public class DeliveryService {
     DeliveryServiceChargeRepository deliveryMarkupPriceRepository;
 
     @Autowired
-    StoreOrderRepository storeOrderRepository;
-
-    @Autowired
     StoreRepository storeRepository;
 
     public HttpReponse getPrice(Order orderDetails) {
@@ -100,7 +97,7 @@ public class DeliveryService {
         String systemTransactionId = StringUtility.CreateRefID("DL");
 
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
-        Double weight = symplifiedService.getTotalWeight(orderDetails.getCartId());
+        CartDetails cartDetails = symplifiedService.getTotalWeight(orderDetails.getCartId());
 
         HttpReponse response = new HttpReponse();
 
@@ -123,13 +120,16 @@ public class DeliveryService {
                 orderDetails.getDelivery().setDeliveryZone("null");
             }
         }
-
+        orderDetails.setVehicleType(cartDetails.getVehicleType());
         if (orderDetails.getVehicleType() == null) {
             if (stores.getMaxOrderQuantityForBike() <= 10) {
                 pickup.setVehicleType(VehicleType.MOTORCYCLE);
                 LogUtil.info(logprefix, location, "Vehicle Type less than 10 : ", pickup.getVehicleType().name());
             } else if (stores.getMaxOrderQuantityForBike() >= 10) {
                 pickup.setVehicleType(VehicleType.CAR);
+                LogUtil.info(logprefix, location, "Vehicle Type more than 10 : ", pickup.getVehicleType().name());
+            } else if (stores.getMaxOrderQuantityForBike() >= 20) {
+                pickup.setVehicleType(VehicleType.VAN);
                 LogUtil.info(logprefix, location, "Vehicle Type more than 10 : ", pickup.getVehicleType().name());
             }
         } else {
@@ -153,17 +153,26 @@ public class DeliveryService {
         //More Details For Delivery
 
         orderDetails.setInsurance(false);
-        if (weight == null) {
+        if (cartDetails.getTotalWeight() == null) {
             orderDetails.setTotalWeightKg(1.0);
         } else {
-            orderDetails.setTotalWeightKg(weight);
+            orderDetails.setTotalWeightKg(cartDetails.getTotalWeight());
         }
 
         orderDetails.getDelivery().setDeliveryAddress(deliveryAddress);
 
         String deliveryType = stores.getType();
 
-        // Self delivery
+        // Self
+//        switch (stores.getType()) {
+//            case "SELF":
+//                LogUtil.info(logprefix, location, "Delivery Type: ", Store.getVehicleType().name());
+//                case "ADHOC":
+//                break;
+//            case "SCHEDULED":
+//                break;
+//
+//        }
         if (stores.getType().equalsIgnoreCase("self")) {
             DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), orderDetails.getDelivery().getDeliveryState());
             PriceResult priceResult = new PriceResult();
@@ -195,7 +204,7 @@ public class DeliveryService {
                 deliveryOrder.setPickupContactName(orderDetails.getPickup().getPickupContactName());
                 deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
                 deliveryOrder.setPickupPostcode(orderDetails.getPickup().getPickupPostcode());
-//                deliveryOrder.setItemType(orderDetails.getItemType().name()); // remove itemType not for self delivery
+                deliveryOrder.setType(stores.getType()); // remove itemType not for self delivery
                 deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
                 deliveryOrder.setVehicleType(pickup.getVehicleType().name());
                 deliveryOrder.setStatus("PENDING");
@@ -254,6 +263,7 @@ public class DeliveryService {
                     LogUtil.info(systemTransactionId, location, "Provider Id" + list.providerId, "");
                     DeliveryQuotation deliveryOrder = new DeliveryQuotation();
 
+                    deliveryOrder.setType(stores.getType());
                     deliveryOrder.setCustomerId(orderDetails.getCustomerId());
                     deliveryOrder.setPickupAddress(pickupAddress);
                     deliveryOrder.setPickupPostcode(orderDetails.getPickup().getPickupPostcode());
@@ -531,8 +541,7 @@ public class DeliveryService {
                 String deliveryType = stores.getType();
                 if (deliveryType.contains("ADHOC")) {
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
-                }
-                else{
+                } else {
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.NEW_ORDER.name());
 
                 }
@@ -745,6 +754,7 @@ public class DeliveryService {
                 deliveryOrder.setStatus(orderCreated.getStatus());
                 deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                 deliveryOrder.setTotalRequest(1L);
+                deliveryOrder.setVehicleType(quotation.getVehicleType());
                 deliveryOrder.setDeliveryFee(BigDecimal.valueOf(quotation.getAmount()));
                 deliveryOrdersRepository.save(deliveryOrder);
                 quotation.setSpOrderId(orderCreated.getSpOrderId());
@@ -758,7 +768,7 @@ public class DeliveryService {
                 deliveryOrderOption.setCreatedDate(orderCreated.getCreatedDate());
                 deliveryOrderOption.setSpOrderId(orderCreated.getSpOrderId());
                 deliveryOrderOption.setSpOrderName(orderCreated.getSpOrderName());
-                deliveryOrderOption.setVehicleType(orderCreated.getVehicleType());
+                deliveryOrderOption.setVehicleType(quotation.getVehicleType());
                 deliveryOrderOption.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
                 deliveryOrderOption.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
                 deliveryOrderOption.setStatus(orderCreated.getStatus());
