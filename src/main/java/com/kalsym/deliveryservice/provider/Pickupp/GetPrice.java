@@ -11,7 +11,6 @@ import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsGetConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 
-import javax.crypto.Mac;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
@@ -29,6 +28,7 @@ public class GetPrice extends SyncDispatcher {
     private final String logprefix;
     private final String location = "PickuppGetPrice";
     private final String token;
+    private String serviceType;
 
 
     public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
@@ -43,6 +43,7 @@ public class GetPrice extends SyncDispatcher {
         this.waitTimeout = Integer.parseInt((String) config.get("getprice_wait_timeout"));
         productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
+        this.serviceType = (String) config.get("serviceType");
     }
 
 
@@ -51,15 +52,10 @@ public class GetPrice extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
         String token = this.token;
-        String ENDPOINT_URL = this.getprice_url;
-        String METHOD = "POST";
-        Mac mac = null;
-
         String request = generateRequestBody(order);
 
         String GETPRICE_URL = this.baseUrl + this.getprice_url + "?" + request;
         LogUtil.info(logprefix, location, "REQUEST BODY FOR GET PRICE : ", GETPRICE_URL);
-
 
         HashMap httpHeader = new HashMap();
         httpHeader.put("Authorization", token);
@@ -84,31 +80,39 @@ public class GetPrice extends SyncDispatcher {
     }
 
     private String generateRequestBody(Order order) {
-        String requestParam = "service_type=" + "express" + "&" +
-                "service_time=" + "120" + "&" +
+        String[] types = serviceType.split(";");
+        String typeValue = "";
+        for (String type : types) {
+            String[] t = type.split("=");
+            if (t[0].equals(order.getDeliveryType().toLowerCase())) {
+                typeValue = t[1];
+            }
+        }
+
+        String requestParam = "service_type=" + order.getDeliveryType().toLowerCase() + "&" +
+                "service_time=" + typeValue + "&" +
                 "is_pickupp_care=" + "false" + "&" +
-                "pickup_address_line_1=" + "Kowloon,%20Hong%20Kong" + "&" +
+                "pickup_address_line_1=" + /*"Kowloon,%20Hong%20Kong"*/ order.getPickup().getPickupAddress().replaceAll(" ", "%20") + "&" +
                 "pickup_address_line_2=" + "&" +
-                "pickup_contact_person=" + "Cinema%20Online" + "&" +
-                "pickup_contact_phone=" + "01312312312" + "&" +
-                "pickup_contact_company=" + "03123123123" + "&" +
-                "pickup_zip_code=" + "999077" + "&" +
-                "pickup_city=" + "Kowloon%20City" + "&" +
-                "pickup_notes=" + "testing" + "&" +
+                "pickup_contact_person=" + /*"Cinema%20Online"*/  order.getPickup().getPickupContactName().replaceAll(" ", "%20") + "&" +
+                "pickup_contact_phone=" + order.getPickup().getPickupContactPhone() + "&" +
+                "pickup_contact_company=" + order.getPickup().getPickupContactPhone() + "&" +
+                "pickup_zip_code=" + order.getPickup().getPickupPostcode() + "&" +
+                "pickup_city=" + /*"Kowloon%20City"*/ order.getPickup().getPickupCity().replaceAll(" ", "%20") + "&" +
+                "pickup_notes=" + order.getRemarks().replaceAll(" ", "%20") + "&" +
                 "dropoff_address_line_1=" + order.getDelivery().getDeliveryAddress().replaceAll(" ", "%20") + "&" +
                 "dropoff_address_line_2=" + "&" +
                 "dropoff_contact_person=" + order.getDelivery().getDeliveryContactName().replaceAll(" ", "%20") + "&" +
                 "dropoff_contact_phone=" + order.getDelivery().getDeliveryContactPhone() + "&" +
                 "dropoff_zip_code=" + order.getDelivery().getDeliveryPostcode() + "&" +
-                "dropoff_city=" + order.getDelivery().getDeliveryCity() + "&" +
+                "dropoff_city=" + order.getDelivery().getDeliveryCity().replaceAll(" ", "%20") + "&" +
                 "width=" + "&" +
                 "height=" + "&" +
                 "length=" + "&" +
                 "weight=" + order.getTotalWeightKg() + "&" +
-                "region=" + "MY";
+                "region=" + order.getRegionCountry();
         return requestParam;
     }
-
 
     private PriceResult extractResponseBody(String respString) {
         LogUtil.info(logprefix, location, "Response: ", respString);

@@ -1,3 +1,7 @@
+ALTER TABLE symplified.delivery_orders ADD pickupTime TIME NULL;
+ALTER TABLE symplified.delivery_orders ADD pickupdate TIMESTAMP NULL;
+
+
 ##############################################################################################
 # Version v.2.3.16 | 09-February-2022
 ###############################################################################################

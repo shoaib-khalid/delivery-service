@@ -30,7 +30,10 @@ public class SubmitOrder extends SyncDispatcher {
     private String atxProductCode = "";
     private String sessionToken;
     private String sslVersion = "SSL";
+    private String origin = "API";
     private String logprefix;
+    private String serviceType;
+
     private String location = "PickuppSubmitOrder ";
 
 
@@ -48,6 +51,9 @@ public class SubmitOrder extends SyncDispatcher {
         productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
         this.sslVersion = (String) config.get("ssl_version");
+        this.origin = (String) config.get("origin");
+        this.serviceType = (String) config.get("serviceType");
+
     }
 
     @Override
@@ -60,7 +66,7 @@ public class SubmitOrder extends SyncDispatcher {
         String requestBody = generateRequestBody();
         String SUBMIT_ORDER_URL = this.baseUrl + this.submitOrder_url;
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, SUBMIT_ORDER_URL, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
-        if (httpResult.resultCode == 0) {
+        if (httpResult.httpResponseCode == 201) {
             LogUtil.info(logprefix, location, "Request successful", "");
             response.resultCode = 0;
             response.returnObject = extractResponseBody(httpResult.responseString);
@@ -74,34 +80,39 @@ public class SubmitOrder extends SyncDispatcher {
 
     private String generateRequestBody() {
         JsonObject jsonReq = new JsonObject();
+        String[] types = serviceType.split(";");
+        String typeValue = "";
+        for (String type : types) {
+            String[] t = type.split("=");
+            if (t[0].equals(order.getDeliveryType().toLowerCase())) {
+                typeValue = t[1];
+            }
+        }
 
-        jsonReq.addProperty("pickup_contact_person", "John");
-        jsonReq.addProperty("pickup_contact_phone", "55555252");
-        jsonReq.addProperty("pickup_address_line_1", "香港銅鑼灣勿地臣街1號 Time Square");
+        jsonReq.addProperty("pickup_contact_person",/* "John"*/order.getPickup().getPickupContactName());
+        jsonReq.addProperty("pickup_contact_phone", /*"55555252"*/order.getPickup().getPickupContactPhone());
+        jsonReq.addProperty("pickup_address_line_1", /*"香港銅鑼灣勿地臣街1號 Time Square"*/ order.getPickup().getPickupAddress());
         jsonReq.addProperty("pickup_time", "2022-02-07T18:00:00+08:00");
-        jsonReq.addProperty("pickup_zip_code", "999077");
-        jsonReq.addProperty("pickup_city", "Kowloon City");
-        jsonReq.addProperty("pickup_notes", "1x Red Pen");
-        jsonReq.addProperty("dropoff_contact_person", "Christine");
-        jsonReq.addProperty("dropoff_contact_phone", "55555928");
-        jsonReq.addProperty("dropoff_address_line_1", "荔枝角青山道500號百美工業大廈");
-        jsonReq.addProperty("dropoff_zip_code", "518000");
-        jsonReq.addProperty("dropoff_city", "Kwai Chung");
-        jsonReq.addProperty("dropoff_notes", "Make sure to call recipient before dropoff");
-        jsonReq.addProperty("region", "HK");
-        jsonReq.addProperty("length", "10");
-        jsonReq.addProperty("width", 20);
-        jsonReq.addProperty("height", 30);
-        jsonReq.addProperty("weight", 05);
-        jsonReq.addProperty("origin", "API");
-        jsonReq.addProperty("client_reference_number", "AW2223456MY");
+        jsonReq.addProperty("pickup_zip_code", order.getPickup().getPickupPostcode());
+        jsonReq.addProperty("pickup_city", order.getPickup().getPickupCity());
+        jsonReq.addProperty("pickup_notes", order.getRemarks());
+        jsonReq.addProperty("dropoff_contact_person", order.getDelivery().getDeliveryContactName());
+        jsonReq.addProperty("dropoff_contact_phone", order.getDelivery().getDeliveryContactPhone());
+        jsonReq.addProperty("dropoff_address_line_1", order.getDelivery().getDeliveryAddress());
+        jsonReq.addProperty("dropoff_zip_code", order.getDelivery().getDeliveryPostcode());
+        jsonReq.addProperty("dropoff_city", order.getDelivery().getDeliveryCity());
+        jsonReq.addProperty("dropoff_notes", order.getRemarks());
+        jsonReq.addProperty("region", order.getRegionCountry());
+        jsonReq.addProperty("length", "");
+        jsonReq.addProperty("width", "");
+        jsonReq.addProperty("height", "");
+        jsonReq.addProperty("weight", order.getTotalWeightKg());
+        jsonReq.addProperty("origin", this.origin);
+        jsonReq.addProperty("client_reference_number", systemTransactionId);
         jsonReq.addProperty("enforce_validation", true);
-        jsonReq.addProperty("service_type", "express");
-        jsonReq.addProperty("service_time", "120");
-        jsonReq.addProperty("item_name", "apple*2");
+        jsonReq.addProperty("service_type", order.getDeliveryType().toLowerCase());
+        jsonReq.addProperty("service_time", typeValue);
         jsonReq.addProperty("is_pickupp_care", false);
-
-
         return jsonReq.toString();
     }
 
@@ -129,7 +140,10 @@ public class SubmitOrder extends SyncDispatcher {
                 orderCreated.setCustomerTrackingUrl(customerTrackingUrl);
                 submitOrderResult.orderCreated = orderCreated;
             } else {
-
+                LogUtil.info(logprefix, location, "Request failed", "");
+/*
+                response.resultCode = -1;
+*/
             }
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);

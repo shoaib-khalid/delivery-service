@@ -15,4 +15,6 @@ public class SpCallbackResult {
     public String spOrderId;
     public String status;
     public String driverId;
+    public String riderName;
+    public String riderPhone;
 }
