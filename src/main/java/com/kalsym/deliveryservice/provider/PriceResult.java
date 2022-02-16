@@ -23,6 +23,7 @@ public class PriceResult {
     public String providerName;
     public String deliveryType;
     public String providerImage;
+    public String vehicleType;
     @JsonIgnore
     public int resultCode;
     public BigDecimal priorityFee;

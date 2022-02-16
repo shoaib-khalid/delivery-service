@@ -39,5 +39,6 @@ public class Order {
    Boolean serviceType;
    VehicleType vehicleType;
    String shipType;
+   String deliveryService;
 
 }

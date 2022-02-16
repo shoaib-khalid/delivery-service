@@ -46,12 +46,13 @@ public class ProcessRequest {
     Object requestBody;
     Store store;
     SequenceNumberRepository sequenceNumberRepository;
+    DeliverySpTypeRepository deliverySpTypeRepository;
     @Autowired
     DeliveryQuotationRepository deliveryQuotationRepository;
 
     public ProcessRequest(String sysTransactionId, Order order, ProviderRatePlanRepository providerRatePlanRepository,
                           ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository,
-                          SequenceNumberRepository sequenceNumberRepository) {
+                          SequenceNumberRepository sequenceNumberRepository, DeliverySpTypeRepository deliverySpTypeRepository) {
         this.sysTransactionId = sysTransactionId;
         this.order = order;
         this.logprefix = sysTransactionId;
@@ -62,6 +63,7 @@ public class ProcessRequest {
         this.providerThreadRunning = 0;
         this.priceResultLists = new ArrayList<>();
         this.sequenceNumberRepository = sequenceNumberRepository;
+        this.deliverySpTypeRepository = deliverySpTypeRepository;
     }
 
     public ProcessRequest(String sysTransactionId, DeliveryOrder deliveryOrder, ProviderRatePlanRepository providerRatePlanRepository,
@@ -107,17 +109,18 @@ public class ProcessRequest {
         //get provider rate plan  
         LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
 //        List<ProviderRatePlan> providerRatePlanList = providerRatePlanRepository.findByIdProductCode(order.getProductCode());
-        List<ProviderRatePlan> providerRatePlanList = providerRatePlanRepository.findByIdProductCodeAndRegionId(order.getProductCode().toLowerCase(), order.getRegionCountry());
+//        List<ProviderRatePlan> providerRatePlanList = providerRatePlanRepository.findByIdProductCodeAndRegionId(order.getProductCode().toLowerCase(), order.getRegionCountry());
+        List<DeliverySpType> deliverySpTypes = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountry(order.getDeliveryService(), order.getRegionCountry());
         if (order.getDeliveryProviderId() == null) {
-            for (int i = 0; i < providerRatePlanList.size(); i++) {
-                List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(providerRatePlanList.get(i).getProvider().getId());
+            for (int i = 0; i < deliverySpTypes.size(); i++) {
+                List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(deliverySpTypes.get(i).getProvider().getId());
                 HashMap config = new HashMap();
                 for (int j = 0; j < providerConfigList.size(); j++) {
                     String fieldName = providerConfigList.get(j).getId().getConfigField();
                     String fieldValue = providerConfigList.get(j).getConfigValue();
                     config.put(fieldName, fieldValue);
                 }
-                ProviderThread dthread = new ProviderThread(this, sysTransactionId, providerRatePlanList.get(i).getProvider(), config, order, "GetPrices", sequenceNumberRepository);
+                ProviderThread dthread = new ProviderThread(this, sysTransactionId, deliverySpTypes.get(i).getProvider(), config, order, "GetPrices", sequenceNumberRepository);
                 dthread.start();
             }
         } else {

@@ -46,6 +46,8 @@ public class DeliveryService {
     @Autowired
     SequenceNumberRepository sequenceNumberRepository;
 
+
+
     @Autowired
     DeliveryQuotationRepository deliveryQuotationRepository;
 
@@ -106,7 +108,6 @@ public class DeliveryService {
         StoreResponseData store = symplifiedService.getStore(orderDetails.getStoreId());
         orderDetails.setRegionCountry(store.getRegionCountryId());
 
-
         //PICKUP ADDRESS
         Pickup pickup = new Pickup();
         //If Store Is PAKISTAN SEARCH DB
@@ -163,16 +164,6 @@ public class DeliveryService {
 
         String deliveryType = stores.getType();
 
-        // Self
-//        switch (stores.getType()) {
-//            case "SELF":
-//                LogUtil.info(logprefix, location, "Delivery Type: ", Store.getVehicleType().name());
-//                case "ADHOC":
-//                break;
-//            case "SCHEDULED":
-//                break;
-//
-//        }
         if (stores.getType().equalsIgnoreCase("self")) {
             DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), orderDetails.getDelivery().getDeliveryState());
             PriceResult priceResult = new PriceResult();
@@ -241,15 +232,18 @@ public class DeliveryService {
             if (orderDetails.getDeliveryProviderId() == null) {
                 //Provider Query
                 try {
-                    StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
-                    orderDetails.setDeliveryProviderId(storeDeliverySp.getProvider().getId());
+//                    StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
+////                    orderDetails.setDeliveryProviderId(storeDeliverySp.getProvider().getId());
+                    StoreDeliveryDetail storeDeliveryDetail = storeDeliveryDetailRepository.findByStoreId(store.getId());
+                    orderDetails.setDeliveryService(storeDeliveryDetail.getType());
+
                 } catch (Exception ex) {
                     LogUtil.info(systemTransactionId, location, "Exception if store sp is null  : " + ex.getMessage(), "");
 
                 }
             }
             //generate transaction id
-            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository);
+            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository);
             processResult = process.GetPrice();
             LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
             if (processResult.resultCode == 0) {
@@ -401,6 +395,7 @@ public class DeliveryService {
                     result.isError = list.isError;
                     result.providerId = list.providerId;
                     result.message = list.message;
+                    result.vehicleType = cartDetails.getVehicleType().name();
                     result.price = bd;
                     result.refId = res.getId();
                     result.providerName = providerName;
@@ -502,7 +497,7 @@ public class DeliveryService {
 
         //generate transaction id
         LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
-        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository);
+        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository);
         ProcessResult processResult = process.SubmitOrder();
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
@@ -716,7 +711,7 @@ public class DeliveryService {
 
         //generate transaction id
         LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
-        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository);
+        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository);
         ProcessResult processResult = process.SubmitOrder();
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
