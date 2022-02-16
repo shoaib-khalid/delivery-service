@@ -1,4 +1,20 @@
 ##############################################################################################
+# Version v.2.4.0 | 16-February-2022
+###############################################################################################
+### Code Changes:
+1. New provider Integration  "PICKUPP"
+   1. Update table delivery_sp_config - production credential 
+   2. Update table delivery_sp
+      - getPriceClassName - com.kalsym.deliveryservice.provider.Pickupp.GetPrice
+      - submitOrderClassName - com.kalsym.deliveryservice.provider.Pickupp.SubmitOrder
+      - queryOrderClassName - com.kalsym.deliveryservice.provider.Pickupp.QueryOrder
+      - spCallbackClassname - com.kalsym.deliveryservice.provider.Pickupp.OrderCallback
+      - 
+ALTER TABLE symplified.delivery_orders ADD pickupTime TIME NULL;
+ALTER TABLE symplified.delivery_orders ADD pickupdate TIMESTAMP NULL;
+
+
+##############################################################################################
 # Version v.2.3.20 | 16-February-2022
 ###############################################################################################
 ### Code Changes:

@@ -40,5 +40,7 @@ public class Order {
    VehicleType vehicleType;
    String shipType;
    String deliveryService;
+   String remarks;
+   String deliveryType;
 
 }
