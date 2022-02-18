@@ -118,6 +118,8 @@ public class SubmitOrder extends SyncDispatcher {
             }
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
+            SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+            response.returnObject = submitOrderResult;
             response.resultCode = -1;
         }
         LogUtil.info(logprefix, location, "Process finish", "");

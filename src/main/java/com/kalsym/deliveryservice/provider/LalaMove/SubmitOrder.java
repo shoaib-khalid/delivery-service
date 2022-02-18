@@ -117,29 +117,38 @@ public class SubmitOrder extends SyncDispatcher {
             e.printStackTrace();
         }
 
-        ResponseEntity<String> responseEntity = restTemplate.exchange(BASE_URL + ENDPOINT_URL_PLACEORDER, HttpMethod.POST, orderRequest, String.class);
-        LogUtil.info(logprefix, location, "Response : ", responseEntity.getBody());
+        try {
+            ResponseEntity<String> responseEntity = restTemplate.exchange(BASE_URL + ENDPOINT_URL_PLACEORDER, HttpMethod.POST, orderRequest, String.class);
+            LogUtil.info(logprefix, location, "Response : ", responseEntity.getBody());
 
-        int statusCode = responseEntity.getStatusCode().value();
+            int statusCode = responseEntity.getStatusCode().value();
 
-        if (statusCode == 200) {
-            response.resultCode = 0;
-            JsonObject jsonResp = new Gson().fromJson(responseEntity.getBody(), JsonObject.class);
-            spOrderId = jsonResp.get("orderRef").getAsString();
-            LogUtil.info(logprefix, location, "OrderNumber in process function:" + spOrderId, "");
-            getDetails(spOrderId);
+            if (statusCode == 200) {
+                response.resultCode = 0;
+                JsonObject jsonResp = new Gson().fromJson(responseEntity.getBody(), JsonObject.class);
+                spOrderId = jsonResp.get("orderRef").getAsString();
+                LogUtil.info(logprefix, location, "OrderNumber in process function:" + spOrderId, "");
+                getDetails(spOrderId);
 
-            response.returnObject = extractResponseBody(responseEntity.getBody());
-        } else {
-            try {
-                LogUtil.info(logprefix, location, "Request failed", responseEntity.getBody());
-            } catch (Exception exception) {
-                LogUtil.info(logprefix, location, "Request failed", exception.getMessage());
+                response.returnObject = extractResponseBody(responseEntity.getBody());
+            } else {
+                try {
+                    LogUtil.info(logprefix, location, "Request failed", responseEntity.getBody());
+                } catch (Exception exception) {
+                    LogUtil.info(logprefix, location, "Request failed", exception.getMessage());
+                }
+                response.resultCode = -1;
             }
+
+            LogUtil.info(logprefix, location, "Process finish", "");
+        } catch (Exception e) {
             response.resultCode = -1;
+            SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+            response.returnObject = submitOrderResult;
+            LogUtil.info(logprefix, location, "Request failed", e.getMessage());
+
         }
 
-        LogUtil.info(logprefix, location, "Process finish", "");
         return response;
     }
 

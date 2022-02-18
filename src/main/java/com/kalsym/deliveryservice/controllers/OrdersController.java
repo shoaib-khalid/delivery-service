@@ -514,7 +514,6 @@ public class OrdersController {
                 orderResults.add(bulkOrderResponse);
                 //fail to get price
             }
-            wait(1000);
         }
 
         LogUtil.info("", location, "Bulk Order List " + orderResults, "");
