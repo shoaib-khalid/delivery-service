@@ -3,8 +3,8 @@ package com.kalsym.deliveryservice.provider.LalaMove;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
-import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.RequestBodies.lalamoveGetPrice.*;
+import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SubmitOrderResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
@@ -110,7 +110,7 @@ public class SubmitOrder extends SyncDispatcher {
 
         HttpEntity<String> orderRequest = null;
         try {
-            orderRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_PLACEORDER, "POST", orderBody, headers,secretKey, apiKey);
+            orderRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_PLACEORDER, "POST", orderBody, headers, secretKey, apiKey);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (InvalidKeyException e) {
@@ -118,7 +118,7 @@ public class SubmitOrder extends SyncDispatcher {
         }
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(BASE_URL + ENDPOINT_URL_PLACEORDER, HttpMethod.POST, orderRequest, String.class);
-        LogUtil.info(logprefix, location, "Response", responseEntity.getBody());
+        LogUtil.info(logprefix, location, "Response : ", responseEntity.getBody());
 
         int statusCode = responseEntity.getStatusCode().value();
 
@@ -131,8 +131,11 @@ public class SubmitOrder extends SyncDispatcher {
 
             response.returnObject = extractResponseBody(responseEntity.getBody());
         } else {
-
-            LogUtil.info(logprefix, location, "Request failed", "");
+            try {
+                LogUtil.info(logprefix, location, "Request failed", responseEntity.getBody());
+            } catch (Exception exception) {
+                LogUtil.info(logprefix, location, "Request failed", exception.getMessage());
+            }
             response.resultCode = -1;
         }
 

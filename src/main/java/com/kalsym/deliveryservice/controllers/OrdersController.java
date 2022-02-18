@@ -378,7 +378,7 @@ public class OrdersController {
     // TODO: TESTING PENDING
     @PostMapping(path = {"/bulkConfirm/"}, name = "bulk-orders-confirm-delivery")
     public ResponseEntity<HttpReponse> batchSubmitDelivery(HttpServletRequest request,
-                                                           @RequestBody List<OrderConfirm> orderConfirm) {
+                                                           @RequestBody List<OrderConfirm> orderConfirm) throws InterruptedException {
         HttpReponse response = new HttpReponse(request.getRequestURI());
 
         String logprefix = request.getRequestURI() + " ";
@@ -514,6 +514,7 @@ public class OrdersController {
                 orderResults.add(bulkOrderResponse);
                 //fail to get price
             }
+            wait(1000);
         }
 
         LogUtil.info("", location, "Bulk Order List " + orderResults, "");
