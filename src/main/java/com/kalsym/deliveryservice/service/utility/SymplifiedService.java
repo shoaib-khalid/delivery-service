@@ -89,12 +89,12 @@ public class SymplifiedService {
                 logger.debug("Store orders group (liveChatOrdersGroupName) received: {}, against storeId: {}", storeResponse.getData(), storeId);
                 return storeResponse.getData();
             } else {
-                logger.warn("Cannot get storename against storeId: {}", storeId);
+                logger.warn("Cannot get StoreDeliveryDetails against storeId: {}", storeId);
             }
 
             logger.debug("Request sent to live service, responseCode: {}, responseBody: {}", res.getStatusCode(), res.getBody());
         } catch (RestClientException e) {
-            logger.error("Error getting storeName against storeId:{}, url: {}", storeId, productServiceURL, e);
+            logger.error("Error getting StoreDeliveryDetails against storeId:{}, url: {}", storeId, productServiceURL, e);
             return null;
         }
         return null;
@@ -115,15 +115,15 @@ public class SymplifiedService {
 
             if (res != null) {
                 ProductResponse productResponse = (ProductResponse) res.getBody();
-                logger.debug("Store orders group (liveChatOrdersGroupName) received: {}, against storeId: {}", productResponse.getData(), storeId);
+                logger.debug("Store orders group (liveChatOrdersGroupName) received: {}, against productId: {}", productResponse.getData(), storeId);
                 return productResponse.getData();
             } else {
-                logger.warn("Cannot get storename against storeId: {}", storeId);
+                logger.warn("Cannot get Product against product: {}", storeId);
             }
 
             logger.debug("Request sent to live service, responseCode: {}, responseBody: {}", res.getStatusCode(), res.getBody());
         } catch (RestClientException e) {
-            logger.error("Error getting storeName against storeId:{}, url: {}", storeId, productServiceURL, e);
+            logger.error("Error getting Product against productId:{}, url: {}", storeId, productServiceURL, e);
             return null;
         }
         return null;
@@ -155,15 +155,15 @@ public class SymplifiedService {
             System.out.println("test" + res.getBody());
             if (res != null) {
                 OrderStatusResponse orderStatusResponse = (OrderStatusResponse) res.getBody();
-                logger.debug("Store orders group (liveChatOrdersGroupName) received: {}, against storeId: {}", orderStatusResponse.getData(), orderId);
+                logger.debug("Store orders group (liveChatOrdersGroupName) received: {}, against orderId: {}", orderStatusResponse.getData(), orderId);
                 return orderStatusResponse.getData().getCompletionStatus();
             } else {
-                logger.warn("Cannot get storename against storeId: {}", orderId);
+                logger.warn("Cannot get Order against orderId: {}", orderId);
             }
 
             logger.debug("Request sent to live service, responseCode: {}, responseBody: {}", res.getStatusCode(), res.getBody());
         } catch (RestClientException e) {
-            logger.error("Error getting storeName against storeId:{}, url: {}", orderId, url, e);
+            logger.error("Error getting Update Status against orderID:{}, url: {}", orderId, url, e);
             return null;
         } catch (Exception exception) {
             System.err.println("Exception :" + exception.getMessage());
@@ -190,12 +190,12 @@ public class SymplifiedService {
                 logger.debug("Store orders group (liveChatOrdersGroupName) received: {}, against storeId: {}", cartDetails.getData());
                 return cartDetails.getData();
             } else {
-                logger.warn("Cannot get storename against storeId: {}", cartId);
+                logger.warn("Cannot get GetTotalWeight against cartId: {}", cartId);
             }
 
             logger.debug("Request sent to live service, responseCode: {}, responseBody: {}", res.getStatusCode(), res.getBody());
         } catch (RestClientException e) {
-            logger.error("Error getting storeName against storeId:{}, url: {}", cartId, productServiceURL, e);
+            logger.error("Error getting GetTotalWeight against cartId:{}, url: {}", cartId, url, e);
             return null;
         }
         return null;
