@@ -24,10 +24,12 @@ public class PriceResult {
     public String deliveryType;
     public String providerImage;
     public String vehicleType;
+    public String deliveryPeriod;
+    public String pickupDateTime;
+
     @JsonIgnore
     public int resultCode;
     public BigDecimal priorityFee;
-
     //only for pakistan
     public String pickupCity;
     public String deliveryCity;

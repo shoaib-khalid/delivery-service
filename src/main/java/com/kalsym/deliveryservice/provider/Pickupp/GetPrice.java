@@ -68,9 +68,9 @@ public class GetPrice extends SyncDispatcher {
         } else {
             JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
             PriceResult result = new PriceResult();
-            LogUtil.info(logprefix, location, "Request failed", jsonResp.get("message").getAsString());
+            LogUtil.info(logprefix, location, "Request failed", jsonResp.get("meta").getAsJsonObject().get("error_message").getAsString());
 
-            result.message = jsonResp.get("message").getAsString();
+            result.message =jsonResp.get("meta").getAsJsonObject().get("error_message").getAsString();
             result.isError = true;
             response.returnObject = result;
             response.resultCode = -1;
@@ -89,7 +89,7 @@ public class GetPrice extends SyncDispatcher {
             }
         }
 
-        String requestParam = "service_type=" + order.getDeliveryType().toLowerCase() + "&" +
+        String requestParam = "service_type=" + order.getDeliveryPeriod().toLowerCase() + "&" +
                 "service_time=" + typeValue + "&" +
                 "is_pickupp_care=" + "false" + "&" +
                 "pickup_address_line_1=" + /*"Kowloon,%20Hong%20Kong"*/ order.getPickup().getPickupAddress().replaceAll(" ", "%20") + "&" +
@@ -99,7 +99,7 @@ public class GetPrice extends SyncDispatcher {
                 "pickup_contact_company=" + order.getPickup().getPickupContactPhone() + "&" +
                 "pickup_zip_code=" + order.getPickup().getPickupPostcode() + "&" +
                 "pickup_city=" + /*"Kowloon%20City"*/ order.getPickup().getPickupCity().replaceAll(" ", "%20") + "&" +
-                "pickup_notes=" + order.getRemarks().replaceAll(" ", "%20") + "&" +
+//                "pickup_notes=" + order.getRemarks().replaceAll(" ", "%20") + "&" +
                 "dropoff_address_line_1=" + order.getDelivery().getDeliveryAddress().replaceAll(" ", "%20") + "&" +
                 "dropoff_address_line_2=" + "&" +
                 "dropoff_contact_person=" + order.getDelivery().getDeliveryContactName().replaceAll(" ", "%20") + "&" +
@@ -125,6 +125,8 @@ public class GetPrice extends SyncDispatcher {
         bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
         priceResult.price = bd;
         priceResult.isError = false;
+        priceResult.deliveryPeriod = order.getDeliveryPeriod();
+
         return priceResult;
     }
 }

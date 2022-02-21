@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * @author user
+ * @author Taufik
  */
 public class ProcessRequest {
     Order order;
@@ -111,8 +111,13 @@ public class ProcessRequest {
 //        List<ProviderRatePlan> providerRatePlanList = providerRatePlanRepository.findByIdProductCode(order.getProductCode());
 //        List<ProviderRatePlan> providerRatePlanList = providerRatePlanRepository.findByIdProductCodeAndRegionId(order.getProductCode().toLowerCase(), order.getRegionCountry());
         List<DeliverySpType> deliverySpTypes = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountry(order.getDeliveryService(), order.getRegionCountry());
+        System.err.println(deliverySpTypes.size());
         if (order.getDeliveryProviderId() == null) {
             for (int i = 0; i < deliverySpTypes.size(); i++) {
+                order.setDeliveryPeriod(deliverySpTypes.get(i).getFulfilment());
+                order.setInterval(deliverySpTypes.get(i).getInterval());
+                System.err.println("TYPE :" + deliverySpTypes.get(i).getInterval());
+                LogUtil.info(logprefix, location, "Find Fulfillment Type :" + order.getDeliveryPeriod(), "");
                 List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(deliverySpTypes.get(i).getProvider().getId());
                 HashMap config = new HashMap();
                 for (int j = 0; j < providerConfigList.size(); j++) {

@@ -26,6 +26,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+/**
+ * @author Irasakumar
+ */
+
+
 @Service
 public class DeliveryService {
     @Autowired
@@ -45,7 +50,6 @@ public class DeliveryService {
 
     @Autowired
     SequenceNumberRepository sequenceNumberRepository;
-
 
 
     @Autowired
@@ -163,6 +167,7 @@ public class DeliveryService {
         orderDetails.getDelivery().setDeliveryAddress(deliveryAddress);
 
         String deliveryType = stores.getType();
+        orderDetails.setDeliveryType(stores.getType());
 
         if (stores.getType().equalsIgnoreCase("self")) {
             DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), orderDetails.getDelivery().getDeliveryState());
@@ -224,7 +229,10 @@ public class DeliveryService {
             response.setData(priceResult);
             LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
             return response;
-        } else {
+        }
+
+        //other than self delivery
+        else {
             orderDetails.setItemType(stores.getItemType());
             orderDetails.setProductCode(stores.getItemType().name());
             orderDetails.setPieces(2);
@@ -233,9 +241,9 @@ public class DeliveryService {
                 //Provider Query
                 try {
                     StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
-                    if(storeDeliverySp !=null) {
+                    if (storeDeliverySp != null) {
                         orderDetails.setDeliveryProviderId(storeDeliverySp.getProvider().getId());
-                    }else {
+                    } else {
                         StoreDeliveryDetail storeDeliveryDetail = storeDeliveryDetailRepository.findByStoreId(store.getId());
                         orderDetails.setDeliveryService(storeDeliveryDetail.getType());
                     }
@@ -402,6 +410,7 @@ public class DeliveryService {
                     result.message = list.message;
                     result.vehicleType = cartDetails.getVehicleType().name();
                     result.price = bd;
+                    result.deliveryPeriod = list.deliveryPeriod;
                     result.refId = res.getId();
                     result.providerName = providerName;
                     result.validUpTo = currentTimeStamp;

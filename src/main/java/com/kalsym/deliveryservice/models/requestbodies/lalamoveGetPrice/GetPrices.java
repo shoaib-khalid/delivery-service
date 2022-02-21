@@ -17,14 +17,16 @@ public class GetPrices {
     public List<Stop> stops;
     public Contact requesterContact;
     public List<Delivery> deliveries;
+    public String scheduleAt;
 
 
-    public GetPrices(String serviceType, List<String> specialRequests, List<Stop> stops, Contact requesterContact, List<Delivery> deliveries) {
+    public GetPrices(String serviceType, List<String> specialRequests, List<Stop> stops, Contact requesterContact, List<Delivery> deliveries, String scheduleAt) {
         this.serviceType = serviceType;
         this.specialRequests = specialRequests;
         this.stops = stops;
         this.requesterContact = requesterContact;
         this.deliveries = deliveries;
+        this.scheduleAt = scheduleAt;
     }
 
     @Override
@@ -35,6 +37,7 @@ public class GetPrices {
                 ", stops=" + stops +
                 ", requesterContact=" + requesterContact +
                 ", deliveries=" + deliveries +
+                ", scheduleAt=" + scheduleAt +
                 '}';
     }
 }

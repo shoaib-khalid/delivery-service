@@ -22,9 +22,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.math.BigDecimal;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 public class GetPrice extends SyncDispatcher {
@@ -87,8 +85,16 @@ public class GetPrice extends SyncDispatcher {
         } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
+        String pickupTime = "";
+        if (order.getDeliveryType().equals("SCHEDULED")) {
+            Calendar cal = Calendar.getInstance(); // creates calendar
+            cal.setTime(new Date());               // sets calendar time/date
+            cal.add(Calendar.HOUR_OF_DAY, order.getInterval());      // adds one hour
+            cal.getTime();
+            pickupTime = cal.getTime().toInstant().toString();
+        }
 
-        GetPrices requ = generateRequestBody();
+        GetPrices requ = generateRequestBody(pickupTime);
         LogUtil.info(logprefix, location, "REQUST BODY FOR GET PRICE : ", requ.toString());
 
         //JSONObject bodyJson = new JSONObject("{\"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"}]}");
@@ -118,7 +124,7 @@ public class GetPrice extends SyncDispatcher {
         if (httpResult.httpResponseCode == 200) {
             LogUtil.info(logprefix, location, "Request successful", "");
             response.resultCode = 0;
-            response.returnObject = extractResponseBody(httpResult.responseString);
+            response.returnObject = extractResponseBody(httpResult.responseString, pickupTime);
         } else {
             JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
             PriceResult result = new PriceResult();
@@ -134,7 +140,7 @@ public class GetPrice extends SyncDispatcher {
     }
 
 
-    private GetPrices generateRequestBody() {
+    private GetPrices generateRequestBody(String pickupTime) {
         List<Delivery> deliveries = new ArrayList<>();
 
         deliveries.add(
@@ -148,6 +154,10 @@ public class GetPrice extends SyncDispatcher {
         GetPrices req = new GetPrices();
         req.serviceType = order.getPickup().getVehicleType().name();
         req.specialRequests = null;
+
+        if (order.getDeliveryType().equals("SCHEDULED")) {
+            req.scheduleAt = pickupTime;
+        }
         Stop s1 = new Stop();
         s1.addresses = new Addresses(
                 new MsMY(order.getPickup().getPickupAddress(),
@@ -167,7 +177,14 @@ public class GetPrice extends SyncDispatcher {
         return req;
     }
 
-    private PriceResult extractResponseBody(String respString) {
+    private PriceResult extractResponseBody(String respString, String pickupTime) {
+//        if (order.getDeliveryType().equals("SCHEDULED")) {
+//            Calendar cal = Calendar.getInstance(); // creates calendar
+//            cal.setTime(new Date());               // sets calendar time/date
+//            cal.add(Calendar.HOUR_OF_DAY, order.getInterval());      // adds one hour
+//            cal.getTime();        }
+
+
         LogUtil.info(logprefix, location, "Response: ", respString);
         JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
         LogUtil.info(logprefix, location, "Lalamove jsonResp: " + jsonResp, "");
@@ -177,6 +194,9 @@ public class GetPrice extends SyncDispatcher {
         BigDecimal bd = new BigDecimal(Double.parseDouble(payAmount));
         bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
         priceResult.price = bd;
+        priceResult.pickupDateTime = pickupTime;
+        priceResult.deliveryPeriod = order.getDeliveryPeriod();
+        System.err.println(" Delivery Period " + order.getDeliveryPeriod());
         priceResult.isError = false;
         return priceResult;
     }

@@ -138,6 +138,8 @@ public class GetPrice extends SyncDispatcher {
             bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
             priceResult.price = bd;
             priceResult.resultCode = 0;
+            priceResult.deliveryPeriod = order.getDeliveryPeriod();
+
 
         } else {
 

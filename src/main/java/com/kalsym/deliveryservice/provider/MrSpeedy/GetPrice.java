@@ -134,6 +134,7 @@ public class GetPrice extends SyncDispatcher {
         BigDecimal bd = new BigDecimal(Double.parseDouble(payAmount));
         bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
         priceResult.price = bd;
+        priceResult.deliveryPeriod = order.getDeliveryPeriod();
         return priceResult;
     }
 

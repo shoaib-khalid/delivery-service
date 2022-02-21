@@ -38,7 +38,8 @@ public class Order {
    String regionCountry;
    Boolean serviceType;
    VehicleType vehicleType;
-   String shipType;
+   String deliveryPeriod;
+   Integer interval;
    String deliveryService;
    String remarks;
    String deliveryType;

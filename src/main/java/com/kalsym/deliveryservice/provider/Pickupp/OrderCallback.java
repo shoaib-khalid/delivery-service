@@ -48,9 +48,24 @@ public class OrderCallback extends SyncDispatcher {
         try {
             String status = jsonBody.get("status").getAsString();
             String spOrderId = jsonBody.get("order_number").getAsString();
+            if(status.equals("CONTACTING_AGENT")){
+                callbackResult.status = "new";
+            }
+            else if(status.equals("ACCEPTED")){
+                callbackResult.status = "on_going";
+            }
+            else if(status.equals("ENROUTE")){
+                callbackResult.status="active";
+            }
+            else if(status.equals("DELIVERED")){
+                callbackResult.status="finished";
+            }
+            else{
+                callbackResult.status = status;
+            }
             String spDriverId = "";
             callbackResult.spOrderId = spOrderId;
-            callbackResult.status = status;
+//            callbackResult.status = status;
             callbackResult.driverId = spDriverId;
             callbackResult.riderName = jsonBody.get("delivery_agent_name").getAsString();
             callbackResult.riderPhone = jsonBody.get("delivery_agent_phone").getAsString();

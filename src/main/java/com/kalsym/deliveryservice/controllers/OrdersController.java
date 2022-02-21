@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author Sarosh
+ * @updateBy Irasakumar
  */
 @RestController()
 @RequestMapping("/orders")
@@ -613,21 +614,24 @@ public class OrdersController {
                 String res;
                 // change from order status codes to delivery status codes.
                 if (status.equals("new")) {
-//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                 } else if (status.equals("available")) {
-//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
                 } else if (status.equals("active")) {
                     orderStatus = "BEING_DELIVERED";
-//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("finished")) {
-//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.DELIVERED_TO_CUSTOMER.name());
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.DELIVERED_TO_CUSTOMER.name());
                     orderStatus = "DELIVERED_TO_CUSTOMER";
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("canceled")) {
                     orderStatus = "REJECTED_BY_STORE";
-//                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                }
+                else{
+                    deliveryOrder.setStatus(status);
                 }
 
 
