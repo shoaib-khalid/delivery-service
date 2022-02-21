@@ -475,8 +475,8 @@ public class OrdersController {
                 deliveryOrder.setStatus(orderCreated.getStatus());
 //                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
 
-                deliveryOrdersRepository.save(deliveryOrder);
-                quotation.setSpOrderId(orderCreated.getSpOrderId());
+                DeliveryOrder db =  deliveryOrdersRepository.save(deliveryOrder);
+                quotation.setSpOrderId(db.getSpOrderId());
                 quotation.setOrderId(o.getOrderId());
                 quotation.setUpdatedDate(new Date());
                 quotation.setStatus("SUBMITTED");
@@ -485,14 +485,14 @@ public class OrdersController {
                 submitOrderResult.orderCreated = deliveryOrder;
                 submitOrderResult.isSuccess = true;
 
-                bulkOrderResponse.setId(orderCreated.getId());
-                bulkOrderResponse.setOrderId(orderCreated.getOrderId());
-                bulkOrderResponse.setSystemTransactionId(orderCreated.getSystemTransactionId());
-                bulkOrderResponse.setSpTransactionId(orderCreated.getSpOrderId());
-                bulkOrderResponse.setStatus(orderCreated.getStatus());
-                bulkOrderResponse.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
+                bulkOrderResponse.setId(db.getId());
+                bulkOrderResponse.setOrderId(o.getOrderId());
+                bulkOrderResponse.setSystemTransactionId(db.getSystemTransactionId());
+                bulkOrderResponse.setSpTransactionId(db.getSpOrderId());
+                bulkOrderResponse.setStatus(db.getStatus());
+                bulkOrderResponse.setCustomerTrackingUrl(db.getCustomerTrackingUrl());
 
-                bulkOrderResponse.setDeliveryProviderId(orderCreated.getDeliveryProviderId());
+                bulkOrderResponse.setDeliveryProviderId(db.getDeliveryProviderId());
                 bulkOrderResponse.setSuccess(true);
                 LogUtil.info(systemTransactionId, location, "Bulk order confirm transaction " + bulkOrderResponse, "");
                 orderResults.add(bulkOrderResponse);
