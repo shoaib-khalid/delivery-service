@@ -232,12 +232,17 @@ public class DeliveryService {
             if (orderDetails.getDeliveryProviderId() == null) {
                 //Provider Query
                 try {
-//                    StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
-////                    orderDetails.setDeliveryProviderId(storeDeliverySp.getProvider().getId());
-                    StoreDeliveryDetail storeDeliveryDetail = storeDeliveryDetailRepository.findByStoreId(store.getId());
-                    orderDetails.setDeliveryService(storeDeliveryDetail.getType());
+                    StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
+                    if(storeDeliverySp !=null) {
+                        orderDetails.setDeliveryProviderId(storeDeliverySp.getProvider().getId());
+                    }else {
+                        StoreDeliveryDetail storeDeliveryDetail = storeDeliveryDetailRepository.findByStoreId(store.getId());
+                        orderDetails.setDeliveryService(storeDeliveryDetail.getType());
+                    }
 
+//                    orderDetails.setDeliveryProviderId(storeDeliveryDetail.getProvider().getId());
                 } catch (Exception ex) {
+
                     LogUtil.info(systemTransactionId, location, "Exception if store sp is null  : " + ex.getMessage(), "");
 
                 }
