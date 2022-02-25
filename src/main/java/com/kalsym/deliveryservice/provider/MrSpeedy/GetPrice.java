@@ -7,6 +7,7 @@ package com.kalsym.deliveryservice.provider.MrSpeedy;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.kalsym.deliveryservice.models.Fulfillment;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
@@ -34,8 +35,9 @@ public class GetPrice extends SyncDispatcher {
     private String sslVersion = "SSL";
     private String logprefix;
     private String location = "MrSpeedyGetPrice";
+    private Fulfillment fulfillment;
 
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
+    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment) {
 
         super(latch);
         this.systemTransactionId = systemTransactionId;
@@ -48,6 +50,7 @@ public class GetPrice extends SyncDispatcher {
         productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
         this.sslVersion = (String) config.get("ssl_version");
+        this.fulfillment = fulfillment;
     }
 
     @Override
@@ -134,7 +137,7 @@ public class GetPrice extends SyncDispatcher {
         BigDecimal bd = new BigDecimal(Double.parseDouble(payAmount));
         bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
         priceResult.price = bd;
-        priceResult.deliveryPeriod = order.getDeliveryPeriod();
+        priceResult.fulfillment = fulfillment.getFulfillment();
         return priceResult;
     }
 

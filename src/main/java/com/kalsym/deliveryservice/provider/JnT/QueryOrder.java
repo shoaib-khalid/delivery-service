@@ -39,7 +39,7 @@ public class QueryOrder extends SyncDispatcher {
     private String sessionToken;
     private String sslVersion = "SSL";
     private String logprefix;
-    private String location = "JnTSubmitOrder";
+    private String location = "JnTQueryOrder";
     private String password;
     private String secretKey;
     private String spOrderId;
@@ -53,7 +53,7 @@ public class QueryOrder extends SyncDispatcher {
         super(latch);
         logprefix = systemTransactionId;
         this.systemTransactionId = systemTransactionId;
-        LogUtil.info(logprefix, location, "JnT SubmitOrder class initiliazed!!", "");
+        LogUtil.info(logprefix, location, "JnT QueryOrder class initiliazed!!", "");
 
         this.baseUrl = (String) config.get("domainUrl");
         this.queryOrder_url = (String) config.get("queryOrder_url");

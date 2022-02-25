@@ -93,6 +93,9 @@ public class OrdersController {
     @Autowired
     DeliveryService deliveryService;
 
+    @Autowired
+    StoreDeliverySpRepository storeDeliverySpRepository;
+
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
                                                 @Valid @RequestBody Order orderDetails) {
@@ -143,7 +146,7 @@ public class OrdersController {
         Pickup pickup = new Pickup();
         pickup.setPickupPostcode(postcode);
         order.setPickup(pickup);
-        ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository,deliverySpTypeRepository);
+        ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository,deliverySpTypeRepository,storeDeliverySpRepository);
         ProcessResult processResult = process.GetPickupDate(serviceProviderId);
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
@@ -176,7 +179,7 @@ public class OrdersController {
         Pickup pickup = new Pickup();
         pickup.setPickupDate(pickupdate);
         order.setPickup(pickup);
-        ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository,deliverySpTypeRepository);
+        ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository,deliverySpTypeRepository,storeDeliverySpRepository);
         ProcessResult processResult = process.GetPickupTime(serviceProviderId);
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
@@ -210,7 +213,7 @@ public class OrdersController {
         pickup.setPickupPostcode(postcode);
         order.setPickup(pickup);
         order.setProductCode(productCode);
-        ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository,deliverySpTypeRepository);
+        ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository,deliverySpTypeRepository,storeDeliverySpRepository);
         ProcessResult processResult = process.GetLocationId();
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
@@ -438,7 +441,7 @@ public class OrdersController {
             LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " "
                     + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
             ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository,
-                    providerConfigurationRepository, providerRepository, sequenceNumberRepository,deliverySpTypeRepository);
+                    providerConfigurationRepository, providerRepository, sequenceNumberRepository,deliverySpTypeRepository, storeDeliverySpRepository);
             ProcessResult processResult = process.SubmitOrder();
             LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 

@@ -2,6 +2,7 @@ package com.kalsym.deliveryservice.provider.Pickupp;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.kalsym.deliveryservice.models.Fulfillment;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
@@ -29,9 +30,10 @@ public class GetPrice extends SyncDispatcher {
     private final String location = "PickuppGetPrice";
     private final String token;
     private String serviceType;
+    private Fulfillment fulfillment;
 
 
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
+    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment) {
         super(latch);
         this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;
@@ -44,6 +46,7 @@ public class GetPrice extends SyncDispatcher {
         productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
         this.serviceType = (String) config.get("serviceType");
+        this.fulfillment = fulfillment;
     }
 
 
@@ -52,8 +55,18 @@ public class GetPrice extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
         String token = this.token;
-        String request = generateRequestBody(order);
+        System.err.println(" PICKUPP :" + fulfillment);
 
+//        String request = new String();
+//        try {
+        String request = generateRequestBody(order);
+   /* } catch (Exception exception) {
+        PriceResult result = new PriceResult();
+        result.message = exception.getMessage();
+        result.isError = true;
+        response.returnObject = result;
+        response.resultCode = -1;
+    }*/
         String GETPRICE_URL = this.baseUrl + this.getprice_url + "?" + request;
         LogUtil.info(logprefix, location, "REQUEST BODY FOR GET PRICE : ", GETPRICE_URL);
 
@@ -64,13 +77,21 @@ public class GetPrice extends SyncDispatcher {
         if (httpResult.httpResponseCode == 200) {
             LogUtil.info(logprefix, location, "Request successful", "");
             response.resultCode = 0;
-            response.returnObject = extractResponseBody(httpResult.responseString);
+            response.returnObject = extractResponseBody(httpResult.responseString, serviceType);
+        } else if (httpResult.httpResponseCode == 408) {
+            PriceResult result = new PriceResult();
+            LogUtil.info(logprefix, location, "Request failed", httpResult.responseString);
+
+            result.message = httpResult.responseString;
+            result.isError = true;
+            response.returnObject = result;
+            response.resultCode = -1;
         } else {
             JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
             PriceResult result = new PriceResult();
             LogUtil.info(logprefix, location, "Request failed", jsonResp.get("meta").getAsJsonObject().get("error_message").getAsString());
 
-            result.message =jsonResp.get("meta").getAsJsonObject().get("error_message").getAsString();
+            result.message = jsonResp.get("meta").getAsJsonObject().get("error_message").getAsString();
             result.isError = true;
             response.returnObject = result;
             response.resultCode = -1;
@@ -81,16 +102,20 @@ public class GetPrice extends SyncDispatcher {
 
     private String generateRequestBody(Order order) {
         String[] types = serviceType.split(";");
-        String typeValue = "";
+//        System.err.println("TYPES : " + serviceType.split(";"));
+        String serviceTypeName = "";
+        String serviceTypeValue = "";
         for (String type : types) {
-            String[] t = type.split("=");
-            if (t[0].equals(order.getDeliveryType().toLowerCase())) {
-                typeValue = t[1];
+            String[] t = type.split(":");
+            if (t[0].equals(fulfillment.getFulfillment())) {
+                String[] s = t[1].split("=");
+                serviceTypeName = s[0];
+                serviceTypeValue = s[1];
             }
         }
 
-        String requestParam = "service_type=" + order.getDeliveryPeriod().toLowerCase() + "&" +
-                "service_time=" + typeValue + "&" +
+        String requestParam = "service_type=" + serviceTypeName + "&" +
+                "service_time=" + serviceTypeValue + "&" +
                 "is_pickupp_care=" + "false" + "&" +
                 "pickup_address_line_1=" + /*"Kowloon,%20Hong%20Kong"*/ order.getPickup().getPickupAddress().replaceAll(" ", "%20") + "&" +
                 "pickup_address_line_2=" + "&" +
@@ -114,7 +139,9 @@ public class GetPrice extends SyncDispatcher {
         return requestParam;
     }
 
-    private PriceResult extractResponseBody(String respString) {
+    private PriceResult extractResponseBody(String respString, String serviceType) {
+
+
         LogUtil.info(logprefix, location, "Response: ", respString);
         JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
         LogUtil.info(logprefix, location, "Pickupp jsonResp: " + jsonResp, "");
@@ -125,8 +152,7 @@ public class GetPrice extends SyncDispatcher {
         bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
         priceResult.price = bd;
         priceResult.isError = false;
-        priceResult.deliveryPeriod = order.getDeliveryPeriod();
-
+        priceResult.fulfillment = fulfillment.getFulfillment();
         return priceResult;
     }
 }

@@ -24,7 +24,7 @@ public class PriceResult {
     public String deliveryType;
     public String providerImage;
     public String vehicleType;
-    public String deliveryPeriod;
+    public String fulfillment;
     public String pickupDateTime;
 
     @JsonIgnore

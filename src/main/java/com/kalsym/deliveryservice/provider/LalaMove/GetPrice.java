@@ -2,6 +2,7 @@ package com.kalsym.deliveryservice.provider.LalaMove;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.kalsym.deliveryservice.models.Fulfillment;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.RequestBodies.lalamoveGetPrice.*;
 import com.kalsym.deliveryservice.provider.PriceResult;
@@ -41,9 +42,10 @@ public class GetPrice extends SyncDispatcher {
     private final String apiKey;
     private String sessionToken;
     private String sslVersion = "SSL";
+    private Fulfillment fulfillment;
 
 
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
+    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment) {
 
 
         super(latch);
@@ -60,6 +62,7 @@ public class GetPrice extends SyncDispatcher {
         productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
         this.sslVersion = (String) config.get("ssl_version");
+        this.fulfillment = fulfillment;
     }
 
     @Override
@@ -89,7 +92,7 @@ public class GetPrice extends SyncDispatcher {
         if (order.getDeliveryType().equals("SCHEDULED")) {
             Calendar cal = Calendar.getInstance(); // creates calendar
             cal.setTime(new Date());               // sets calendar time/date
-            cal.add(Calendar.HOUR_OF_DAY, order.getInterval());      // adds one hour
+            cal.add(Calendar.HOUR_OF_DAY, fulfillment.getInterval());      // adds one hour
             cal.getTime();
             pickupTime = cal.getTime().toInstant().toString();
         }
@@ -195,8 +198,8 @@ public class GetPrice extends SyncDispatcher {
         bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
         priceResult.price = bd;
         priceResult.pickupDateTime = pickupTime;
-        priceResult.deliveryPeriod = order.getDeliveryPeriod();
-        System.err.println(" Delivery Period " + order.getDeliveryPeriod());
+        priceResult.fulfillment = fulfillment.getFulfillment();
+        System.err.println(" Delivery Period " + fulfillment.getFulfillment());
         priceResult.isError = false;
         return priceResult;
     }

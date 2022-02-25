@@ -233,30 +233,48 @@ public class DeliveryService {
 
         //other than self delivery
         else {
+
+//            switch (orderDetails.getDeliveryType()) {
+//                case "ADHOC":
             orderDetails.setItemType(stores.getItemType());
             orderDetails.setProductCode(stores.getItemType().name());
-            orderDetails.setPieces(2);
+            orderDetails.setPieces(cartDetails.getTotalPcs());
 
-            if (orderDetails.getDeliveryProviderId() == null) {
-                //Provider Query
-                try {
-                    StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
-                    if (storeDeliverySp != null) {
-                        orderDetails.setDeliveryProviderId(storeDeliverySp.getProvider().getId());
-                    } else {
-                        StoreDeliveryDetail storeDeliveryDetail = storeDeliveryDetailRepository.findByStoreId(store.getId());
-                        orderDetails.setDeliveryService(storeDeliveryDetail.getType());
-                    }
-
-//                    orderDetails.setDeliveryProviderId(storeDeliveryDetail.getProvider().getId());
-                } catch (Exception ex) {
-
-                    LogUtil.info(systemTransactionId, location, "Exception if store sp is null  : " + ex.getMessage(), "");
-
+            List<StoreDeliverySp> storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
+            if (!storeDeliverySp.isEmpty()) {
+                orderDetails.setDeliveryProviderId(storeDeliverySp.get(0).getProvider().getId());
+                List<String> periods = new ArrayList<>();
+                for (StoreDeliverySp s : storeDeliverySp) {
+                    periods.add(s.getFulfilment());
                 }
+//                orderDetails.setDeliveryPeriod(periods);
             }
+//                    if (orderDetails.getDeliveryProviderId() == null) {
+//                        //Provider Query
+//                        try {
+//                            StoreDeliverySp storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
+//                            if (storeDeliverySp != null) {
+//                                orderDetails.setDeliveryProviderId(storeDeliverySp.getProvider().getId());
+//                            } else {
+//                                StoreDeliveryDetail storeDeliveryDetail = storeDeliveryDetailRepository.findByStoreId(store.getId());
+//                                orderDetails.setDeliveryService(storeDeliveryDetail.getType());
+//                            }
+//
+////                    orderDetails.setDeliveryProviderId(storeDeliveryDetail.getProvider().getId());
+//                        } catch (Exception ex) {
+//
+//                            LogUtil.info(systemTransactionId, location, "Exception if store sp is null  : " + ex.getMessage(), "");
+//
+//                        }
+//                    }
+//                case "SCHEDULED":
+//                    orderDetails.setItemType(stores.getItemType());
+//                    orderDetails.setProductCode(stores.getItemType().name());
+//                    orderDetails.setPieces(cartDetails.getTotalPcs());
+//
+//            }
             //generate transaction id
-            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository);
+            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository);
             processResult = process.GetPrice();
             LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
             if (processResult.resultCode == 0) {
@@ -410,7 +428,7 @@ public class DeliveryService {
                     result.message = list.message;
                     result.vehicleType = cartDetails.getVehicleType().name();
                     result.price = bd;
-                    result.deliveryPeriod = list.deliveryPeriod;
+                    result.fulfillment = list.fulfillment;
                     result.refId = res.getId();
                     result.providerName = providerName;
                     result.validUpTo = currentTimeStamp;
@@ -436,8 +454,10 @@ public class DeliveryService {
                 priceResultList.add(priceResult);
                 response.setData(priceResultList);
             }
-
+            //generate transaction id
         }
+
+
         return response;
     }
 
@@ -511,7 +531,7 @@ public class DeliveryService {
 
         //generate transaction id
         LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
-        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository);
+        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository);
         ProcessResult processResult = process.SubmitOrder();
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
@@ -725,7 +745,7 @@ public class DeliveryService {
 
         //generate transaction id
         LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
-        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository);
+        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository);
         ProcessResult processResult = process.SubmitOrder();
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 

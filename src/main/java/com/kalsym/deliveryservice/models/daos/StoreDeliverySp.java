@@ -31,5 +31,5 @@ public class StoreDeliverySp {
     @Fetch(FetchMode.JOIN)
     private Provider provider;
 
-//    private String storeCostCenterCode;
+    private String fulfilment;
 }

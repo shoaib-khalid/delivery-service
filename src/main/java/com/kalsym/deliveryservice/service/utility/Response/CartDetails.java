@@ -12,4 +12,5 @@ import lombok.ToString;
 public class CartDetails {
     Double totalWeight;
     VehicleType vehicleType;
+    Integer totalPcs;
 }

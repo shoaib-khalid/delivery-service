@@ -106,9 +106,10 @@ public class HttpsGetConn {
 
         } catch (SocketTimeoutException ex) {
             if (ex.getMessage().equals("Read timed out")) {
+                response.httpResponseCode = 408;
                 response.resultCode = -2;
                 response.responseString = ex.getMessage();
-                LogUtil.error(refId, loglocation, "Exception : " + ex.getMessage(), "", ex);
+                LogUtil.error(refId, loglocation, "Exception Read Timeout : " + ex.getMessage(), "", ex);
             } else {
                 response.resultCode = -1;
                 response.responseString = ex.getMessage();
