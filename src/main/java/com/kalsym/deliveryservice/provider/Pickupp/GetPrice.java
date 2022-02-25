@@ -40,7 +40,7 @@ public class GetPrice extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Pickupp GetPrices class initiliazed!!", "");
         this.getprice_url = (String) config.get("getprice_url");
         this.baseUrl = (String) config.get("domainUrl");
-        this.token = (String) config.get("token");
+        this.token = (String) config.get("token"); //production token - "c3ltcGxpZmllZEBrYWxzeW0uY29tOjI1NDZmMjNjYjgxM2E5ZThiNjdmMzFhNWQ5MDk4MWVl"
         this.connectTimeout = Integer.parseInt((String) config.get("getprice_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("getprice_wait_timeout"));
         productMap = (HashMap) config.get("productCodeMapping");
@@ -55,18 +55,8 @@ public class GetPrice extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
         String token = this.token;
-        System.err.println(" PICKUPP :" + fulfillment);
-
-//        String request = new String();
-//        try {
         String request = generateRequestBody(order);
-   /* } catch (Exception exception) {
-        PriceResult result = new PriceResult();
-        result.message = exception.getMessage();
-        result.isError = true;
-        response.returnObject = result;
-        response.resultCode = -1;
-    }*/
+
         String GETPRICE_URL = this.baseUrl + this.getprice_url + "?" + request;
         LogUtil.info(logprefix, location, "REQUEST BODY FOR GET PRICE : ", GETPRICE_URL);
 
@@ -122,20 +112,20 @@ public class GetPrice extends SyncDispatcher {
                 "pickup_contact_person=" + /*"Cinema%20Online"*/  order.getPickup().getPickupContactName().replaceAll(" ", "%20") + "&" +
                 "pickup_contact_phone=" + order.getPickup().getPickupContactPhone() + "&" +
                 "pickup_contact_company=" + order.getPickup().getPickupContactPhone() + "&" +
-                "pickup_zip_code=" + order.getPickup().getPickupPostcode() + "&" +
+                "pickup_zip_code=" + /*"999077"*/order.getPickup().getPickupPostcode() + "&" +
                 "pickup_city=" + /*"Kowloon%20City"*/ order.getPickup().getPickupCity().replaceAll(" ", "%20") + "&" +
 //                "pickup_notes=" + order.getRemarks().replaceAll(" ", "%20") + "&" +
-                "dropoff_address_line_1=" + order.getDelivery().getDeliveryAddress().replaceAll(" ", "%20") + "&" +
+                "dropoff_address_line_1=" + /*"Kwai%20Chung%20Park%20(Closed),%20Kwai%20Chung,%20Hong%20Kong"*/ order.getDelivery().getDeliveryAddress().replaceAll(" ", "%20") + "&" +
                 "dropoff_address_line_2=" + "&" +
                 "dropoff_contact_person=" + order.getDelivery().getDeliveryContactName().replaceAll(" ", "%20") + "&" +
                 "dropoff_contact_phone=" + order.getDelivery().getDeliveryContactPhone() + "&" +
-                "dropoff_zip_code=" + order.getDelivery().getDeliveryPostcode() + "&" +
+                "dropoff_zip_code=" + /*"518000"*/ order.getDelivery().getDeliveryPostcode() + "&" +
                 "dropoff_city=" + order.getDelivery().getDeliveryCity().replaceAll(" ", "%20") + "&" +
-                "width=" + "&" +
-                "height=" + "&" +
-                "length=" + "&" +
+                "width=" + order.getWidth() + "&" + //set in db
+                "height=" + order.getHeight() + "&" +
+                "length=" + order.getLength() + "&" +
                 "weight=" + order.getTotalWeightKg() + "&" +
-                "region=" + order.getRegionCountry();
+                "region=" + /*"HK"*/  order.getRegionCountry();
         return requestParam;
     }
 

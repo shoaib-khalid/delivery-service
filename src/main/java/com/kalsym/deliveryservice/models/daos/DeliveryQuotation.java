@@ -57,5 +57,6 @@ public class DeliveryQuotation {
     private String deliveryCity;
     private String pickupZone;
     private String deliveryZone;
+    private String fulfillmentType;
 
 }

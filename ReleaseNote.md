@@ -1,10 +1,39 @@
 ##############################################################################################
+# Version v.2.4.8| 25-February-2022
+###############################################################################################
+### Code Changes:
+
+Bug Fixed - Added Length, Height, Weight, Width Configuration In Table.
+
+
+ALTER TABLE symplified.delivery_quotation ADD fulfillmentType varchar(100) NULL;
+
+
+CREATE TABLE symplified.delivery_vehicle_types (
+vehicleType enum('MOTORCYCLE','CAR','VAN','PICKUP','LARGEVAN','SMALLLORRY','MEDIUMLORRY','LARGELORRY')CREATE TABLE symplified.delivery_vehicle_types (
+NOT NULL,
+height DECIMAL(15,2) NOT NULL,
+width DECIMAL(15,2) NOT NULL,
+`length` DECIMAL(15,2) NOT NULL,
+weight DECIMAL(15,2) NOT NULL
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8
+COLLATE=utf8_general_ci;
+
+INSERT INTO SYMPLIFIED.DELIVERY_VEHICLE_TYPES (VEHICLETYPE,HEIGHT,WIDTH,`length`,WEIGHT) VALUES
+('MOTORCYCLE',30.00,30.00,30.00,10.00),
+('CAR',50.00,50.00,50.00,40.00),
+('PICKUP',120.00,90.00,90.00,200.00),
+('VAN',170.00,120.00,120.00,500.00),
+('SMALLLORRY',290.00,150.00,150.00,1000.00);
+
+
+##############################################################################################
 # Version v.2.4.7| 25-February-2022
 ###############################################################################################
 ### Code Changes:
 Get Price Bug Fixed- Added Fulfillment Type in the Response
-
-
 
 ##############################################################################################
 # Version v.2.4.6 | 21-February-2022
@@ -18,8 +47,6 @@ Bulk Order - Bug Fixed
 ### Code Changes:
 Get Price backend logic enhance. Update Get quotaion response
 ALTER TABLE symplified.delivery_sp_type ADD `interval` INT NULL;
-
-
 
 ##############################################################################################
 # Version v.2.4.4 | 21-February-2022

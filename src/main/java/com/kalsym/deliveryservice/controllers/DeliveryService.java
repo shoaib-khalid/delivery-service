@@ -93,6 +93,9 @@ public class DeliveryService {
     DeliveryServiceChargeRepository deliveryMarkupPriceRepository;
 
     @Autowired
+    DeliveryVehicleTypesRepository deliveryVehicleTypesRepository;
+
+    @Autowired
     StoreRepository storeRepository;
 
     public HttpReponse getPrice(Order orderDetails) {
@@ -125,20 +128,25 @@ public class DeliveryService {
                 orderDetails.getDelivery().setDeliveryZone("null");
             }
         }
+        DeliveryVehicleTypes deliveryVehicleTypes = null;
         orderDetails.setVehicleType(cartDetails.getVehicleType());
         if (orderDetails.getVehicleType() == null) {
             if (stores.getMaxOrderQuantityForBike() <= 10) {
                 pickup.setVehicleType(VehicleType.MOTORCYCLE);
+                deliveryVehicleTypes = deliveryVehicleTypesRepository.findByVehicleType(pickup.getVehicleType().name());
                 LogUtil.info(logprefix, location, "Vehicle Type less than 10 : ", pickup.getVehicleType().name());
             } else if (stores.getMaxOrderQuantityForBike() >= 10) {
                 pickup.setVehicleType(VehicleType.CAR);
+                deliveryVehicleTypes = deliveryVehicleTypesRepository.findByVehicleType(pickup.getVehicleType().name());
                 LogUtil.info(logprefix, location, "Vehicle Type more than 10 : ", pickup.getVehicleType().name());
             } else if (stores.getMaxOrderQuantityForBike() >= 20) {
                 pickup.setVehicleType(VehicleType.VAN);
+                deliveryVehicleTypes = deliveryVehicleTypesRepository.findByVehicleType(pickup.getVehicleType().name());
                 LogUtil.info(logprefix, location, "Vehicle Type more than 10 : ", pickup.getVehicleType().name());
             }
         } else {
             pickup.setVehicleType(orderDetails.getVehicleType());
+            deliveryVehicleTypes = deliveryVehicleTypesRepository.findByVehicleType(orderDetails.getVehicleType().name());
         }
 
         LogUtil.info(logprefix, location, "Vehicle Type: ", pickup.getVehicleType().name());
@@ -159,9 +167,17 @@ public class DeliveryService {
 
         orderDetails.setInsurance(false);
         if (cartDetails.getTotalWeight() == null) {
-            orderDetails.setTotalWeightKg(1.0);
+            orderDetails.setTotalWeightKg(null);
         } else {
             orderDetails.setTotalWeightKg(cartDetails.getTotalWeight());
+        }
+        if (deliveryVehicleTypes != null) {
+            orderDetails.setHeight(deliveryVehicleTypes.getHeight());
+            orderDetails.setWidth(deliveryVehicleTypes.getWidth());
+            orderDetails.setLength(deliveryVehicleTypes.getLength());
+            if (orderDetails.getTotalWeightKg() != null) {
+                orderDetails.setTotalWeightKg(deliveryVehicleTypes.getWeight().doubleValue());
+            }
         }
 
         orderDetails.getDelivery().setDeliveryAddress(deliveryAddress);
@@ -310,6 +326,7 @@ public class DeliveryService {
                     deliveryOrder.setCreatedDate(new Date());
                     deliveryOrder.setStoreId(store.getId());
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
+                    deliveryOrder.setFulfillmentType(list.fulfillment);
 
                     deliveryOrder.setDeliveryProviderId(list.providerId);
 

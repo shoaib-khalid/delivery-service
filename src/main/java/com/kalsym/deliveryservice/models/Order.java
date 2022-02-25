@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.Valid;
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -23,7 +24,6 @@ public class Order {
     String productCode;
     Integer deliveryProviderId;
     ItemType itemType;
-    Double totalWeightKg;
     String transactionId;
     String orderId;
     String shipmentContent;
@@ -43,5 +43,9 @@ public class Order {
     //   String deliveryService;
     String remarks;
     String deliveryType;
+    Double totalWeightKg;
+    BigDecimal height;
+    BigDecimal width;
+    BigDecimal length;
 
 }
