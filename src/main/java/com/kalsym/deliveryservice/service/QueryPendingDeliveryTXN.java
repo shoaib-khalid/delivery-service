@@ -36,7 +36,7 @@ public class QueryPendingDeliveryTXN {
     @Autowired
     SymplifiedService symplifiedService;
 
-    @Scheduled(cron = "${delivery-service:0 0/01 * * * ?}")
+    @Scheduled(cron = "${delivery-service:0 0/05 * * * ?}")
     public void dailyScheduler() throws ParseException {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 

@@ -640,7 +640,6 @@ public class OrdersController {
                     deliveryOrder.setStatus(status);
                 }
 
-
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                 deliveryOrdersRepository.save(deliveryOrder);
             } else {

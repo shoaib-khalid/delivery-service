@@ -140,7 +140,7 @@ public class GetPrice extends SyncDispatcher {
                 "height=" + order.getHeight() + "&" +
                 "length=" + order.getLength() + "&" +
                 "weight=" + order.getTotalWeightKg() + "&" +
-                "region=" + /*"HK"*/  order.getRegionCountry();
+                "region=" + order.getRegionCountry().substring(0, order.getRegionCountry().length() - 1);
         return requestParam;
     }
 
