@@ -49,5 +49,6 @@ public class Order {
     BigDecimal height;
     BigDecimal width;
     BigDecimal length;
+    String pickupTime;
 
 }

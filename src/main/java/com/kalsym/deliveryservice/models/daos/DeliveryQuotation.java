@@ -58,5 +58,6 @@ public class DeliveryQuotation {
     private String pickupZone;
     private String deliveryZone;
     private String fulfillmentType;
+    private String pickupTime;
 
 }

@@ -55,38 +55,53 @@ public class GetPrice extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
         String token = this.token;
-        String request = generateRequestBody(order);
+        String request = "";
+        try {
+            request = generateRequestBody(order);
+        } catch (Exception exception) {
+            LogUtil.info(logprefix, location, "REQUEST BODY Exception  : ", exception.getMessage());
 
+        }
         String GETPRICE_URL = this.baseUrl + this.getprice_url + "?" + request;
         LogUtil.info(logprefix, location, "REQUEST BODY FOR GET PRICE : ", GETPRICE_URL);
 
         HashMap httpHeader = new HashMap();
         httpHeader.put("Authorization", token);
-        HttpResult httpResult = HttpsGetConn.SendHttpsRequest("GET", this.systemTransactionId, GETPRICE_URL, httpHeader, this.connectTimeout, this.waitTimeout);
+        try {
+            HttpResult httpResult = HttpsGetConn.SendHttpsRequest("GET", this.systemTransactionId, GETPRICE_URL, httpHeader, this.connectTimeout, this.waitTimeout);
 
-        if (httpResult.httpResponseCode == 200) {
-            LogUtil.info(logprefix, location, "Request successful", "");
-            response.resultCode = 0;
-            response.returnObject = extractResponseBody(httpResult.responseString, serviceType);
-        } else if (httpResult.httpResponseCode == 408) {
+            if (httpResult.httpResponseCode == 200) {
+                LogUtil.info(logprefix, location, "Request successful", "");
+                response.resultCode = 0;
+                response.returnObject = extractResponseBody(httpResult.responseString, serviceType);
+            } else if (httpResult.httpResponseCode == 408) {
+                PriceResult result = new PriceResult();
+                LogUtil.info(logprefix, location, "Request failed", httpResult.responseString);
+
+                result.message = httpResult.responseString;
+                result.isError = true;
+                response.returnObject = result;
+                response.resultCode = -1;
+            } else {
+                JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
+                PriceResult result = new PriceResult();
+                LogUtil.info(logprefix, location, "Request failed", jsonResp.get("meta").getAsJsonObject().get("error_message").getAsString());
+
+                result.message = jsonResp.get("meta").getAsJsonObject().get("error_message").getAsString();
+                result.isError = true;
+                response.returnObject = result;
+                response.resultCode = -1;
+            }
+            LogUtil.info(logprefix, location, String.valueOf(httpResult.httpResponseCode), "");
+
+        } catch (Exception exception) {
             PriceResult result = new PriceResult();
-            LogUtil.info(logprefix, location, "Request failed", httpResult.responseString);
-
-            result.message = httpResult.responseString;
-            result.isError = true;
-            response.returnObject = result;
-            response.resultCode = -1;
-        } else {
-            JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
-            PriceResult result = new PriceResult();
-            LogUtil.info(logprefix, location, "Request failed", jsonResp.get("meta").getAsJsonObject().get("error_message").getAsString());
-
-            result.message = jsonResp.get("meta").getAsJsonObject().get("error_message").getAsString();
+            LogUtil.info(logprefix, location, "Request failed", exception.getMessage());
+            result.message = "ERR_SERVICE_NOT_SUPPORTED";
             result.isError = true;
             response.returnObject = result;
             response.resultCode = -1;
         }
-        LogUtil.info(logprefix, location, String.valueOf(httpResult.httpResponseCode), "");
         return response;
     }
 

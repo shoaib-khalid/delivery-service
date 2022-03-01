@@ -80,7 +80,7 @@ public class SubmitOrder extends SyncDispatcher {
 
         String BASE_URL = this.baseUrl;
         String ENDPOINT_URL_PLACEORDER = this.endpointUrl;
-        LogUtil.info(logprefix, location, "BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER, "");
+        LogUtil.info(logprefix, location, "BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER, "" + order.getDeliveryType());
 
         String METHOD = "POST";
         Mac mac = null;
@@ -195,6 +195,11 @@ public class SubmitOrder extends SyncDispatcher {
         GetPrices req = new GetPrices();
         req.serviceType = order.getPickup().getVehicleType().name();
         req.specialRequests = null;
+
+
+        if (order.getPickupTime() != null) {
+            req.scheduleAt = order.getPickupTime();
+        }
         Stop s1 = new Stop();
         s1.addresses = new Addresses(
                 new MsMY(order.getPickup().getPickupAddress(),

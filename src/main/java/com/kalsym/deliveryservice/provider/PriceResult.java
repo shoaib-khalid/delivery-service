@@ -7,6 +7,7 @@ package com.kalsym.deliveryservice.provider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.kalsym.deliveryservice.models.daos.DeliveryPeriod;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 
@@ -14,6 +15,7 @@ import java.math.BigDecimal;
  * @author user
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@ToString
 public class PriceResult {
     public Long refId;
     public int providerId;

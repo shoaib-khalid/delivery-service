@@ -1,4 +1,14 @@
 ##############################################################################################
+# Version v.2.5.0| 01-March-2022
+###############################################################################################
+### Code Changes:
+
+ALTER TABLE symplified.delivery_quotation ADD pickupTime DATETIME NULL;
+ALTER TABLE symplified.delivery_quotation MODIFY COLUMN pickupTime varchar(200) NULL;
+1. Bug fixed get price and confirm delivery
+
+
+##############################################################################################
 # Version v.2.4.9| 01-March-2022
 ###############################################################################################
 ### Code Changes:
