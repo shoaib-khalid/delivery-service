@@ -114,7 +114,7 @@ public class HttpsPostConn {
             }
             in.close();
 
-            LogUtil.info(refId, loglocation, "Response of topup :" + httpMsgResp.toString(), "");
+            LogUtil.info(refId, loglocation, "Response of :" + httpMsgResp.toString(), "");
 
             response.resultCode = 0;
 

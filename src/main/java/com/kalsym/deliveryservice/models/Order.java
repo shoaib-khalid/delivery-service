@@ -8,6 +8,7 @@ import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.validation.Valid;
 import java.math.BigDecimal;
@@ -18,6 +19,7 @@ import java.util.List;
  */
 @Getter
 @Setter
+@ToString
 public class Order {
     String customerId;
     Integer merchantId;

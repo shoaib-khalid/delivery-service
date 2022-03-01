@@ -149,7 +149,7 @@ public class ProviderThread extends Thread implements Runnable {
 
             //get the java class name from SPId->JavaClass mapping
             String className = "";
-            if (functionName.equalsIgnoreCase("GetPrices")) {
+            if (functionName.equalsIgnoreCase("GetPrice")) {
                 className = provider.getGetPriceClassname();
                 LogUtil.info(logprefix, location, "GetPrices class name for SP ID:" + provider.getId() + " -> " + className, "");
             } else if (functionName.equalsIgnoreCase("SubmitOrder")) {
@@ -208,8 +208,11 @@ public class ProviderThread extends Thread implements Runnable {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, store, this.sysTransactionId, this.sequenceNumberRepository);
                 } else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
-                } else {
+                }else if (functionName.equalsIgnoreCase("GetPrice")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository, this.fulfillment);
+                }
+                else {
+                    reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -229,13 +232,13 @@ public class ProviderThread extends Thread implements Runnable {
 
             LogUtil.info(logprefix, location, "ProviderThread finish", "");
             ProcessResult response = reqFactoryObj.getProcessResult();
-            if (functionName.equalsIgnoreCase("GetPrices")) {
+            if (functionName.equalsIgnoreCase("GetPrice")) {
                 PriceResult priceResult = (PriceResult) response.returnObject;
                 priceResult.providerId = provider.getId();
                 caller.addPriceResult(priceResult);
             } else if (functionName.equalsIgnoreCase("SubmitOrder")) {
                 SubmitOrderResult submitOrderResult = (SubmitOrderResult) response.returnObject;
-                submitOrderResult.providerId = provider.getId();
+                submitOrderResult.deliveryProviderId = provider.getId();
                 caller.setSubmitOrderResult(submitOrderResult);
             } else if (functionName.equalsIgnoreCase("CancelOrder")) {
                 CancelOrderResult cancelOrderResult = (CancelOrderResult) response.returnObject;

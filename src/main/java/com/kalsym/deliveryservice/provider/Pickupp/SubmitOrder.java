@@ -65,18 +65,32 @@ public class SubmitOrder extends SyncDispatcher {
         httpHeader.put("Authorization", token);
         String requestBody = generateRequestBody();
         String SUBMIT_ORDER_URL = this.baseUrl + this.submitOrder_url;
-        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, SUBMIT_ORDER_URL, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
-        if (httpResult.httpResponseCode == 201) {
-            LogUtil.info(logprefix, location, "Request successful", "");
-            response.resultCode = 0;
-            response.returnObject = extractResponseBody(httpResult.responseString);
-        } else {
-            LogUtil.info(logprefix, location, "Request failed", "");
+
+        try {
+            HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, SUBMIT_ORDER_URL, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
+            if (httpResult.httpResponseCode == 201) {
+                LogUtil.info(logprefix, location, "Request successful", "");
+                response.resultCode = 0;
+                response.returnObject = extractResponseBody(httpResult.responseString);
+            } else {
+                LogUtil.info(logprefix, location, "Request failed", "");
+                response.resultCode = -1;
+                SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+                submitOrderResult.resultCode =-1;
+                response.returnObject = submitOrderResult;
+            }
+            LogUtil.info(logprefix, location, "Process finish", "");
+
+        } catch (Exception e) {
             response.resultCode = -1;
             SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+            submitOrderResult.resultCode =-1;
+            submitOrderResult.message =  e.getMessage();
             response.returnObject = submitOrderResult;
+            LogUtil.info(logprefix, location, "Request failed PICKUPP EXCEPTION", e.getMessage());
+
         }
-        LogUtil.info(logprefix, location, "Process finish", "");
+
         return response;
     }
 

@@ -6,6 +6,7 @@ package com.kalsym.deliveryservice.provider;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.kalsym.deliveryservice.models.daos.DeliveryPeriod;
 
 import java.math.BigDecimal;
 
@@ -24,11 +25,12 @@ public class PriceResult {
     public String deliveryType;
     public String providerImage;
     public String vehicleType;
-    public String fulfillment;
     public String pickupDateTime;
+    public DeliveryPeriod deliveryPeriod;
 
     @JsonIgnore
     public int resultCode;
+    public String fulfillment;
     public BigDecimal priorityFee;
     //only for pakistan
     public String pickupCity;

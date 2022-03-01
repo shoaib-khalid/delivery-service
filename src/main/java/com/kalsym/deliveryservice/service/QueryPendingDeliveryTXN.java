@@ -20,11 +20,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Service
 public class QueryPendingDeliveryTXN {
@@ -37,7 +36,7 @@ public class QueryPendingDeliveryTXN {
     @Autowired
     SymplifiedService symplifiedService;
 
-    @Scheduled(cron = "${delivery-service:0 0/05 * * * ?}")
+    @Scheduled(cron = "${delivery-service:0 0/01 * * * ?}")
     public void dailyScheduler() throws ParseException {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 
@@ -47,138 +46,158 @@ public class QueryPendingDeliveryTXN {
         for (DeliveryOrder o : deliveryOrders) {
             LogUtil.info("QueryPendingDeliveryTXN", location, "Request Cancel", "");
 
-            if (o.getTotalRequest() < 2) {
-                LogUtil.info("QueryPendingDeliveryTXN", location, "First Request Five After Minutes Place Order", "");
+            long currentTimestamp = System.currentTimeMillis();
+            Date parsedDate = null;
+            try {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                parsedDate = dateFormat.parse(o.getCreatedDate());
+                System.err.println(" Parse Date : " + parsedDate);
+                Timestamp timestamp = new java.sql.Timestamp(parsedDate.getTime());
+            } catch (Exception e) { //this generic but you can control another types of exception
+                // look the origin of excption
+                LogUtil.info("QueryPendingDeliveryTXN", location, "Exception = " + e.getMessage(), "");
+            }
+            long searchTimestamp = parsedDate.getTime();// this also gives me back timestamp in 13 digit (1425506040493)
 
-                HttpReponse result = deliveryService.cancelOrder(o.getId());
-                Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(o.getDeliveryQuotationId());
+            long difference = Math.abs(currentTimestamp - searchTimestamp);
+            LogUtil.info("QueryPendingDeliveryTXN", location, "Time differences = " + difference + " " + (difference > 10 * 60 * 1000), "");
 
-                Order order = new Order();
-                Delivery delivery = new Delivery();
-                order.setCustomerId(quotation.get().getCustomerId());
-                order.setCartId(quotation.get().getCartId());
-                order.setStoreId(quotation.get().getStoreId());
-                String[] address = quotation.get().getDeliveryAddress().split(quotation.get().getDeliveryPostcode().concat(","));
-                delivery.setDeliveryAddress(address[0].substring(0, address[0].length() - 1));
-                delivery.setDeliveryCity(quotation.get().getDeliveryCity());
-                String[] state = address[1].split(",");
-                delivery.setDeliveryState(state[1]);
-                delivery.setDeliveryContactName(quotation.get().getDeliveryContactName());
-                delivery.setDeliveryContactPhone(quotation.get().getDeliveryContactPhone());
-                delivery.setDeliveryPostcode(quotation.get().getDeliveryPostcode());
-                order.setDelivery(delivery);
-                order.setVehicleType(VehicleType.CAR);
-                order.setDeliveryProviderId(quotation.get().getDeliveryProviderId());
-                LogUtil.info("QueryPendingDeliveryTXN", location, "Request Get Price", "");
+            if (difference > 10 * 60 * 1000) {
+                LogUtil.info("QueryPendingDeliveryTXN", location, "Print Here", "");
 
-                HttpReponse getPrice = deliveryService.getPrice(order);
-                HashSet<PriceResult> priceResult = (HashSet<PriceResult>) getPrice.getData();
-                SubmitDelivery submitDelivery = new SubmitDelivery();
-                LogUtil.info("QueryPendingDeliveryTXN", location, "priceResult ", priceResult.toString());
-                Long refId = null;
-                for (PriceResult res : priceResult) {
-                    if (res.providerId == o.getDeliveryProviderId()) {
-                        refId = res.refId;
+                if (o.getTotalRequest() < 2) {
+                    LogUtil.info("QueryPendingDeliveryTXN", location, "First Request Five After Minutes Place Order", "");
+
+                    HttpReponse result = deliveryService.cancelOrder(o.getId(), "");
+                    Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(o.getDeliveryQuotationId());
+
+                    Order order = new Order();
+                    Delivery delivery = new Delivery();
+                    order.setCustomerId(quotation.get().getCustomerId());
+                    order.setCartId(quotation.get().getCartId());
+                    order.setStoreId(quotation.get().getStoreId());
+                    String[] address = quotation.get().getDeliveryAddress().split(quotation.get().getDeliveryPostcode().concat(","));
+                    delivery.setDeliveryAddress(address[0].substring(0, address[0].length() - 1));
+                    delivery.setDeliveryCity(quotation.get().getDeliveryCity());
+                    String[] state = address[1].split(",");
+                    delivery.setDeliveryState(state[1]);
+                    delivery.setDeliveryContactName(quotation.get().getDeliveryContactName());
+                    delivery.setDeliveryContactPhone(quotation.get().getDeliveryContactPhone());
+                    delivery.setDeliveryPostcode(quotation.get().getDeliveryPostcode());
+                    order.setDelivery(delivery);
+                    order.setVehicleType(VehicleType.CAR);
+                    order.setDeliveryProviderId(quotation.get().getDeliveryProviderId());
+                    LogUtil.info("QueryPendingDeliveryTXN", location, "Request Get Price", "");
+
+                    HttpReponse getPrice = deliveryService.getPrice(order, "");
+                    HashSet<PriceResult> priceResult = (HashSet<PriceResult>) getPrice.getData();
+                    SubmitDelivery submitDelivery = new SubmitDelivery();
+                    LogUtil.info("QueryPendingDeliveryTXN", location, "priceResult ", priceResult.toString());
+                    Long refId = null;
+                    for (PriceResult res : priceResult) {
+                        if (res.providerId == o.getDeliveryProviderId()) {
+                            refId = res.refId;
+                        }
                     }
-                }
-                Optional<DeliveryQuotation> request = deliveryQuotationRepository.findById(refId);
+                    Optional<DeliveryQuotation> request = deliveryQuotationRepository.findById(refId);
 //                LogUtil.info("QueryPendingDeliveryTXN", location, "Request Submit Order", o.getOrderId());
-                deliveryService.placeOrder(o.getOrderId(), request.get(), submitDelivery);
+                    deliveryService.placeOrder(o.getOrderId(), request.get(), submitDelivery);
 
-            } else if (o.getTotalRequest() < 3) {
-                LogUtil.info("QueryPendingDeliveryTXN", location, "Second Request After Ten Minutes Place Order", "");
-                HttpReponse result = deliveryService.cancelOrder(o.getId());
+                } else if (o.getTotalRequest() < 3) {
+                    LogUtil.info("QueryPendingDeliveryTXN", location, "Second Request After Ten Minutes Place Order", "");
+                    HttpReponse result = deliveryService.cancelOrder(o.getId(), "");
 
-                Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(o.getDeliveryQuotationId());
+                    Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(o.getDeliveryQuotationId());
 
-                Order order = new Order();
-                Delivery delivery = new Delivery();
-                order.setCustomerId(quotation.get().getCustomerId());
-                order.setCartId(quotation.get().getCartId());
-                order.setStoreId(quotation.get().getStoreId());
-                String[] address = quotation.get().getDeliveryAddress().split(quotation.get().getDeliveryPostcode().concat(","));
-                delivery.setDeliveryAddress(address[0].substring(0, address[0].length() - 1));
-                delivery.setDeliveryCity(quotation.get().getDeliveryCity());
-                String[] state = address[1].split(",");
-                delivery.setDeliveryState(state[1]);
-                delivery.setDeliveryContactName(quotation.get().getDeliveryContactName());
-                delivery.setDeliveryContactPhone(quotation.get().getDeliveryContactPhone());
-                delivery.setDeliveryPostcode(quotation.get().getDeliveryPostcode());
-                order.setDelivery(delivery);
-                order.setVehicleType(VehicleType.MOTORCYCLE);
-                order.setDeliveryProviderId(quotation.get().getDeliveryProviderId());
-                LogUtil.info("QueryPendingDeliveryTXN", location, "Request Get Price", "");
+                    Order order = new Order();
+                    Delivery delivery = new Delivery();
+                    order.setCustomerId(quotation.get().getCustomerId());
+                    order.setCartId(quotation.get().getCartId());
+                    order.setStoreId(quotation.get().getStoreId());
+                    String[] address = quotation.get().getDeliveryAddress().split(quotation.get().getDeliveryPostcode().concat(","));
+                    delivery.setDeliveryAddress(address[0].substring(0, address[0].length() - 1));
+                    delivery.setDeliveryCity(quotation.get().getDeliveryCity());
+                    String[] state = address[1].split(",");
+                    delivery.setDeliveryState(state[1]);
+                    delivery.setDeliveryContactName(quotation.get().getDeliveryContactName());
+                    delivery.setDeliveryContactPhone(quotation.get().getDeliveryContactPhone());
+                    delivery.setDeliveryPostcode(quotation.get().getDeliveryPostcode());
+                    order.setDelivery(delivery);
+                    order.setVehicleType(VehicleType.MOTORCYCLE);
+                    order.setDeliveryProviderId(quotation.get().getDeliveryProviderId());
+                    LogUtil.info("QueryPendingDeliveryTXN", location, "Request Get Price", "");
 
-                HttpReponse getPrice = deliveryService.getPrice(order);
-                HashSet<PriceResult> priceResult = (HashSet<PriceResult>) getPrice.getData();
-                SubmitDelivery submitDelivery = new SubmitDelivery();
-                LogUtil.info("QueryPendingDeliveryTXN", location, "priceResult ", priceResult.toString());
-                Long refId = null;
-                for (PriceResult res : priceResult) {
-                    if (res.providerId == o.getDeliveryProviderId()) {
-                        refId = res.refId;
+                    HttpReponse getPrice = deliveryService.getPrice(order, "");
+                    HashSet<PriceResult> priceResult = (HashSet<PriceResult>) getPrice.getData();
+                    SubmitDelivery submitDelivery = new SubmitDelivery();
+                    LogUtil.info("QueryPendingDeliveryTXN", location, "priceResult ", priceResult.toString());
+                    Long refId = null;
+                    for (PriceResult res : priceResult) {
+                        if (res.providerId == o.getDeliveryProviderId()) {
+                            refId = res.refId;
+                        }
                     }
-                }
-                Optional<DeliveryQuotation> request = deliveryQuotationRepository.findById(refId);
+                    Optional<DeliveryQuotation> request = deliveryQuotationRepository.findById(refId);
 //                LogUtil.info("QueryPendingDeliveryTXN", location, "Request Submit Order", o.getOrderId());
-                HttpReponse placeOrder = deliveryService.placeOrder(o.getOrderId(), request.get(), submitDelivery);
-                SubmitOrderResult submitOrderResult = (SubmitOrderResult) placeOrder.getData();
-                BigDecimal priorityFee = BigDecimal.valueOf((request.get().getAmount() * 50) / 100);
-                priorityFee = priorityFee.setScale(2, BigDecimal.ROUND_HALF_UP);
-                deliveryService.addPriorityFee(submitOrderResult.orderCreated.getId(), priorityFee);
+                    HttpReponse placeOrder = deliveryService.placeOrder(o.getOrderId(), request.get(), submitDelivery);
+                    SubmitOrderResult submitOrderResult = (SubmitOrderResult) placeOrder.getData();
+                    BigDecimal priorityFee = BigDecimal.valueOf((request.get().getAmount() * 50) / 100);
+                    priorityFee = priorityFee.setScale(2, BigDecimal.ROUND_HALF_UP);
+                    deliveryService.addPriorityFee(submitOrderResult.orderCreated.getId(), priorityFee);
 
-            } else if (o.getTotalRequest() < 4) {
-                LogUtil.info("QueryPendingDeliveryTXN", location, "Third Request After Fifteen Minutes Place Order", "");
-                HttpReponse result = deliveryService.cancelOrder(o.getId());
+                } else if (o.getTotalRequest() < 4) {
+                    LogUtil.info("QueryPendingDeliveryTXN", location, "Third Request After Fifteen Minutes Place Order", "");
+                    HttpReponse result = deliveryService.cancelOrder(o.getId(), "");
 
-                Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(o.getDeliveryQuotationId());
+                    Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(o.getDeliveryQuotationId());
 
-                Order order = new Order();
-                Delivery delivery = new Delivery();
-                order.setCustomerId(quotation.get().getCustomerId());
-                order.setCartId(quotation.get().getCartId());
-                order.setStoreId(quotation.get().getStoreId());
-                String[] address = quotation.get().getDeliveryAddress().split(quotation.get().getDeliveryPostcode().concat(","));
-                delivery.setDeliveryAddress(address[0].substring(0, address[0].length() - 1));
-                delivery.setDeliveryCity(quotation.get().getDeliveryCity());
-                String[] state = address[1].split(",");
-                delivery.setDeliveryState(state[1]);
-                delivery.setDeliveryContactName(quotation.get().getDeliveryContactName());
-                delivery.setDeliveryContactPhone(quotation.get().getDeliveryContactPhone());
-                delivery.setDeliveryPostcode(quotation.get().getDeliveryPostcode());
-                order.setDelivery(delivery);
-                order.setVehicleType(VehicleType.MOTORCYCLE);
-                order.setDeliveryProviderId(quotation.get().getDeliveryProviderId());
-                LogUtil.info("QueryPendingDeliveryTXN", location, "Request Get Price", "");
+                    Order order = new Order();
+                    Delivery delivery = new Delivery();
+                    order.setCustomerId(quotation.get().getCustomerId());
+                    order.setCartId(quotation.get().getCartId());
+                    order.setStoreId(quotation.get().getStoreId());
+                    String[] address = quotation.get().getDeliveryAddress().split(quotation.get().getDeliveryPostcode().concat(","));
+                    delivery.setDeliveryAddress(address[0].substring(0, address[0].length() - 1));
+                    delivery.setDeliveryCity(quotation.get().getDeliveryCity());
+                    String[] state = address[1].split(",");
+                    delivery.setDeliveryState(state[1]);
+                    delivery.setDeliveryContactName(quotation.get().getDeliveryContactName());
+                    delivery.setDeliveryContactPhone(quotation.get().getDeliveryContactPhone());
+                    delivery.setDeliveryPostcode(quotation.get().getDeliveryPostcode());
+                    order.setDelivery(delivery);
+                    order.setVehicleType(VehicleType.MOTORCYCLE);
+                    order.setDeliveryProviderId(quotation.get().getDeliveryProviderId());
+                    LogUtil.info("QueryPendingDeliveryTXN", location, "Request Get Price", "");
 
-                HttpReponse getPrice = deliveryService.getPrice(order);
-                HashSet<PriceResult> priceResult = (HashSet<PriceResult>) getPrice.getData();
-                SubmitDelivery submitDelivery = new SubmitDelivery();
-                LogUtil.info("QueryPendingDeliveryTXN", location, "priceResult ", priceResult.toString());
-                Long refId = null;
-                for (PriceResult res : priceResult) {
-                    if (res.providerId == o.getDeliveryProviderId()) {
-                        refId = res.refId;
+                    HttpReponse getPrice = deliveryService.getPrice(order, "");
+                    HashSet<PriceResult> priceResult = (HashSet<PriceResult>) getPrice.getData();
+                    SubmitDelivery submitDelivery = new SubmitDelivery();
+                    LogUtil.info("QueryPendingDeliveryTXN", location, "priceResult ", priceResult.toString());
+                    Long refId = null;
+                    for (PriceResult res : priceResult) {
+                        if (res.providerId == o.getDeliveryProviderId()) {
+                            refId = res.refId;
+                        }
                     }
-                }
-                Optional<DeliveryQuotation> request = deliveryQuotationRepository.findById(refId);
+                    Optional<DeliveryQuotation> request = deliveryQuotationRepository.findById(refId);
 //                LogUtil.info("QueryPendingDeliveryTXN", location, "Request Submit Order", o.getOrderId());
-                HttpReponse placeOrder = deliveryService.placeOrder(o.getOrderId(), request.get(), submitDelivery);
-                SubmitOrderResult submitOrderResult = (SubmitOrderResult) placeOrder.getData();
-                BigDecimal priorityFee = BigDecimal.valueOf((request.get().getAmount() * 100) / 100);
-                priorityFee = priorityFee.setScale(2, BigDecimal.ROUND_HALF_UP);
-                deliveryService.addPriorityFee(submitOrderResult.orderCreated.getId(), priorityFee);
+                    HttpReponse placeOrder = deliveryService.placeOrder(o.getOrderId(), request.get(), submitDelivery);
+                    SubmitOrderResult submitOrderResult = (SubmitOrderResult) placeOrder.getData();
+                    BigDecimal priorityFee = BigDecimal.valueOf((request.get().getAmount() * 100) / 100);
+                    priorityFee = priorityFee.setScale(2, BigDecimal.ROUND_HALF_UP);
+                    deliveryService.addPriorityFee(submitOrderResult.orderCreated.getId(), priorityFee);
 
-            } else if (o.getTotalRequest() < 5) {
-                LogUtil.info("QueryPendingDeliveryTXN", location, "Third Request After Fifteen Minutes Place Order", "");
-                HttpReponse result = deliveryService.cancelOrder(o.getId());
+                } else if (o.getTotalRequest() < 5) {
+                    LogUtil.info("QueryPendingDeliveryTXN", location, "Third Request After Fifteen Minutes Place Order", "");
 
-                String orderStatus = "FAILED_FIND_DRIVER";
-                String res = symplifiedService.updateOrderStatus(o.getOrderId(), orderStatus);
+                    HttpReponse result = deliveryService.cancelOrder(o.getId(), "");
 
+                    String orderStatus = "FAILED_FIND_DRIVER";
+                    String res = symplifiedService.updateOrderStatus(o.getOrderId(), orderStatus);
+
+                }
             }
         }
-
     }
 
 
@@ -196,12 +215,10 @@ public class QueryPendingDeliveryTXN {
         for (DeliveryOrder order : deliveryOrders) {
             LogUtil.info("QueryPendingTXN", location, "Order Id : " + order.getOrderId(), "");
             System.err.println("Query Pending Transaction : " + order.getOrderId());
-            deliveryService.queryOrder(order.getId());
+            deliveryService.queryOrder(order.getId(), "QueryPendingTransaction");
 
             LogUtil.info("QueryPendingTXN Status ", location, "Order Id : " + order.getOrderId() + " Order Status : " + order.getSystemStatus(), "");
-
         }
     }
-
 
 }

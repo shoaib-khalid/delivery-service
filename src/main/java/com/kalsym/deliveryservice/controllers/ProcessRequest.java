@@ -132,7 +132,7 @@ public class ProcessRequest {
                     String fieldValue = providerConfigList.get(j).getConfigValue();
                     config.put(fieldName, fieldValue);
                 }
-                ProviderThread dthread = new ProviderThread(this, sysTransactionId, deliverySpTypes.get(i).getProvider(), config, order, "GetPrices", sequenceNumberRepository, fulfillment);
+                ProviderThread dthread = new ProviderThread(this, sysTransactionId, deliverySpTypes.get(i).getProvider(), config, order, "GetPrice", sequenceNumberRepository, fulfillment);
                 dthread.start();
             }
         } else {
@@ -152,7 +152,7 @@ public class ProcessRequest {
                     String fieldValue = providerConfigList.get(j).getConfigValue();
                     config.put(fieldName, fieldValue);
                 }
-                ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetPrices", sequenceNumberRepository, fulfillment);
+                ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetPrice", sequenceNumberRepository, fulfillment);
                 dthread.start();
 
             }
@@ -225,7 +225,7 @@ public class ProcessRequest {
         deliveryOrder.setTotalWeightKg(order.getTotalWeightKg());
 
         ProcessResult response = new ProcessResult();
-        if (submitOrderResult.orderCreated != null) {
+        if (submitOrderResult.resultCode == 0) {
             LogUtil.info(logprefix, location, "Order succesfully created", "");
             DeliveryOrder orderCreated = submitOrderResult.orderCreated;
             deliveryOrder.setCreatedDate(orderCreated.getCreatedDate());
@@ -244,7 +244,7 @@ public class ProcessRequest {
 
             response.resultCode = 0;
         } else {
-            response.resultCode = -1;
+            response.resultCode = submitOrderResult.resultCode;
             response.resultString = submitOrderResult.message;
             LogUtil.info(logprefix, location, "Fail to create order", "");
         }

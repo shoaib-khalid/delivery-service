@@ -1,5 +1,6 @@
 package com.kalsym.deliveryservice.controllers;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
 import com.kalsym.deliveryservice.models.*;
 import com.kalsym.deliveryservice.models.daos.*;
@@ -9,7 +10,6 @@ import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
 import com.kalsym.deliveryservice.provider.*;
 import com.kalsym.deliveryservice.repositories.*;
-import com.kalsym.deliveryservice.service.QueryPendingDeliveryTXN;
 import com.kalsym.deliveryservice.service.utility.SymplifiedService;
 import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.LogUtil;
@@ -35,7 +35,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Sarosh
@@ -96,6 +95,10 @@ public class OrdersController {
     @Autowired
     StoreDeliverySpRepository storeDeliverySpRepository;
 
+
+    @Autowired
+    DeliveryPeriodRepository deliveryPeriodRepository;
+
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
                                                 @Valid @RequestBody Order orderDetails) {
@@ -103,8 +106,7 @@ public class OrdersController {
         System.err.println("request.getRequestURI()" + request.getRequestURI());
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
-        HttpReponse response = new HttpReponse(request.getRequestURI());
-        response = deliveryService.getPrice(orderDetails);
+        HttpReponse response = deliveryService.getPrice(orderDetails, request.getRequestURI());
 
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -121,7 +123,7 @@ public class OrdersController {
         String systemTransactionId = StringUtility.CreateRefID("DL");
 
 
-        response = deliveryService.getQuotaion(id);
+        response = deliveryService.getQuotaion(id, request.getRequestURI());
         LogUtil.info(logprefix, location, "Quotation ", response.getData().toString());
 
 
@@ -146,7 +148,7 @@ public class OrdersController {
         Pickup pickup = new Pickup();
         pickup.setPickupPostcode(postcode);
         order.setPickup(pickup);
-        ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository,deliverySpTypeRepository,storeDeliverySpRepository);
+        ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository);
         ProcessResult processResult = process.GetPickupDate(serviceProviderId);
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
@@ -179,7 +181,7 @@ public class OrdersController {
         Pickup pickup = new Pickup();
         pickup.setPickupDate(pickupdate);
         order.setPickup(pickup);
-        ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository,deliverySpTypeRepository,storeDeliverySpRepository);
+        ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository);
         ProcessResult processResult = process.GetPickupTime(serviceProviderId);
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
@@ -213,7 +215,7 @@ public class OrdersController {
         pickup.setPickupPostcode(postcode);
         order.setPickup(pickup);
         order.setProductCode(productCode);
-        ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository,deliverySpTypeRepository,storeDeliverySpRepository);
+        ProcessRequest process = new ProcessRequest(systemTransactionId, order, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository);
         ProcessResult processResult = process.GetLocationId();
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
@@ -235,7 +237,8 @@ public class OrdersController {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
-        response = deliveryService.submitOrder(orderId, refId, submitDelivery);
+
+        response = deliveryService.submitOrder(orderId, refId, submitDelivery, request.getRequestURI());
 //        DeliveryOrder deliveryOrderOption = deliveryOrdersRepository.findByOrderId(orderId);
 //        String systemTransactionId;
 //
@@ -375,8 +378,9 @@ public class OrdersController {
 //            deliveryQuotationRepository.save(quotation);
 //            response.setMessage(processResult.resultString);
 //            //fail to get price
+
         return ResponseEntity.status(HttpStatus.OK).body(response);
-//        }
+
     }
 
     // TODO: TESTING PENDING
@@ -441,7 +445,7 @@ public class OrdersController {
             LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " "
                     + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
             ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository,
-                    providerConfigurationRepository, providerRepository, sequenceNumberRepository,deliverySpTypeRepository, storeDeliverySpRepository);
+                    providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository);
             ProcessResult processResult = process.SubmitOrder();
             LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
@@ -478,7 +482,7 @@ public class OrdersController {
                 deliveryOrder.setStatus(orderCreated.getStatus());
 //                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
 
-                DeliveryOrder db =  deliveryOrdersRepository.save(deliveryOrder);
+                DeliveryOrder db = deliveryOrdersRepository.save(deliveryOrder);
                 quotation.setSpOrderId(db.getSpOrderId());
                 quotation.setOrderId(o.getOrderId());
                 quotation.setUpdatedDate(new Date());
@@ -534,7 +538,7 @@ public class OrdersController {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
-        response = deliveryService.cancelOrder(orderId);
+        response = deliveryService.cancelOrder(orderId, request.getRequestURI());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
@@ -547,7 +551,7 @@ public class OrdersController {
 
         LogUtil.info(logprefix, location, "", "");
 
-        response = deliveryService.queryOrder(orderId);
+        response = deliveryService.queryOrder(orderId, request.getRequestURI());
         return ResponseEntity.status(response.getStatus()).body(response);
     }
 
@@ -632,8 +636,7 @@ public class OrdersController {
                     orderStatus = "REJECTED_BY_STORE";
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
-                }
-                else{
+                } else {
                     deliveryOrder.setStatus(status);
                 }
 
@@ -749,7 +752,7 @@ public class OrdersController {
         }
     }
 
-    @GetMapping(path = {"/getDeliveryProvider/{type}/{country}"}, name = "orders-confirm-delivery")
+    @GetMapping(path = {"/getDeliveryProvider/{type}/{country}"}, name = "delivery-get-provider")
     public ResponseEntity<HttpReponse> getDeliveryProvider(HttpServletRequest request,
                                                            @PathVariable("type") String type, @PathVariable("country") String country) {
         String logprefix = request.getRequestURI() + " ";
@@ -980,13 +983,17 @@ public class OrdersController {
                 mainCategory.add(c);
             }
         }
+        String id = "EXPRESS";
 
-        List<DeliveryMainType> sortedList = mainCategory.stream()
-                .sorted(Comparator.comparingLong(DeliveryMainType::getId))
-                .collect(Collectors.toList());
+        DeliveryPeriod deliveryPeriod = deliveryPeriodRepository.getOne(id);
+        System.err.println("test - " + deliveryPeriod.toString());
 
-
-        response.setData(sortedList);
+//        List<DeliveryMainType> sortedList = mainCategory.stream()
+//                .sorted(Comparator.comparingLong(DeliveryMainType::getId))
+//                .collect(Collectors.toList());
+//
+//
+//        response.setData(sortedList);
         return ResponseEntity.status(HttpStatus.OK).body(response);
 
     }
@@ -1008,6 +1015,7 @@ public class OrdersController {
     @Getter
     @Setter
     @ToString
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class BulkOrderResponse {
         private Long id;
         private String orderId;
