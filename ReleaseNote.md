@@ -1,5 +1,15 @@
 ##############################################################################################
-# Version v.2.5.0| 02-March-2022
+# Version v.2.5.2| 02-March-2022
+###############################################################################################
+### Code Changes:
+1. Bug fixed for PICKUPP Query and Place Order Time
+   ALTER TABLE symplified.delivery_quotation ADD `interval` INT NULL;
+2. Get Price sort by merchant choose
+3. Pickupp change time zone format
+
+
+##############################################################################################
+# Version v.2.5.1| 02-March-2022
 ###############################################################################################
 ### Code Changes:
 1. Query Pending Transaction Pending time Changed

@@ -39,4 +39,6 @@ public class PriceResult {
     public String deliveryCity;
     public String pickupZone;
     public String deliveryZone;
+    public Integer interval;
+
 }

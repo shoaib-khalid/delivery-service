@@ -59,5 +59,6 @@ public class DeliveryQuotation {
     private String deliveryZone;
     private String fulfillmentType;
     private String pickupTime;
+    private Integer interval;
 
 }

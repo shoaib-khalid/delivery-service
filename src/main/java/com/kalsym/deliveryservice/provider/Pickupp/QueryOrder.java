@@ -3,6 +3,7 @@ package com.kalsym.deliveryservice.provider.Pickupp;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
+import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.QueryOrderResult;
@@ -10,14 +11,8 @@ import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsGetConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
-import javax.xml.bind.DatatypeConverter;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
@@ -28,6 +23,7 @@ public class QueryOrder extends SyncDispatcher {
     private final int connectTimeout;
     private final int waitTimeout;
     private final String systemTransactionId;
+    private final String trackingUrl;
     private String spOrderId;
     private HashMap productMap;
     private String atxProductCode = "";
@@ -36,7 +32,6 @@ public class QueryOrder extends SyncDispatcher {
     private String logprefix;
     private String location = "PickuppQueryOrder";
     private String token;
-    private final String trackingUrl;
 
 
     public QueryOrder(CountDownLatch latch, HashMap config, String spOrderId, String systemTransactionId) {
@@ -102,14 +97,30 @@ public class QueryOrder extends SyncDispatcher {
             queryOrderResult.isSuccess = isSuccess;
 
             String driverId = data.get("trips").getAsJsonArray().get(0).getAsJsonObject().get("delivery_agent_id").getAsString();
-            String shareLink = trackingUrl+data.get("order_number");
+            String shareLink = trackingUrl + data.get("order_number");
             String status = data.get("status").getAsString();
 
             DeliveryOrder orderFound = new DeliveryOrder();
             orderFound.setSpOrderId(spOrderId);
             orderFound.setStatus(status);
             orderFound.setCustomerTrackingUrl(shareLink);
-//
+
+
+            switch (status) {
+                case "SCHEDULED":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                    break;
+                case "ASSIGNED":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
+                    break;
+                case "ENROUTE":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+                    break;
+                case "DELIVERED":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+                    break;
+            }
+
             queryOrderResult.orderFound = orderFound;
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);

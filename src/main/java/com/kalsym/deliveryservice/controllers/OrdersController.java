@@ -612,6 +612,7 @@ public class OrdersController {
             SpCallbackResult spCallbackResult = (SpCallbackResult) processResult.returnObject;
             String spOrderId = spCallbackResult.spOrderId;
             String status = spCallbackResult.status;
+
             int spId = spCallbackResult.providerId;
             DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
             if (deliveryOrder != null) {

@@ -33,6 +33,7 @@ public class ProcessRequest {
     List<PriceResult> priceResultLists;
     PriceResult priceResultList;
     List<DeliveryQuotation> deliveryQuotations;
+    List<Fulfillment> fulfillments;
 
     SubmitOrderResult submitOrderResult;
     CancelOrderResult cancelOrderResult;
@@ -51,6 +52,24 @@ public class ProcessRequest {
     StoreDeliverySpRepository storeDeliveryDetailSp;
     @Autowired
     DeliveryQuotationRepository deliveryQuotationRepository;
+
+    public ProcessRequest(String sysTransactionId, Order order, ProviderRatePlanRepository providerRatePlanRepository,
+                          ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository,
+                          SequenceNumberRepository sequenceNumberRepository, DeliverySpTypeRepository deliverySpTypeRepository, StoreDeliverySpRepository storeDeliveryDetailSp, List<Fulfillment> fulfillments) {
+        this.sysTransactionId = sysTransactionId;
+        this.order = order;
+        this.logprefix = sysTransactionId;
+        this.location = "ProcessRequest";
+        this.providerRatePlanRepository = providerRatePlanRepository;
+        this.providerConfigurationRepository = providerConfigurationRepository;
+        this.providerRepository = providerRepository;
+        this.providerThreadRunning = 0;
+        this.priceResultLists = new ArrayList<>();
+        this.sequenceNumberRepository = sequenceNumberRepository;
+        this.deliverySpTypeRepository = deliverySpTypeRepository;
+        this.storeDeliveryDetailSp = storeDeliveryDetailSp;
+        this.fulfillments = fulfillments;
+    }
 
     public ProcessRequest(String sysTransactionId, Order order, ProviderRatePlanRepository providerRatePlanRepository,
                           ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository,
@@ -111,27 +130,27 @@ public class ProcessRequest {
     public ProcessResult GetPrice() {
         //get provider rate plan  
         LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
-        System.err.println("FROM THREAD " + order.getDeliveryProviderId());
         if (order.getDeliveryProviderId() == null) {
-            List<DeliverySpType> deliverySpTypes = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountry(order.getDeliveryType(), order.getRegionCountry());
-            for (int i = 0; i < deliverySpTypes.size(); i++) {
-                Fulfillment fulfillment = new Fulfillment();
-                fulfillment.setFulfillment(deliverySpTypes.get(i).getFulfilment());
-                fulfillment.setInterval(deliverySpTypes.get(i).getInterval());
+            for (Fulfillment f : fulfillments) {
+                List<DeliverySpType> deliverySpTypes = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountryAndFulfilment(order.getDeliveryType(), order.getRegionCountry(), f.getFulfillment());
+                for (int i = 0; i < deliverySpTypes.size(); i++) {
+                    LogUtil.info(logprefix, location, "Get Price The Provider ID IS NULL  : " + sysTransactionId + " FulfillmentType : "+ deliverySpTypes.get(i).getFulfilment() , "");
 
-//                order.setDeliveryPeriod(deliverySpTypes.get(i).getFulfilment());
-//                order.setInterval(deliverySpTypes.get(i).getInterval());
-                System.err.println("TYPE :" + deliverySpTypes.get(i).getInterval());
-                LogUtil.info(logprefix, location, "Find Fulfillment Type :" + order.getDeliveryPeriod(), "");
-                List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(deliverySpTypes.get(i).getProvider().getId());
-                HashMap config = new HashMap();
-                for (int j = 0; j < providerConfigList.size(); j++) {
-                    String fieldName = providerConfigList.get(j).getId().getConfigField();
-                    String fieldValue = providerConfigList.get(j).getConfigValue();
-                    config.put(fieldName, fieldValue);
+                    Fulfillment fulfillment = new Fulfillment();
+                    fulfillment.setFulfillment(deliverySpTypes.get(i).getFulfilment());
+                    fulfillment.setInterval(deliverySpTypes.get(i).getInterval());
+
+                    LogUtil.info(logprefix, location, "Find Fulfillment Type :" + f.getFulfillment(), "");
+                    List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(deliverySpTypes.get(i).getProvider().getId());
+                    HashMap config = new HashMap();
+                    for (int j = 0; j < providerConfigList.size(); j++) {
+                        String fieldName = providerConfigList.get(j).getId().getConfigField();
+                        String fieldValue = providerConfigList.get(j).getConfigValue();
+                        config.put(fieldName, fieldValue);
+                    }
+                    ProviderThread dthread = new ProviderThread(this, sysTransactionId, deliverySpTypes.get(i).getProvider(), config, order, "GetPrice", sequenceNumberRepository, fulfillment);
+                    dthread.start();
                 }
-                ProviderThread dthread = new ProviderThread(this, sysTransactionId, deliverySpTypes.get(i).getProvider(), config, order, "GetPrice", sequenceNumberRepository, fulfillment);
-                dthread.start();
             }
         } else {
 
@@ -139,13 +158,15 @@ public class ProcessRequest {
             Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
             List<StoreDeliverySp> storeDeliverySps = storeDeliveryDetailSp.findByStoreId(order.getStoreId());
             if (storeDeliverySps.isEmpty()) {
+
                 List<DeliverySpType> deliverySpTypes = deliverySpTypeRepository.findAllByProviderAndDeliveryTypeAndRegionCountryAndFulfilment(provider, order.getDeliveryType(), order.getRegionCountry(), order.getDeliveryPeriod());
                 for (DeliverySpType deliverySpType : deliverySpTypes) {
+                    LogUtil.info(logprefix, location, "Get Price The Store DeliverySP is Empty : " + sysTransactionId + " FulfillmentType : "+ deliverySpType.getFulfilment() , "");
+
                     Fulfillment fulfillment = new Fulfillment();
 
                     fulfillment.setFulfillment(deliverySpType.getFulfilment());
                     fulfillment.setInterval(deliverySpType.getInterval());
-                    System.err.println("setDeliveryPeriod :" + fulfillment);
 
                     HashMap config = new HashMap();
                     for (int j = 0; j < providerConfigList.size(); j++) {
@@ -159,11 +180,10 @@ public class ProcessRequest {
                 }
             } else {
                 for (StoreDeliverySp storeDeliverySp : storeDeliverySps) {
-//                order.setDeliveryPeriod(storeDeliverySp.getFulfilment());
+                    LogUtil.info(logprefix, location, "Get Price The Store DeliverySP : " + storeDeliverySp.getStoreId() + " FulfillmentType : "+ storeDeliverySp.getFulfilment() , "");
                     Fulfillment fulfillment = new Fulfillment();
 
                     fulfillment.setFulfillment(storeDeliverySp.getFulfilment());
-                    System.err.println("setDeliveryPeriod :" + fulfillment);
 
                     HashMap config = new HashMap();
                     for (int j = 0; j < providerConfigList.size(); j++) {
@@ -182,7 +202,8 @@ public class ProcessRequest {
         try {
             Thread.sleep(100);
         } catch (Exception ex) {
-            System.err.println("EXEPTION :  " + ex.getMessage());
+            LogUtil.info(logprefix, location, "Get Price a) : " + ex.getMessage(), "");
+
 
         }
 
@@ -190,9 +211,8 @@ public class ProcessRequest {
             try {
                 Thread.sleep(500);
             } catch (Exception ex) {
-                System.err.println("EXEPTION :  " + ex.getMessage());
+                LogUtil.info(logprefix, location, "Get Price b) : " + ex.getMessage(), "");
             }
-            //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
         }
 
         ProcessResult response = new ProcessResult();

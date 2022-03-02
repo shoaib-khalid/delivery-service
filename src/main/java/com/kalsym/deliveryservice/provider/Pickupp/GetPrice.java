@@ -87,7 +87,7 @@ public class GetPrice extends SyncDispatcher {
                 PriceResult result = new PriceResult();
                 LogUtil.info(logprefix, location, "Request failed", jsonResp.get("meta").getAsJsonObject().get("error_message").getAsString());
 
-                result.message = jsonResp.get("meta").getAsJsonObject().get("error_message").getAsString();
+                result.message = "ERR_SERVICE_NOT_SUPPORTED";
                 result.isError = true;
                 response.returnObject = result;
                 response.resultCode = -1;
@@ -158,6 +158,8 @@ public class GetPrice extends SyncDispatcher {
         priceResult.price = bd;
         priceResult.isError = false;
         priceResult.fulfillment = fulfillment.getFulfillment();
+        priceResult.interval= fulfillment.getInterval();
+
         return priceResult;
     }
 }

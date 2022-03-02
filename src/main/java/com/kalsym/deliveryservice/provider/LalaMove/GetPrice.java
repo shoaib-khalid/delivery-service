@@ -78,7 +78,7 @@ public class GetPrice extends SyncDispatcher {
 
         String BASE_URL = this.baseUrl;
         String ENDPOINT_URL_PLACEORDER = this.getprice_url;
-        System.err.println("BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER);
+        LogUtil.info(logprefix, location, "BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER, "");
         try {
             mac = Mac.getInstance("HmacSHA256");
             SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
@@ -199,8 +199,8 @@ public class GetPrice extends SyncDispatcher {
         priceResult.price = bd;
         priceResult.pickupDateTime = pickupTime;
         priceResult.fulfillment = fulfillment.getFulfillment();
-        System.err.println(" Delivery Period " + fulfillment.getFulfillment());
         priceResult.isError = false;
+        priceResult.interval= fulfillment.getInterval();
         return priceResult;
     }
 }
