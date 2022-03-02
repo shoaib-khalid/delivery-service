@@ -1,9 +1,16 @@
 ##############################################################################################
+# Version v.2.5.3| 02-March-2022
+###############################################################################################
+### Code Changes:
+ALTER TABLE symplified.delivery_quotation ADD intervalTime INT NULL;
+1. bug fixed get price
+
+
+##############################################################################################
 # Version v.2.5.2| 02-March-2022
 ###############################################################################################
 ### Code Changes:
 1. Bug fixed for PICKUPP Query and Place Order Time
-   ALTER TABLE symplified.delivery_quotation ADD `interval` INT NULL;
 2. Get Price sort by merchant choose
 3. Pickupp change time zone format
 

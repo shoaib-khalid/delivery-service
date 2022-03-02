@@ -80,15 +80,18 @@ public class GetPrice extends SyncDispatcher {
 
                 result.message = httpResult.responseString;
                 result.isError = true;
+                result.interval = null;
                 response.returnObject = result;
                 response.resultCode = -1;
             } else {
                 JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
                 PriceResult result = new PriceResult();
+//                result.interval = null;
                 LogUtil.info(logprefix, location, "Request failed", jsonResp.get("meta").getAsJsonObject().get("error_message").getAsString());
 
                 result.message = "ERR_SERVICE_NOT_SUPPORTED";
                 result.isError = true;
+                result.interval = null;
                 response.returnObject = result;
                 response.resultCode = -1;
             }
@@ -99,6 +102,7 @@ public class GetPrice extends SyncDispatcher {
             LogUtil.info(logprefix, location, "Request failed", exception.getMessage());
             result.message = "ERR_SERVICE_NOT_SUPPORTED";
             result.isError = true;
+            result.interval = null;
             response.returnObject = result;
             response.resultCode = -1;
         }
@@ -118,6 +122,7 @@ public class GetPrice extends SyncDispatcher {
                 serviceTypeValue = s[1];
             }
         }
+        fulfillment.setInterval(Integer.parseInt(serviceTypeValue));
 
         String requestParam = "service_type=" + serviceTypeName + "&" +
                 "service_time=" + serviceTypeValue + "&" +
@@ -158,7 +163,7 @@ public class GetPrice extends SyncDispatcher {
         priceResult.price = bd;
         priceResult.isError = false;
         priceResult.fulfillment = fulfillment.getFulfillment();
-        priceResult.interval= fulfillment.getInterval();
+        priceResult.interval = 4;
 
         return priceResult;
     }

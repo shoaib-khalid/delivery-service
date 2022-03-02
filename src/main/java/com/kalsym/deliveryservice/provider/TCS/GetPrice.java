@@ -116,12 +116,14 @@ public class GetPrice extends SyncDispatcher {
             priceResult.pickupZone = zonePickup;
             priceResult.deliveryZone = zoneDelivery;
             priceResult.fulfillment = fulfillment.getFulfillment();
+            priceResult.interval = null;
             response.resultCode = 0;
             response.returnObject = priceResult;
 
         } else {
             PriceResult result = new PriceResult();
             result.message = "ERR_OUT_OF_SERVICE_AREA";
+            result.interval = null;
             result.isError = true;
             response.returnObject = result;
             response.resultCode = -1;

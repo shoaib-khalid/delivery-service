@@ -79,6 +79,7 @@ public class GetPrice extends SyncDispatcher {
 
                 result.message = invalidResponse;
                 result.isError = true;
+                result.interval = null;
                 response.resultCode = -1;
                 response.returnObject = result;
             }
@@ -138,6 +139,7 @@ public class GetPrice extends SyncDispatcher {
         bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
         priceResult.price = bd;
         priceResult.fulfillment = fulfillment.getFulfillment();
+        priceResult.interval = null;
         return priceResult;
     }
 

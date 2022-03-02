@@ -200,7 +200,11 @@ public class GetPrice extends SyncDispatcher {
         priceResult.pickupDateTime = pickupTime;
         priceResult.fulfillment = fulfillment.getFulfillment();
         priceResult.isError = false;
-        priceResult.interval= fulfillment.getInterval();
+        if (fulfillment.getInterval() != null) {
+            priceResult.interval = fulfillment.getInterval();
+        } else {
+            priceResult.interval = null;
+        }
         return priceResult;
     }
 }

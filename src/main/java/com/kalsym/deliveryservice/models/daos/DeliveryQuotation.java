@@ -25,7 +25,7 @@ public class DeliveryQuotation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String itemType;
-//    private Integer spId;
+    //    private Integer spId;
     private String customerId;
     private String type;
     private String productCode;
@@ -59,6 +59,5 @@ public class DeliveryQuotation {
     private String deliveryZone;
     private String fulfillmentType;
     private String pickupTime;
-    private Integer interval;
-
+    private Integer intervalTime;
 }

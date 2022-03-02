@@ -141,6 +141,7 @@ public class GetPrice extends SyncDispatcher {
             bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
             priceResult.price = bd;
             priceResult.resultCode = 0;
+            priceResult.interval = null;
             priceResult.fulfillment = fulfillment.getFulfillment();
 
 

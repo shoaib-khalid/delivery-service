@@ -153,12 +153,11 @@ public class ProcessRequest {
                 }
             }
         } else {
-
+            System.err.println("HERE ");
             List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(order.getDeliveryProviderId());
             Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
             List<StoreDeliverySp> storeDeliverySps = storeDeliveryDetailSp.findByStoreId(order.getStoreId());
             if (storeDeliverySps.isEmpty()) {
-
                 List<DeliverySpType> deliverySpTypes = deliverySpTypeRepository.findAllByProviderAndDeliveryTypeAndRegionCountryAndFulfilment(provider, order.getDeliveryType(), order.getRegionCountry(), order.getDeliveryPeriod());
                 for (DeliverySpType deliverySpType : deliverySpTypes) {
                     LogUtil.info(logprefix, location, "Get Price The Store DeliverySP is Empty : " + sysTransactionId + " FulfillmentType : "+ deliverySpType.getFulfilment() , "");

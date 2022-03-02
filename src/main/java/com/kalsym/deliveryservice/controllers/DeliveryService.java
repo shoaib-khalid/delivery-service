@@ -256,16 +256,16 @@ public class DeliveryService {
         //other than self delivery
         else {
             List<Fulfillment> fulfillments = new ArrayList<>();
-            if (!stores.getStoreDeliveryPeriodList().isEmpty()) {
+//            if (!stores.getStoreDeliveryPeriodList().isEmpty()) {
                 for (StoreDeliveryPeriod storeDeliveryPeriod : stores.getStoreDeliveryPeriodList()) {
                     if (storeDeliveryPeriod.isEnabled()) {
                         Fulfillment fulfillment = new Fulfillment();
                         fulfillment.setFulfillment(storeDeliveryPeriod.getDeliveryPeriod());
                         fulfillments.add(fulfillment);
                     }
-                }
+//                }
             }
-            
+
             orderDetails.setItemType(stores.getItemType());
             orderDetails.setProductCode(stores.getItemType().name());
             orderDetails.setPieces(cartDetails.getTotalPcs());
@@ -273,10 +273,10 @@ public class DeliveryService {
             List<StoreDeliverySp> storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
             if (!storeDeliverySp.isEmpty()) {
                 orderDetails.setDeliveryProviderId(storeDeliverySp.get(0).getProvider().getId());
-//                List<String> periods = new ArrayList<>();
-//                for (StoreDeliverySp s : storeDeliverySp) {
-//                    periods.add(s.getFulfilment());
-//                }
+                List<String> periods = new ArrayList<>();
+                for (StoreDeliverySp s : storeDeliverySp) {
+                    periods.add(s.getFulfilment());
+                }
             }
             ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository, fulfillments);
             processResult = process.GetPrice();
@@ -316,7 +316,7 @@ public class DeliveryService {
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
                     deliveryOrder.setFulfillmentType(list.fulfillment);
                     if (list.interval != null) {
-                        deliveryOrder.setInterval(list.interval);
+                        deliveryOrder.setIntervalTime(list.interval);
                     }
                     deliveryOrder.setDeliveryProviderId(list.providerId);
 
@@ -543,7 +543,7 @@ public class DeliveryService {
         LogUtil.info(systemTransactionId, location, "Get Store " + stores.getType(), "");
         orderDetails.setDeliveryType(stores.getType());
         orderDetails.setDeliveryPeriod(quotation.getFulfillmentType());
-        orderDetails.setInterval(quotation.getInterval());
+        orderDetails.setInterval(quotation.getIntervalTime());
 
 
         //generate transaction id
