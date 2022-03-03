@@ -96,7 +96,6 @@ public class QueryOrder extends SyncDispatcher {
             LogUtil.info(logprefix, location, "isSuccess:" + isSuccess, "");
             queryOrderResult.isSuccess = isSuccess;
 
-            String driverId = data.get("trips").getAsJsonArray().get(0).getAsJsonObject().get("delivery_agent_id").getAsString();
             String shareLink = trackingUrl + data.get("order_number");
             String status = data.get("status").getAsString();
 
@@ -108,6 +107,7 @@ public class QueryOrder extends SyncDispatcher {
 
             switch (status) {
                 case "SCHEDULED":
+                case "CONTACTING_AGENT":
                     orderFound.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                     break;
                 case "ASSIGNED":

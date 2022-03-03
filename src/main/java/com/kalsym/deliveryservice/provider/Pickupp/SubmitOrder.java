@@ -172,6 +172,7 @@ public class SubmitOrder extends SyncDispatcher {
                 submitOrderResult.isSuccess = true;
                 //extract order created
                 String orderId = data.get("order_number").getAsString();
+                String status = data.get("status").getAsString();
 
                 String orderName = data.get("id").getAsString();
                 String created = data.get("created_at").getAsString();
@@ -179,6 +180,8 @@ public class SubmitOrder extends SyncDispatcher {
                 DeliveryOrder orderCreated = new DeliveryOrder();
                 orderCreated.setSpOrderId(orderId);
                 orderCreated.setSpOrderName(orderName);
+                orderCreated.setStatus(status);
+
                 orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
                 orderCreated.setCustomerTrackingUrl(customerTrackingUrl);
                 submitOrderResult.orderCreated = orderCreated;

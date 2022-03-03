@@ -124,10 +124,11 @@ public class GetPrice extends SyncDispatcher {
         }
         fulfillment.setInterval(Integer.parseInt(serviceTypeValue));
 
+
         String requestParam = "service_type=" + serviceTypeName + "&" +
                 "service_time=" + serviceTypeValue + "&" +
                 "is_pickupp_care=" + "false" + "&" +
-                "pickup_address_line_1=" + /*"Kowloon,%20Hong%20Kong"*/ order.getPickup().getPickupAddress().replaceAll(" ", "%20") + "&" +
+                "pickup_address_line_1=" + /*"Kowloon,%20Hong%20Kong"*/ order.getPickup().getPickupAddress().replaceAll("\n", "%20").replaceAll(" ", "%20") + "&" +
                 "pickup_address_line_2=" + "&" +
                 "pickup_contact_person=" + /*"Cinema%20Online"*/  order.getPickup().getPickupContactName().replaceAll(" ", "%20") + "&" +
                 "pickup_contact_phone=" + order.getPickup().getPickupContactPhone() + "&" +
