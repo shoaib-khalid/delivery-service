@@ -639,6 +639,8 @@ public class DeliveryService {
             LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
             return response;
         } else if (processResult.resultCode == 2) {
+            LogUtil.info(systemTransactionId, location, "Response with Pending Status  : " + processResult.resultCode, processResult.resultString);
+
             quotation.setOrderId(orderId);
             quotation.setUpdatedDate(new Date());
             deliveryQuotationRepository.save(quotation);
@@ -661,8 +663,8 @@ public class DeliveryService {
             thread.start();
             return response;
 
-
         } else {
+            LogUtil.info(systemTransactionId, location, "Response with Failed Status  : " + processResult.resultCode, processResult.resultString);
             quotation.setOrderId(orderId);
             quotation.setUpdatedDate(new Date());
             deliveryQuotationRepository.save(quotation);

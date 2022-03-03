@@ -136,7 +136,6 @@ public class SubmitOrder extends SyncDispatcher {
         jsonReq.addProperty("pickup_contact_person",/* "John"*/order.getPickup().getPickupContactName());
         jsonReq.addProperty("pickup_contact_phone", /*"55555252"*/order.getPickup().getPickupContactPhone());
         jsonReq.addProperty("pickup_address_line_1", /*"香港銅鑼灣勿地臣街1號 Time Square"*/ order.getPickup().getPickupAddress());
-        jsonReq.addProperty("pickup_time", sdf.format(pickuptime));
         jsonReq.addProperty("pickup_zip_code", order.getPickup().getPickupPostcode());
         jsonReq.addProperty("pickup_city", order.getPickup().getPickupCity());
         jsonReq.addProperty("pickup_notes", order.getRemarks());
