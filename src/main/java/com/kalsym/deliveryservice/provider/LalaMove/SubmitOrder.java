@@ -197,7 +197,7 @@ public class SubmitOrder extends SyncDispatcher {
         req.specialRequests = null;
 
 
-        if (order.getPickupTime() != null) {
+        if (order.getDeliveryPeriod().equals("FOURHOURS") || order.getDeliveryPeriod().equals("NEXTDAY") || order.getDeliveryPeriod().equals("FOURDAYS")) {
             req.scheduleAt = order.getPickupTime();
         }
         Stop s1 = new Stop();

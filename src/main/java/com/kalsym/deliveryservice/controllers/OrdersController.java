@@ -237,8 +237,10 @@ public class OrdersController {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
+        LogUtil.info(orderId, location, "Request Body : " + submitDelivery, "");
 
-        response = deliveryService.submitOrder(orderId, refId, submitDelivery, request.getRequestURI());
+
+        response = deliveryService.submitOrder(orderId, refId, submitDelivery, request.getRequestURI() + " ");
 //        DeliveryOrder deliveryOrderOption = deliveryOrdersRepository.findByOrderId(orderId);
 //        String systemTransactionId;
 //

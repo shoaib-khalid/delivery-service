@@ -158,7 +158,7 @@ public class GetPrice extends SyncDispatcher {
         req.serviceType = order.getPickup().getVehicleType().name();
         req.specialRequests = null;
 
-        if (order.getDeliveryType().equals("SCHEDULED")) {
+        if (order.getDeliveryPeriod().equals("FOURHOURS") || order.getDeliveryPeriod().equals("NEXTDAY") || order.getDeliveryPeriod().equals("FOURDAYS")) {
             req.scheduleAt = pickupTime;
         }
         Stop s1 = new Stop();
