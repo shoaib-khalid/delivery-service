@@ -1,4 +1,10 @@
 ##############################################################################################
+# Version v.2.5.7| 03-March-2022
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Submit Order Remove The Line 
+
+##############################################################################################
 # Version v.2.5.6| 03-March-2022
 ###############################################################################################
 ### Code Changes:
@@ -12,7 +18,7 @@
 ### Code Changes:
 1. Confirm Delivery Bug Fixed
 - delivery_sp_config
-     INSERT INTO SYMPLIFIED.DELIVERY_SP_CONFIG (SPID,CONFIGFIELD,CONFIGVALUE) VALUES
+     INSERT INTO SYMPLIFIED.DELIVERY_SP_CONFIG (spId,configField,configValue) VALUES
     (6,'domainUrl','https://gateway.my.pickupp.io/v2'),
     (6,'getprice_connect_timeout','10000'),
     (6,'getprice_url','/merchant/orders/quote'),
@@ -23,7 +29,7 @@
     (6,'serviceType','EXPRESS:express=120;FOURHOURS:four_hours=-1;SAMEDAY:same_day=-1;NEXTDAY:next_day=1;'),
     (6,'submitorder_connect_timeout','20000'),
     (6,'submitorder_url','/merchant/orders/single');
-    INSERT INTO SYMPLIFIED.DELIVERY_SP_CONFIG (SPID,CONFIGFIELD,CONFIGVALUE) VALUES
+    INSERT INTO SYMPLIFIED.DELIVERY_SP_CONFIG (spId,configField,configValue) VALUES
     (6,'submitorder_wait_timeout','25000'),
     (6,'token','c3ltcGxpZmllZEBrYWxzeW0uY29tOjI1NDZmMjNjYjgxM2E5ZThiNjdmMzFhNWQ5MDk4MWVl'),
     (6,'trackingUrl','https://my.pickupp.io/en/tracking?orderNumber=');
@@ -156,7 +162,7 @@ Get Price backend logic enhance. Update Get quotaion response
     ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 values
-    INSERT INTO SYMPLIFIED.DELIVERY_SP_TYPE (DELIVERYSPID,DELIVERYTYPE,REGIONCOUNTRY,FULFILMENT,`interval`) VALUES
+    INSERT INTO s.delivery_sp_type (DELIVERYSPID,DELIVERYTYPE,REGIONCOUNTRY,FULFILMENT,`interval`) VALUES
     ('1','SCHEDULED','MYS','EXPRESS',0),
     ('1','SCHEDULED','MYS','FOURHOURS',0),
     ('3','SCHEDULED','MYS','EXPRESS',0),
@@ -245,7 +251,7 @@ ALTER TABLE symplified.delivery_main_type MODIFY COLUMN `type` enum('SCHEDULED',
 ALTER TABLE symplified.delivery_main_type ADD main_id BIGINT NULL;
 
 -values
-INSERT INTO SYMPLIFIED.DELIVERY_MAIN_TYPE (`type`,MAIN_ID) VALUES
+INSERT INTO symplified.delivery_main_type (`type`,MAIN_ID) VALUES
 ('SCHEDULED',NULL),
 ('ADHOC',NULL),
 ('EXPRESS',2),
@@ -277,7 +283,7 @@ ALTER TABLE symplified.delivery_sp ADD remark TINYINT NOT NULL;
 1. Get Delivery Provider details response updated. 
 
 ALTER TABLE symplified.delivery_sp MODIFY COLUMN remarks INT NULL;
-ALTER TABLE symplified.delivery_sp MODIFY COLUMN minimumOrderQuantity int NULL;
+ALTER TABLE symplified.delivery_sp ADD minimumOrderQuantity INT NULL;
 
 
 CREATE TABLE symplified.delivery_remarks (

@@ -9,6 +9,8 @@ import com.kalsym.deliveryservice.provider.SubmitOrderResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.DateTimeUtil;
+import com.kalsym.deliveryservice.utils.HttpResult;
+import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 
 import java.text.SimpleDateFormat;
@@ -69,18 +71,18 @@ public class SubmitOrder extends SyncDispatcher {
         String SUBMIT_ORDER_URL = this.baseUrl + this.submitOrder_url;
 
         try {
-//            HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, SUBMIT_ORDER_URL, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
-//            if (httpResult.httpResponseCode == 201) {
-//                LogUtil.info(logprefix, location, "Request successful", "");
-//                response.resultCode = 0;
-//                response.returnObject = extractResponseBody(httpResult.responseString);
-//            } else {
-//                LogUtil.info(logprefix, location, "Request failed", "");
-//                response.resultCode = -1;
-//                SubmitOrderResult submitOrderResult = new SubmitOrderResult();
-//                submitOrderResult.resultCode = -1;
-//                response.returnObject = submitOrderResult;
-//            }
+            HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, SUBMIT_ORDER_URL, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
+            if (httpResult.httpResponseCode == 201) {
+                LogUtil.info(logprefix, location, "Request successful", "");
+                response.resultCode = 0;
+                response.returnObject = extractResponseBody(httpResult.responseString);
+            } else {
+                LogUtil.info(logprefix, location, "Request failed", "");
+                response.resultCode = -1;
+                SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+                submitOrderResult.resultCode = -1;
+                response.returnObject = submitOrderResult;
+            }
             LogUtil.info(logprefix, location, "Process finish", "");
 
         } catch (Exception e) {
