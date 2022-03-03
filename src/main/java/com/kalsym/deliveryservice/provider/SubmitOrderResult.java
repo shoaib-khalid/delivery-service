@@ -12,18 +12,20 @@ import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
  *
  * @author user
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+//@JsonInclude(JsonInclude.Include.NON_NULL)
 public class SubmitOrderResult {
-    @JsonIgnore
-    public int resultCode;
     public int deliveryProviderId;
     public DeliveryOrder orderCreated;
     public boolean isSuccess;
     public String message;
     public String status;
-    public String customerTrackingUrl;
-    public String spTransactionId;
     public String systemTransactionId;
     public String orderId;
+    @JsonIgnore
+    public int resultCode;
+    @JsonIgnore
+    public String customerTrackingUrl;
+    @JsonIgnore
+    public String spTransactionId;
 
 }

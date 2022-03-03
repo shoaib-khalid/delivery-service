@@ -146,7 +146,7 @@ public class SymplifiedService {
             orders.setModifiedBy("");
             orders.setOrderId(orderId);
             orders.setStatus(status);
-            System.out.println("payment" + orders.toString());
+            logger.info("orderDeliveryConfirmationURL : " + orders.toString());
 
             HttpEntity<OrderUpdate> httpEntity;
             httpEntity = new HttpEntity(orders, headers);

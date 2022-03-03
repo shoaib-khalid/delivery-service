@@ -600,6 +600,10 @@ public class DeliveryService {
                 quotation.setUpdatedDate(new Date());
                 submitOrderResult.orderCreated = deliveryOrder;
                 submitOrderResult.status = deliveryOrder.getSystemStatus();
+                submitOrderResult.message=processResult.resultString;
+                submitOrderResult.systemTransactionId = systemTransactionId;
+                submitOrderResult.orderId = orderId;
+
 
             } else {
                 DeliveryOrder orderCreated = submitOrderResult.orderCreated;
@@ -621,6 +625,11 @@ public class DeliveryService {
                 quotation.setOrderId(orderId);
                 quotation.setUpdatedDate(new Date());
                 submitOrderResult.orderCreated = deliveryOrderOption;
+                submitOrderResult.status=orderCreated.getStatus();
+                submitOrderResult.message=processResult.resultString;
+                submitOrderResult.systemTransactionId = systemTransactionId;
+                submitOrderResult.orderId = orderId;
+
             }
             deliveryQuotationRepository.save(quotation);
             //assign back to orderCreated to get deliveryOrder Id
@@ -634,19 +643,22 @@ public class DeliveryService {
             quotation.setUpdatedDate(new Date());
             deliveryQuotationRepository.save(quotation);
             SubmitOrderResult orderResult = (SubmitOrderResult) processResult.returnObject;
-            orderResult.orderId = orderId;
-            orderResult.systemTransactionId = systemTransactionId;
-            orderResult.status = "PENDING";
             orderResult.deliveryProviderId = quotation.getDeliveryProviderId();
-
             orderResult.isSuccess = false;
             orderResult.message = processResult.resultString;
+            orderResult.status = "PENDING";
+            orderResult.systemTransactionId = systemTransactionId;
+            orderResult.orderId = orderId;
+            orderResult.orderCreated = null;
+
+
+
             response.setData(orderResult);
             response.setMessage(processResult.resultString);
             //fail to get price
 //            retryOrder(orderDetails);
-            RetryThread thread = new RetryThread(quotation, systemTransactionId, deliveryQuotationRepository, deliveryService, symplifiedService, new PriceResult());
-            thread.start();
+//            RetryThread thread = new RetryThread(quotation, systemTransactionId, deliveryQuotationRepository, deliveryService, symplifiedService, new PriceResult());
+//            thread.start();
             return response;
 
 
@@ -655,13 +667,14 @@ public class DeliveryService {
             quotation.setUpdatedDate(new Date());
             deliveryQuotationRepository.save(quotation);
             SubmitOrderResult orderResult = (SubmitOrderResult) processResult.returnObject;
-            orderResult.orderId = orderId;
-            orderResult.systemTransactionId = systemTransactionId;
-            orderResult.status = "FAILED";
             orderResult.deliveryProviderId = quotation.getDeliveryProviderId();
-
             orderResult.isSuccess = false;
             orderResult.message = processResult.resultString;
+            orderResult.status = "FAILED";
+            orderResult.systemTransactionId = systemTransactionId;
+            orderResult.orderId = orderId;
+            orderResult.orderCreated = null;
+
             response.setData(orderResult);
             response.setMessage(processResult.resultString);
             //fail to get price
