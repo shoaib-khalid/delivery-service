@@ -1,16 +1,13 @@
 package com.kalsym.deliveryservice.provider.LalaMove;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
+import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.QueryOrderResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
-import com.kalsym.deliveryservice.utils.HttpResult;
-import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
-import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -18,15 +15,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
@@ -132,6 +124,26 @@ public class QueryOrder extends SyncDispatcher {
             orderFound.setSpOrderId(spOrderId);
             orderFound.setStatus(status);
             orderFound.setCustomerTrackingUrl(shareLink);
+            switch (status) {
+                case "ASSIGNING_DRIVER":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                    break;
+                case "ON_GOING":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
+                    break;
+                case "PICKED_UP":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+                    break;
+                case "COMPLETED":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+                case "REJECTED":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
+                case "EXPIRED":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.EXPIRED.name());
+                case "CANCELED":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
+                    break;
+            }
 //            orderFound.setMerchantTrackingUrl(shareLink);
             queryOrderResult.orderFound = orderFound;
         } catch (Exception ex) {

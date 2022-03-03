@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Sarosh
@@ -985,17 +986,17 @@ public class OrdersController {
                 mainCategory.add(c);
             }
         }
-        String id = "EXPRESS";
-
-        DeliveryPeriod deliveryPeriod = deliveryPeriodRepository.getOne(id);
-        System.err.println("test - " + deliveryPeriod.toString());
-
-//        List<DeliveryMainType> sortedList = mainCategory.stream()
-//                .sorted(Comparator.comparingLong(DeliveryMainType::getId))
-//                .collect(Collectors.toList());
+//        String id = "EXPRESS";
 //
-//
-//        response.setData(sortedList);
+//        DeliveryPeriod deliveryPeriod = deliveryPeriodRepository.getOne(id);
+//        System.err.println("test - " + deliveryPeriod.toString());
+
+        List<DeliveryMainType> sortedList = mainCategory.stream()
+                .sorted(Comparator.comparingLong(DeliveryMainType::getId))
+                .collect(Collectors.toList());
+
+
+        response.setData(sortedList);
         return ResponseEntity.status(HttpStatus.OK).body(response);
 
     }

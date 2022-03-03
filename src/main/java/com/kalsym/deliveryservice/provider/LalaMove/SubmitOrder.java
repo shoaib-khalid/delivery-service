@@ -196,7 +196,7 @@ public class SubmitOrder extends SyncDispatcher {
         req.serviceType = order.getPickup().getVehicleType().name();
         req.specialRequests = null;
 
-
+        System.err.println("order.getDeliveryPeriod() : "+ order.getDeliveryPeriod());
         if (order.getDeliveryPeriod().equals("FOURHOURS") || order.getDeliveryPeriod().equals("NEXTDAY") || order.getDeliveryPeriod().equals("FOURDAYS")) {
             req.scheduleAt = order.getPickupTime();
         }

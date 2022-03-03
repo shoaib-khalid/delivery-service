@@ -1,8 +1,51 @@
 ##############################################################################################
+# Version v.2.5.6| 03-March-2022
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Get Price
+### Release Note Changes:
+1. Release Note Update 
+
+##############################################################################################
 # Version v.2.5.5| 03-March-2022
 ###############################################################################################
 ### Code Changes:
 1. Confirm Delivery Bug Fixed
+- delivery_sp_config
+     INSERT INTO SYMPLIFIED.DELIVERY_SP_CONFIG (SPID,CONFIGFIELD,CONFIGVALUE) VALUES
+    (6,'domainUrl','https://gateway.my.pickupp.io/v2'),
+    (6,'getprice_connect_timeout','10000'),
+    (6,'getprice_url','/merchant/orders/quote'),
+    (6,'getprice_wait_timeout','30000'),
+    (6,'queryorder_connect_timeout','30000'),
+    (6,'queryorder_url','https://gateway.my.pickupp.io/v2/merchant/orders/,?include_history=true'),
+    (6,'queryorder_wait_timeout','30000'),
+    (6,'serviceType','EXPRESS:express=120;FOURHOURS:four_hours=-1;SAMEDAY:same_day=-1;NEXTDAY:next_day=1;'),
+    (6,'submitorder_connect_timeout','20000'),
+    (6,'submitorder_url','/merchant/orders/single');
+    INSERT INTO SYMPLIFIED.DELIVERY_SP_CONFIG (SPID,CONFIGFIELD,CONFIGVALUE) VALUES
+    (6,'submitorder_wait_timeout','25000'),
+    (6,'token','c3ltcGxpZmllZEBrYWxzeW0uY29tOjI1NDZmMjNjYjgxM2E5ZThiNjdmMzFhNWQ5MDk4MWVl'),
+    (6,'trackingUrl','https://my.pickupp.io/en/tracking?orderNumber=');
+
+- delivery_sp
+- INSERT INTO SYMPLIFIED.DELIVERY_SP (ID,NAME,ADDRESS,CONTACTNO,CONTACTPERSON,GETPRICECLASSNAME,SUBMITORDERCLASSNAME,CANCELORDERCLASSNAME,QUERYORDERCLASSNAME,SPCALLBACKCLASSNAME,PICKUPDATECLASSNAME,PICKUPTIMECLASSNAME,LOCATIONIDCLASSNAME,PROVIDERIMAGE,REGIONCOUNTRYID,AIRWAYBILLCLASSNAME,DRIVERDETAILSCLASSNAME,ADDITIONALQUERYCLASSNAME,MINIMUMORDERQUANTITY,ADDPRIORITYCLASSNAME,SCHEDULEDATE,REMARK) VALUES
+  ('6','PICKUPP',NULL,NULL,NULL,'com.kalsym.deliveryservice.provider.Pickupp.GetPrice','com.kalsym.deliveryservice.provider.Pickupp.SubmitOrder',NULL,'com.kalsym.deliveryservice.provider.Pickupp.QueryOrder',NULL,NULL,NULL,NULL,'https://symplified.it/delivery-assets/provider-logo/pickupp.png','MYS',NULL,NULL,NULL,1,NULL,0,0);
+
+-delivery_period
+CREATE TABLE `delivery_period` (
+`id` varchar(20) NOT NULL,
+`name` varchar(50) DEFAULT NULL,
+`description` varchar(100) DEFAULT NULL,
+PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3
+
+values
+INSERT INTO SYMPLIFIED.DELIVERY_PERIOD (ID,NAME,DESCRIPTION) VALUES
+('EXPRESS','Express','Pickup between 30 min - 2 hours'),
+('FOURDAYS','3-5 Days','Within city 2 days, intercity up to 5 days'),
+('FOURHOURS','2-4 Hours','Pickup & Drop-off between 2 - 4 hours'),
+('NEXTDAY','Next Day','Pickup & Delivery next day');
 
 ##############################################################################################
 # Version v.2.5.4| 03-March-2022
@@ -102,7 +145,36 @@ Bulk Order - Bug Fixed
 ###############################################################################################
 ### Code Changes:
 Get Price backend logic enhance. Update Get quotaion response
-ALTER TABLE symplified.delivery_sp_type ADD `interval` INT NULL;
+    CREATE TABLE `delivery_sp_type` (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `deliverySpId` varchar(50) NOT NULL,
+    `deliveryType` enum('ADHOC','SCHEDULED','SELF') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+    `regionCountry` varchar(3) NOT NULL,
+    `fulfilment` enum('EXPRESS','FOURHOURS','NEXTDAY','FOURDAYS') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+    `interval` int DEFAULT NULL,
+    PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+values
+    INSERT INTO SYMPLIFIED.DELIVERY_SP_TYPE (DELIVERYSPID,DELIVERYTYPE,REGIONCOUNTRY,FULFILMENT,`interval`) VALUES
+    ('1','SCHEDULED','MYS','EXPRESS',0),
+    ('1','SCHEDULED','MYS','FOURHOURS',0),
+    ('3','SCHEDULED','MYS','EXPRESS',0),
+    ('3','SCHEDULED','MYS','FOURHOURS',4),
+    ('4','SCHEDULED','PAK','NEXTDAY',0),
+    ('5','SCHEDULED','MYS','FOURDAYS',0),
+    ('6','SCHEDULED','MYS','NEXTDAY',0),
+    ('6','SCHEDULED','MYS','FOURHOURS',0),
+    ('1','ADHOC','MYS','EXPRESS',NULL),
+    ('3','ADHOC','MYS','FOURHOURS',4);
+    INSERT INTO SYMPLIFIED.DELIVERY_SP_TYPE (DELIVERYSPID,DELIVERYTYPE,REGIONCOUNTRY,FULFILMENT,`interval`) VALUES
+    ('3','ADHOC','MYS','EXPRESS',0),
+    ('6','ADHOC','MYS','EXPRESS',NULL);
+
+
+
+
+[//]: # (ALTER TABLE symplified.delivery_sp_type ADD `interval` INT NULL;)
 
 ##############################################################################################
 # Version v.2.4.4 | 21-February-2022
@@ -172,6 +244,16 @@ COLLATE=utf8_general_ci;
 ALTER TABLE symplified.delivery_main_type MODIFY COLUMN `type` enum('SCHEDULED','ADHOC','EXPRESS','4HOURS','SAMEDAY','NEXTDAY','3-5DAYS') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 ALTER TABLE symplified.delivery_main_type ADD main_id BIGINT NULL;
 
+-values
+INSERT INTO SYMPLIFIED.DELIVERY_MAIN_TYPE (`type`,MAIN_ID) VALUES
+('SCHEDULED',NULL),
+('ADHOC',NULL),
+('EXPRESS',2),
+('4HOURS',2),
+('SAMEDAY',2),
+('NEXTDAY',1),
+('3-5DAYS',1);
+
 
 ALTER TABLE symplified.delivery_quotation CHANGE productCode `type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL;
 
@@ -211,6 +293,10 @@ COLLATE=utf8_general_ci;
 ALTER TABLE symplified.delivery_remarks MODIFY COLUMN id int auto_increment NOT NULL;
 ALTER TABLE symplified.delivery_remarks ADD deliveryType varchar(100) NOT NULL;
 
+values
+INSERT INTO SYMPLIFIED.DELIVERY_REMARKS (TITLE,MESSAGE,DELIVERYTYPE) VALUES
+('Minimum item for pickup does not meet','Please drop your shipment to nearest Logistic.','DROPSHIP'),
+('Logistic provider will collect order item ','Logitstic partner will contact to you to for collect the order','PICKUP');
 
 
 ##############################################################################################

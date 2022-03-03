@@ -657,8 +657,8 @@ public class DeliveryService {
             response.setMessage(processResult.resultString);
             //fail to get price
 //            retryOrder(orderDetails);
-//            RetryThread thread = new RetryThread(quotation, systemTransactionId, deliveryQuotationRepository, deliveryService, symplifiedService, new PriceResult());
-//            thread.start();
+            RetryThread thread = new RetryThread(quotation, systemTransactionId, deliveryQuotationRepository, deliveryService, symplifiedService, new PriceResult());
+            thread.start();
             return response;
 
 
@@ -811,6 +811,7 @@ public class DeliveryService {
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(quotation.getStoreId());
         LogUtil.info(systemTransactionId, location, "Get Store " + stores.getType(), "");
         orderDetails.setDeliveryType(stores.getType());
+        orderDetails.setDeliveryPeriod(quotation.getFulfillmentType());
 
         //generate transaction id
         LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
