@@ -180,7 +180,8 @@ public class SubmitOrder extends SyncDispatcher {
                 DeliveryOrder orderCreated = new DeliveryOrder();
                 orderCreated.setSpOrderId(orderId);
                 orderCreated.setSpOrderName(orderName);
-                orderCreated.setStatus(status);
+                orderCreated.setStatusDescription(status);
+                orderCreated.setStatus("ASSIGNING_DRIVER");
 
                 orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
                 orderCreated.setCustomerTrackingUrl(customerTrackingUrl);

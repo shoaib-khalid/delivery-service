@@ -90,7 +90,8 @@ public class QueryOrder extends SyncDispatcher {
         try {
             JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
             JsonObject data = jsonResp.getAsJsonObject("data");
-            System.err.println("jsonResp from orderDetail: " + jsonResp);
+            LogUtil.info(logprefix, location, "Response :" + jsonResp, "");
+
             boolean isSuccess = true;
 //            JsonArray pod = jsonResp.get("pod").getAsJsonArray();
             LogUtil.info(logprefix, location, "isSuccess:" + isSuccess, "");
@@ -99,25 +100,38 @@ public class QueryOrder extends SyncDispatcher {
             String shareLink = trackingUrl + data.get("order_number");
             String status = data.get("status").getAsString();
 
+            LogUtil.info(logprefix, location, "Status :" + status, "");
+
+            JsonObject deliveryAgent = data.getAsJsonArray("trips").get(0).getAsJsonObject().getAsJsonObject("delivery_agent");
+            LogUtil.info(logprefix, location, "deliveryAgent :" + deliveryAgent, "");
+
             DeliveryOrder orderFound = new DeliveryOrder();
             orderFound.setSpOrderId(spOrderId);
             orderFound.setStatus(status);
             orderFound.setCustomerTrackingUrl(shareLink);
-
+            orderFound.setRiderName(deliveryAgent.get("name").getAsString());
+            orderFound.setRiderPhoneNo(deliveryAgent.get("phone").getAsString());
+            orderFound.setDriverId(deliveryAgent.get("id").getAsString());
 
             switch (status) {
                 case "SCHEDULED":
                 case "CONTACTING_AGENT":
                     orderFound.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                    System.err.println("SYSTEM STATUS" + orderFound.getSystemStatus());
                     break;
                 case "ASSIGNED":
+                case "ACCEPTED":
                     orderFound.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
+                    System.err.println("SYSTEM STATUS" + orderFound.getSystemStatus());
                     break;
                 case "ENROUTE":
                     orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+                    System.err.println("SYSTEM STATUS" + orderFound.getSystemStatus());
                     break;
                 case "DELIVERED":
                     orderFound.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+                    System.err.println("SYSTEM STATUS" + orderFound.getSystemStatus());
+
                     break;
             }
 

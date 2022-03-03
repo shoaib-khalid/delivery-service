@@ -196,7 +196,7 @@ public class SubmitOrder extends SyncDispatcher {
         req.serviceType = order.getPickup().getVehicleType().name();
         req.specialRequests = null;
 
-        System.err.println("order.getDeliveryPeriod() : "+ order.getDeliveryPeriod());
+        System.err.println("order.getDeliveryPeriod() : " + order.getDeliveryPeriod());
         if (order.getDeliveryPeriod().equals("FOURHOURS") || order.getDeliveryPeriod().equals("NEXTDAY") || order.getDeliveryPeriod().equals("FOURDAYS")) {
             req.scheduleAt = order.getPickupTime();
         }
@@ -248,6 +248,8 @@ public class SubmitOrder extends SyncDispatcher {
             orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
             orderCreated.setCustomerTrackingUrl(shareLink);
             orderCreated.setStatus(status);
+            orderCreated.setStatusDescription(status);
+            orderCreated.setStatus("ASSIGNING_DRIVER");
 
             submitOrderResult.orderCreated = orderCreated;
         } catch (Exception ex) {

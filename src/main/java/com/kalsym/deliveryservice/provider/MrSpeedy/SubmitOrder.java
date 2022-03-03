@@ -127,6 +127,8 @@ public class SubmitOrder extends SyncDispatcher {
             orderCreated.setVehicleType(vehicleType.toString());
             orderCreated.setMerchantTrackingUrl(merchantTrackingUrl);
             orderCreated.setCustomerTrackingUrl(customerTrackingUrl);
+            orderCreated.setStatusDescription(orderObject.get("status").getAsString());
+            orderCreated.setStatus("ASSIGNING_DRIVER");
             submitOrderResult.orderCreated = orderCreated;
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
