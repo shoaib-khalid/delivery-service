@@ -869,8 +869,8 @@ public class OrdersController {
         HttpReponse response = new HttpReponse(request.getRequestURI());
         Provider provider = providerRepository.findOneById(Integer.valueOf(providerId));
         if (provider != null) {
-            if (!quantity.equals("null")) {
-                if (Integer.parseInt(quantity) > provider.getMinimumOrderQuantity()) {
+            if (quantity != null) {
+                if (Integer.parseInt(quantity) >= provider.getMinimumOrderQuantity()) {
                     DeliveryRemarks deliveryRemarks = deliveryRemarksDb.findByDeliveryType(DeliveryTypeRemarks.PICKUP.name());
                     if (provider.getRemark()) {
                         provider.setRemarks(deliveryRemarks);
