@@ -146,10 +146,28 @@ public class GetPrice extends SyncDispatcher {
     private GetPrices generateRequestBody(String pickupTime) {
         List<Delivery> deliveries = new ArrayList<>();
 
+        String pickupContactNO;
+        String deliveryContactNo;
+        if (order.getPickup().getPickupContactPhone().startsWith("6")) {
+            //national format
+            pickupContactNO = order.getPickup().getPickupContactPhone().substring(1);
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(1);
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        } else if (order.getPickup().getPickupContactPhone().startsWith("+6")) {
+            pickupContactNO = order.getPickup().getPickupContactPhone().substring(2);
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(2);
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        } else {
+            pickupContactNO = order.getPickup().getPickupContactPhone();
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        }
+
+
         deliveries.add(
                 new Delivery(
                         1,
-                        new Contact(order.getDelivery().getDeliveryContactName(), order.getDelivery().getDeliveryContactPhone()),
+                        new Contact(order.getDelivery().getDeliveryContactName(),deliveryContactNo),
                         ""
                 )
         );
@@ -175,7 +193,7 @@ public class GetPrice extends SyncDispatcher {
         stopList.add(s2);
 
         req.stops = stopList;
-        req.requesterContact = new Contact(order.getPickup().getPickupContactName(), order.getPickup().getPickupContactPhone());
+        req.requesterContact = new Contact(order.getPickup().getPickupContactName(),pickupContactNO);
         req.deliveries = deliveries;
         return req;
     }

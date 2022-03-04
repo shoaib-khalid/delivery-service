@@ -552,7 +552,6 @@ public class DeliveryService {
             orderDetails.setLength(deliveryVehicleTypes.getLength());
         }
 
-
         //generate transaction id
         LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
         ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository);

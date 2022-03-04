@@ -124,6 +124,23 @@ public class GetPrice extends SyncDispatcher {
         }
         fulfillment.setInterval(Integer.parseInt(serviceTypeValue));
 
+        String pickupContactNO;
+        String deliveryContactNo;
+        if (order.getPickup().getPickupContactPhone().startsWith("6")) {
+            //national format
+            pickupContactNO = order.getPickup().getPickupContactPhone().substring(1);
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(1);
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        } else if (order.getPickup().getPickupContactPhone().startsWith("+6")) {
+            pickupContactNO = order.getPickup().getPickupContactPhone().substring(2);
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(2);
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        } else {
+            pickupContactNO = order.getPickup().getPickupContactPhone();
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        }
+
 
         String requestParam = "service_type=" + serviceTypeName + "&" +
                 "service_time=" + serviceTypeValue + "&" +
@@ -131,7 +148,7 @@ public class GetPrice extends SyncDispatcher {
                 "pickup_address_line_1=" + /*"Kowloon,%20Hong%20Kong"*/ order.getPickup().getPickupAddress().replaceAll("\n", "%20").replaceAll(" ", "%20") + "&" +
                 "pickup_address_line_2=" + "&" +
                 "pickup_contact_person=" + /*"Cinema%20Online"*/  order.getPickup().getPickupContactName().replaceAll(" ", "%20") + "&" +
-                "pickup_contact_phone=" + order.getPickup().getPickupContactPhone() + "&" +
+                "pickup_contact_phone=" + pickupContactNO+ "&" +
                 "pickup_contact_company=" + order.getPickup().getPickupContactPhone() + "&" +
                 "pickup_zip_code=" + /*"999077"*/order.getPickup().getPickupPostcode() + "&" +
                 "pickup_city=" + /*"Kowloon%20City"*/ order.getPickup().getPickupCity().replaceAll(" ", "%20") + "&" +
@@ -139,7 +156,7 @@ public class GetPrice extends SyncDispatcher {
                 "dropoff_address_line_1=" + /*"Kwai%20Chung%20Park%20(Closed),%20Kwai%20Chung,%20Hong%20Kong"*/ order.getDelivery().getDeliveryAddress().replaceAll(" ", "%20") + "&" +
                 "dropoff_address_line_2=" + "&" +
                 "dropoff_contact_person=" + order.getDelivery().getDeliveryContactName().replaceAll(" ", "%20") + "&" +
-                "dropoff_contact_phone=" + order.getDelivery().getDeliveryContactPhone() + "&" +
+                "dropoff_contact_phone=" + deliveryContactNo + "&" +
                 "dropoff_zip_code=" + /*"518000"*/ order.getDelivery().getDeliveryPostcode() + "&" +
                 "dropoff_city=" + order.getDelivery().getDeliveryCity().replaceAll(" ", "%20") + "&" +
                 "width=" + order.getWidth() + "&" + //set in db

@@ -71,19 +71,19 @@ public class SubmitOrder extends SyncDispatcher {
         String SUBMIT_ORDER_URL = this.baseUrl + this.submitOrder_url;
 
         try {
-            HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, SUBMIT_ORDER_URL, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
-            if (httpResult.httpResponseCode == 201) {
-                LogUtil.info(logprefix, location, "Request successful", "");
-                response.resultCode = 0;
-                response.returnObject = extractResponseBody(httpResult.responseString);
-            } else {
-                LogUtil.info(logprefix, location, "Request failed", "");
-                response.resultCode = -1;
-                SubmitOrderResult submitOrderResult = new SubmitOrderResult();
-                submitOrderResult.resultCode = -1;
-                response.returnObject = submitOrderResult;
-            }
-            LogUtil.info(logprefix, location, "Process finish", "");
+//            HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, SUBMIT_ORDER_URL, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
+//            if (httpResult.httpResponseCode == 201) {
+//                LogUtil.info(logprefix, location, "Request successful", "");
+//                response.resultCode = 0;
+//                response.returnObject = extractResponseBody(httpResult.responseString);
+//            } else {
+//                LogUtil.info(logprefix, location, "Request failed", "");
+//                response.resultCode = -1;
+//                SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+//                submitOrderResult.resultCode = -1;
+//                response.returnObject = submitOrderResult;
+//            }
+//            LogUtil.info(logprefix, location, "Process finish", "");
 
         } catch (Exception e) {
             response.resultCode = -1;
@@ -130,17 +130,34 @@ public class SubmitOrder extends SyncDispatcher {
         final SimpleDateFormat sdf =
                 new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.ZZZ");
 
+        String pickupContactNO;
+        String deliveryContactNo;
+        if (order.getPickup().getPickupContactPhone().startsWith("6")) {
+            //national format
+            pickupContactNO = order.getPickup().getPickupContactPhone().substring(1);
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(1);
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        } else if (order.getPickup().getPickupContactPhone().startsWith("+6")) {
+            pickupContactNO = order.getPickup().getPickupContactPhone().substring(2);
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(2);
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        } else {
+            pickupContactNO = order.getPickup().getPickupContactPhone();
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        }
+
 // Give it to me in GMT time.
         sdf.setTimeZone(TimeZone.getTimeZone("GMT+08:00"));
         LogUtil.info(logprefix, location, "PIKCUP TIME : " + pickuptime, "");
         jsonReq.addProperty("pickup_contact_person",/* "John"*/order.getPickup().getPickupContactName());
-        jsonReq.addProperty("pickup_contact_phone", /*"55555252"*/order.getPickup().getPickupContactPhone());
+        jsonReq.addProperty("pickup_contact_phone", /*"55555252"*/pickupContactNO);
         jsonReq.addProperty("pickup_address_line_1", /*"香港銅鑼灣勿地臣街1號 Time Square"*/ order.getPickup().getPickupAddress());
         jsonReq.addProperty("pickup_zip_code", order.getPickup().getPickupPostcode());
         jsonReq.addProperty("pickup_city", order.getPickup().getPickupCity());
         jsonReq.addProperty("pickup_notes", order.getRemarks());
         jsonReq.addProperty("dropoff_contact_person", order.getDelivery().getDeliveryContactName());
-        jsonReq.addProperty("dropoff_contact_phone", order.getDelivery().getDeliveryContactPhone());
+        jsonReq.addProperty("dropoff_contact_phone", deliveryContactNo);
         jsonReq.addProperty("dropoff_address_line_1", order.getDelivery().getDeliveryAddress());
         jsonReq.addProperty("dropoff_zip_code", order.getDelivery().getDeliveryPostcode());
         jsonReq.addProperty("dropoff_city", order.getDelivery().getDeliveryCity());
