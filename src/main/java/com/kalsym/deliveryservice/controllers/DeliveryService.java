@@ -545,6 +545,13 @@ public class DeliveryService {
         orderDetails.setDeliveryPeriod(quotation.getFulfillmentType());
         orderDetails.setInterval(quotation.getIntervalTime());
 
+        DeliveryVehicleTypes deliveryVehicleTypes = deliveryVehicleTypesRepository.findByVehicleType(quotation.getVehicleType());
+        if (deliveryVehicleTypes != null) {
+            orderDetails.setHeight(deliveryVehicleTypes.getHeight());
+            orderDetails.setWidth(deliveryVehicleTypes.getWidth());
+            orderDetails.setLength(deliveryVehicleTypes.getLength());
+        }
+
 
         //generate transaction id
         LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
@@ -813,6 +820,13 @@ public class DeliveryService {
         LogUtil.info(systemTransactionId, location, "Get Store " + stores.getType(), "");
         orderDetails.setDeliveryType(stores.getType());
         orderDetails.setDeliveryPeriod(quotation.getFulfillmentType());
+
+        DeliveryVehicleTypes deliveryVehicleTypes = deliveryVehicleTypesRepository.findByVehicleType(quotation.getVehicleType());
+        if (deliveryVehicleTypes != null) {
+            orderDetails.setHeight(deliveryVehicleTypes.getHeight());
+            orderDetails.setWidth(deliveryVehicleTypes.getWidth());
+            orderDetails.setLength(deliveryVehicleTypes.getLength());
+        }
 
         //generate transaction id
         LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");

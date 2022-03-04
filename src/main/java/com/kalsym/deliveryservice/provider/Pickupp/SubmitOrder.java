@@ -146,9 +146,9 @@ public class SubmitOrder extends SyncDispatcher {
         jsonReq.addProperty("dropoff_city", order.getDelivery().getDeliveryCity());
         jsonReq.addProperty("dropoff_notes", order.getRemarks());
         jsonReq.addProperty("region", order.getRegionCountry());
-        jsonReq.addProperty("length", "");
-        jsonReq.addProperty("width", "");
-        jsonReq.addProperty("height", "");
+        jsonReq.addProperty("length", order.getLength());
+        jsonReq.addProperty("width", order.getHeight());
+        jsonReq.addProperty("height", order.getHeight());
         jsonReq.addProperty("weight", order.getTotalWeightKg());
         jsonReq.addProperty("origin", this.origin);
         jsonReq.addProperty("client_reference_number", systemTransactionId);
