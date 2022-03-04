@@ -147,26 +147,27 @@ public class QueryOrder extends SyncDispatcher {
             if (details.size() > 0) {
                 status = details.get(0).getAsJsonObject().get("scanstatus").getAsString();
             }
+            if (status == null) {
+                status = dataFirstObject.get("orderDetail").getAsJsonObject().get("orderstatus").getAsString();
+
+            }
 
             DeliveryOrder orderFound = new DeliveryOrder();
             orderFound.setSpOrderId(spOrderId);
             orderFound.setStatus(status);
             if (status.equals("Picked Up")) {
                 orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-            }
-            else if (status.equals("On Hold")) {
+            } else if (status.equals("On Hold")) {
                 orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-            }
-            else if (status.equals("Departure")) {
+            } else if (status.equals("Departure")) {
                 orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-            }
-            else if(status.equals("Delivered")){
+            } else if (status.equals("Delivered")) {
                 orderFound.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
-            }
-            else if(status.equals("On Return")){
+            } else if (status.equals("On Return")) {
                 orderFound.setSystemStatus(DeliveryCompletionStatus.FAILED.name());
-            }
-            else {
+            } else if (status.equals("PUSAT_DISPATCH")) {
+                orderFound.setSystemStatus(DeliveryCompletionStatus.NEW_ORDER.name());
+            } else {
                 orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
             }
 

@@ -62,8 +62,10 @@ public class Provider implements Serializable {
     @JsonIgnore
     Integer minimumOrderQuantity;
     @JsonIgnore
+    Boolean retry;
+    @JsonIgnore
     Boolean remark;
     @Transient
     DeliveryRemarks remarks;
-    private Boolean scheduleDate;
+    Boolean scheduleDate;
 }

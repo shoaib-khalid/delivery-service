@@ -32,8 +32,6 @@ public class GetPrice extends SyncDispatcher {
     private final String logprefix;
     private final String location = "JnTGetPrice";
     private final String secretKey;
-    private final String apiKey;
-    private String sslVersion = "SSL";
     private String passowrd;
     private String customerCode;
     private String account;
@@ -50,11 +48,9 @@ public class GetPrice extends SyncDispatcher {
         this.baseUrl = (String) config.get("domainUrl");
 
         this.secretKey = (String) config.get("secretKey");
-        this.apiKey = (String) config.get("apiKey");
         this.connectTimeout = Integer.parseInt((String) config.get("getprice_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("getprice_wait_timeout"));
         this.order = order;
-        this.sslVersion = (String) config.get("ssl_version");
         this.passowrd = (String) config.get("getPricePassword");
         this.customerCode = (String) config.get("cuscode");
         this.account = (String) config.get("account");

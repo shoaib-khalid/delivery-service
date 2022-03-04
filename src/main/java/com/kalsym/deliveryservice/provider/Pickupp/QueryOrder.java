@@ -108,11 +108,14 @@ public class QueryOrder extends SyncDispatcher {
             DeliveryOrder orderFound = new DeliveryOrder();
             orderFound.setSpOrderId(spOrderId);
             orderFound.setStatus(status);
-            orderFound.setCustomerTrackingUrl(shareLink);
-            orderFound.setRiderName(deliveryAgent.get("name").getAsString());
-            orderFound.setRiderPhoneNo(deliveryAgent.get("phone").getAsString());
-            orderFound.setDriverId(deliveryAgent.get("id").getAsString());
-
+            try {
+                orderFound.setCustomerTrackingUrl(shareLink);
+                orderFound.setRiderName(deliveryAgent.get("name").getAsString());
+                orderFound.setRiderPhoneNo(deliveryAgent.get("phone").getAsString());
+                orderFound.setDriverId(deliveryAgent.get("id").getAsString());
+            }catch (Exception exception){
+                LogUtil.info(logprefix, location, "Exception Cannot Get Rider Details :" + deliveryAgent, "");
+            }
             switch (status) {
                 case "SCHEDULED":
                 case "CONTACTING_AGENT":

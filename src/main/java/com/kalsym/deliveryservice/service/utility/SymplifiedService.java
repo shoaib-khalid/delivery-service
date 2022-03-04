@@ -151,17 +151,22 @@ public class SymplifiedService {
             HttpEntity<OrderUpdate> httpEntity;
             httpEntity = new HttpEntity(orders, headers);
             logger.info("orderDeliveryConfirmationURL : " + url);
-            ResponseEntity<OrderStatusResponse> res = restTemplate.exchange(url, HttpMethod.PUT, httpEntity, OrderStatusResponse.class);
-            System.out.println("test" + res.getBody());
-            if (res != null) {
-                OrderStatusResponse orderStatusResponse = (OrderStatusResponse) res.getBody();
-                logger.debug("Store orders group (liveChatOrdersGroupName) received: {}, against orderId: {}", orderStatusResponse.getData(), orderId);
-                return orderStatusResponse.getData().getCompletionStatus();
-            } else {
-                logger.warn("Cannot get Order against orderId: {}", orderId);
+            try {
+                ResponseEntity<OrderStatusResponse> res = restTemplate.exchange(url, HttpMethod.PUT, httpEntity, OrderStatusResponse.class);
+                System.out.println("test" + res.getBody());
+                if (res != null) {
+                    OrderStatusResponse orderStatusResponse = (OrderStatusResponse) res.getBody();
+                    logger.debug("Store orders group (liveChatOrdersGroupName) received: {}, against orderId: {}", orderStatusResponse.getData(), orderId);
+                    return orderStatusResponse.getData().getCompletionStatus();
+                } else {
+                    logger.warn("Cannot get Order against orderId: {}", orderId);
+                }
+                logger.debug("Request sent to live service, responseCode: {}, responseBody: {}", res.getStatusCode(), res.getBody());
+
+            } catch (Exception exception) {
+                logger.error("Error getting Update Status against orderID:{}, url: {}", orderId, url, exception.getMessage());
             }
 
-            logger.debug("Request sent to live service, responseCode: {}, responseBody: {}", res.getStatusCode(), res.getBody());
         } catch (RestClientException e) {
             logger.error("Error getting Update Status against orderID:{}, url: {}", orderId, url, e);
             return null;
