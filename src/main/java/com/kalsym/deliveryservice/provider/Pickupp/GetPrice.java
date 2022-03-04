@@ -158,7 +158,8 @@ public class GetPrice extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Pickupp jsonResp: " + jsonResp, "");
         JsonObject data = jsonResp.get("data").getAsJsonObject();
         PriceResult priceResult = new PriceResult();
-        BigDecimal bd = new BigDecimal(Double.parseDouble(data.get("price").getAsString()));
+        Double total = Double.parseDouble(data.get("price").getAsString()) + Double.parseDouble(data.get("tax_price").getAsString());
+        BigDecimal bd = new BigDecimal(total);
         LogUtil.info(logprefix, location, "Payment Amount:" + bd, "");
         bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
         priceResult.price = bd;
