@@ -387,7 +387,7 @@ public class OrdersController {
     }
 
     // TODO: TESTING PENDING
-    @PostMapping(path = {"/bulkConfirm/"}, name = "bulk-orders-confirm-delivery")
+    @PostMapping(path = {"/bulkConfirm"}, name = "bulk-orders-confirm-delivery")
     public ResponseEntity<HttpReponse> batchSubmitDelivery(HttpServletRequest request,
                                                            @RequestBody List<OrderConfirm> orderConfirm) throws InterruptedException {
         HttpReponse response = new HttpReponse(request.getRequestURI());

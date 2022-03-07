@@ -194,6 +194,7 @@ public class DeliveryService {
         if (stores.getType().equalsIgnoreCase("self")) {
             DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), orderDetails.getDelivery().getDeliveryState());
             PriceResult priceResult = new PriceResult();
+            Set<PriceResult> priceResultList = new HashSet<>();
             orderDetails.setItemType(ItemType.SELF);
 
             if (deliveryOptions == null) {
@@ -245,10 +246,11 @@ public class DeliveryService {
                 priceResult.isError = false;
                 priceResult.refId = res.getId();
                 priceResult.validUpTo = currentTimeStamp;
+                priceResultList.add(priceResult);
 
             }
             response.setSuccessStatus(HttpStatus.OK);
-            response.setData(priceResult);
+            response.setData(priceResultList);
             LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
             return response;
         }
