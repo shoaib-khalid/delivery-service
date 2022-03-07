@@ -424,7 +424,7 @@ public class OrdersController {
             pickup.setPickupPostcode(quotation.getPickupPostcode());
             pickup.setVehicleType(VehicleType.valueOf(quotation.getVehicleType()));
             pickup.setPickupCity(quotation.getPickupCity());
-
+            orderDetails.setStoreId(quotation.getStoreId());
             Store store = storeRepository.getOne(quotation.getStoreId());
 
             if (store.getRegionCountryId().equals("PAK")) {
@@ -443,6 +443,9 @@ public class OrdersController {
             orderDetails.setDelivery(delivery);
             orderDetails.setCartId(quotation.getCartId());
             orderDetails.setServiceType(true);
+
+            System.err.println("COST CENTER CODE : " + orderDetails.getPickup().getCostCenterCode() + " STORE ID " + orderDetails.getStoreId());
+
 
             //generate transaction id
             LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " "

@@ -76,8 +76,8 @@ public class SubmitOrder extends SyncDispatcher {
         } catch (Exception e) {
             response.resultCode = -1;
             SubmitOrderResult submitOrderResult = new SubmitOrderResult();
-            submitOrderResult.resultCode =-1;
-            submitOrderResult.message =  e.getMessage();
+            submitOrderResult.resultCode = -1;
+            submitOrderResult.message = e.getMessage();
             response.returnObject = submitOrderResult;
             LogUtil.info(logprefix, location, "Request failed TCS EXCEPTION : ", e.getMessage());
 
@@ -109,6 +109,8 @@ public class SubmitOrder extends SyncDispatcher {
         } else {
             jsonRequest.addProperty("insuranceValue", 0);
         }
+        LogUtil.info(logprefix, location, "Request Body: ", jsonRequest.toString());
+
         return jsonRequest.toString();
     }
 

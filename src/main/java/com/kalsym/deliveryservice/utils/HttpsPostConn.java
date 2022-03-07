@@ -1,15 +1,14 @@
 /*
  * Here comes the text of your license
- * Each line should be prefixed with  * 
+ * Each line should be prefixed with  *
  */
 package com.kalsym.deliveryservice.utils;
 
-import com.kalsym.deliveryservice.utils.LogUtil;
+import javax.net.ssl.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -18,23 +17,16 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 /**
- *
  * @author user
  */
 public class HttpsPostConn {
-    
+
     public static HttpResult SendHttpsRequest(String httpMethod, String refId, String targetUrl, HashMap httpHeader, String requestBody, int connectTimeout, int waitTimeout) {
         HttpResult response = new HttpResult();
         String loglocation = "HttpsConn";
-        
+
         try {
             // Create a trust manager that does not validate certificate chains
             TrustManager[] trustAllCerts = new TrustManager[]{
@@ -57,36 +49,36 @@ public class HttpsPostConn {
                 }
             };
 
-            SSLContext sc = SSLContext.getInstance("SSL");
+            SSLContext sc = SSLContext.getInstance("TLSv1.2");
             sc.init(null, trustAllCerts, new SecureRandom());
 
             LogUtil.info(refId, loglocation, "Sending Request to :" + targetUrl, "");
             URL url = new URL(targetUrl);
-//            HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+//            HttpURLConnection con = (HttpURLConnection) url.openConnection();
 //            con.setSSLSocketFactory(sc.getSocketFactory());
-//            con.setHostnameVerifier(hv);
+            con.setHostnameVerifier(hv);
             con.setConnectTimeout(connectTimeout);
             con.setReadTimeout(waitTimeout);
             con.setRequestMethod(httpMethod);
             con.setDoOutput(true);
-            
-                
+
+
             //Set HTTP Headers
-            LogUtil.info(refId, loglocation, "Set HTTP Header","");
+            LogUtil.info(refId, loglocation, "Set HTTP Header", "");
             Iterator it = httpHeader.entrySet().iterator();
             while (it.hasNext()) {
-                LogUtil.info(refId, loglocation, "Header List ","");
+                LogUtil.info(refId, loglocation, "Header List ", "");
 
-                Map.Entry pair = (Map.Entry)it.next();
-                LogUtil.info(refId, loglocation, (String)pair.getKey() + " = " + (String)pair.getValue(), "");
-                con.setRequestProperty((String)pair.getKey(), (String)pair.getValue());
+                Map.Entry pair = (Map.Entry) it.next();
+                LogUtil.info(refId, loglocation, (String) pair.getKey() + " = " + (String) pair.getValue(), "");
+                con.setRequestProperty((String) pair.getKey(), (String) pair.getValue());
                 it.remove(); // avoids a ConcurrentModificationException
             }
-            
+
             con.connect();
-            
-            if (requestBody!=null) {
+
+            if (requestBody != null) {
                 //for post paramters in JSON Format                
                 OutputStream os = con.getOutputStream();
                 OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
@@ -99,8 +91,8 @@ public class HttpsPostConn {
 
             int responseCode = con.getResponseCode();
             LogUtil.info(refId, loglocation, "HTTP Response code:" + responseCode, "");
-            response.httpResponseCode=responseCode;
-            
+            response.httpResponseCode = responseCode;
+
             BufferedReader in;
             if (responseCode < HttpsURLConnection.HTTP_BAD_REQUEST) {
                 in = new BufferedReader(new InputStreamReader(con.getInputStream()));

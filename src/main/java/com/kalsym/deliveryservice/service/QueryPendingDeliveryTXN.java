@@ -221,6 +221,7 @@ public class QueryPendingDeliveryTXN {
         status.add(DeliveryCompletionStatus.COMPLETED.name());
         status.add(DeliveryCompletionStatus.CANCELED.name());
         status.add(DeliveryCompletionStatus.EXPIRED.name());
+        status.add(DeliveryCompletionStatus.REJECTED.name());
 
         List<DeliveryOrder> deliveryOrders = deliveryOrdersRepository.findByStatusNotIn(status);
         for (DeliveryOrder order : deliveryOrders) {
