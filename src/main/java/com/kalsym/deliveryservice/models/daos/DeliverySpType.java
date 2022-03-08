@@ -26,4 +26,6 @@ public class DeliverySpType {
     private Provider provider;
     String deliveryType;
     String regionCountry;
+    String fulfilment;
+    Integer interval;
 }

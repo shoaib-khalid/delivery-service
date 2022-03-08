@@ -12,7 +12,6 @@ import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
@@ -58,19 +57,31 @@ public class SubmitOrder extends SyncDispatcher {
         httpHeader.put("Content-Type", "application/json");
         httpHeader.put("X-IBM-Client-Id", clientId);
         String requestBody = generateBody();
+        try {
+            HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, submitOrder_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
 
-        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, submitOrder_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
+            if (httpResult.httpResponseCode == 200) {
+                response.resultCode = 0;
+                LogUtil.info(logprefix, location, "TCS Response for Submit Order: " + httpResult.responseString, "");
+                response.returnObject = extractResponseBody(httpResult.responseString);
+            } else {
+                LogUtil.info(logprefix, location, "Request failed", "");
+                SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+                submitOrderResult.resultCode =-1;
+                response.returnObject = submitOrderResult;
 
-        if (httpResult.httpResponseCode == 200) {
-            response.resultCode = 0;
-            LogUtil.info(logprefix, location, "TCS Response for Submit Order: " + httpResult.responseString, "");
-            response.returnObject = extractResponseBody(httpResult.responseString);
-        } else {
-            LogUtil.info(logprefix, location, "Request failed", "");
+                response.resultCode = -1;
+            }
+            LogUtil.info(logprefix, location, "Process finish", "");
+        } catch (Exception e) {
             response.resultCode = -1;
-        }
-        LogUtil.info(logprefix, location, "Process finish", "");
+            SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+            submitOrderResult.resultCode = -1;
+            submitOrderResult.message = e.getMessage();
+            response.returnObject = submitOrderResult;
+            LogUtil.info(logprefix, location, "Request failed TCS EXCEPTION : ", e.getMessage());
 
+        }
         return response;
     }
 
@@ -98,6 +109,8 @@ public class SubmitOrder extends SyncDispatcher {
         } else {
             jsonRequest.addProperty("insuranceValue", 0);
         }
+        LogUtil.info(logprefix, location, "Request Body: ", jsonRequest.toString());
+
         return jsonRequest.toString();
     }
 
@@ -126,26 +139,26 @@ public class SubmitOrder extends SyncDispatcher {
                 LogUtil.info(logprefix, location, "Consignment note for TCS: " + extractedCN, "");
             } else if (code.equals("0400")) {
 
-                submitOrderResult.providerId = order.getDeliveryProviderId();
+                submitOrderResult.deliveryProviderId = order.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
                 submitOrderResult.message = message;
 
                 LogUtil.info(logprefix, location, "TCS: Bad Request / Custom validation message. Message: " + message, "");
             } else if (code.equals("0404")) {
-                submitOrderResult.providerId = order.getDeliveryProviderId();
+                submitOrderResult.deliveryProviderId = order.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
                 submitOrderResult.message = message;
 
                 LogUtil.info(logprefix, location, "TCS: Data Not Found.", "");
             } else if (code.equals("0408")) {
-                submitOrderResult.providerId = order.getDeliveryProviderId();
+                submitOrderResult.deliveryProviderId = order.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
                 submitOrderResult.message = message;
 
                 LogUtil.info(logprefix, location, "TCS: The server is taking too long to respond, please try later.", "");
             } else {
                 LogUtil.info(logprefix, location, "TCS: An internal error has occurred.", "");
-                submitOrderResult.providerId = order.getDeliveryProviderId();
+                submitOrderResult.deliveryProviderId = order.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
                 submitOrderResult.message = message;
 

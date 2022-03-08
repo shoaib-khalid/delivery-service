@@ -13,6 +13,7 @@ import lombok.Setter;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import java.io.Serializable;
 
 /**
@@ -55,6 +56,16 @@ public class Provider implements Serializable {
     @JsonIgnore
     String additionalQueryClassName;
     @JsonIgnore
-    String addPriorityClassName; ;
-//    String regionCountryId;
+    String addPriorityClassName;
+    ;
+    //    String regionCountryId;
+    @JsonIgnore
+    Integer minimumOrderQuantity;
+    @JsonIgnore
+    Boolean retry;
+    @JsonIgnore
+    Boolean remark;
+    @Transient
+    DeliveryRemarks remarks;
+    Boolean scheduleDate;
 }

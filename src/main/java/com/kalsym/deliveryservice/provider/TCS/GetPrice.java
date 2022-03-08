@@ -1,5 +1,6 @@
 package com.kalsym.deliveryservice.provider.TCS;
 
+import com.kalsym.deliveryservice.models.Fulfillment;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
@@ -32,9 +33,10 @@ public class GetPrice extends SyncDispatcher {
     private SequenceNumberRepository sequenceNumberRepository;
     @Autowired
     private DeliveryZonePriceRepository deliveryZonePriceRepository;
+    private Fulfillment fulfillment;
 
 
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
+    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment) {
         super(latch);
         this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;
@@ -46,6 +48,7 @@ public class GetPrice extends SyncDispatcher {
 //        this.providerId = Integer.parseInt((String) config.get("providerId"));
         this.order = order;
         this.sslVersion = (String) config.get("ssl_version");
+        this.fulfillment = fulfillment;
     }
 
     @Override
@@ -112,12 +115,15 @@ public class GetPrice extends SyncDispatcher {
             priceResult.deliveryCity = deliveryCity;
             priceResult.pickupZone = zonePickup;
             priceResult.deliveryZone = zoneDelivery;
+            priceResult.fulfillment = fulfillment.getFulfillment();
+            priceResult.interval = null;
             response.resultCode = 0;
             response.returnObject = priceResult;
 
         } else {
             PriceResult result = new PriceResult();
             result.message = "ERR_OUT_OF_SERVICE_AREA";
+            result.interval = null;
             result.isError = true;
             response.returnObject = result;
             response.resultCode = -1;

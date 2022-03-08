@@ -2,6 +2,7 @@ package com.kalsym.deliveryservice.provider.JnT;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.kalsym.deliveryservice.models.Fulfillment;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
@@ -31,14 +32,13 @@ public class GetPrice extends SyncDispatcher {
     private final String logprefix;
     private final String location = "JnTGetPrice";
     private final String secretKey;
-    private final String apiKey;
-    private String sslVersion = "SSL";
     private String passowrd;
     private String customerCode;
     private String account;
+    private Fulfillment fulfillment;
 
 
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
+    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository,Fulfillment fulfillment) {
 
         super(latch);
         this.systemTransactionId = systemTransactionId;
@@ -48,14 +48,13 @@ public class GetPrice extends SyncDispatcher {
         this.baseUrl = (String) config.get("domainUrl");
 
         this.secretKey = (String) config.get("secretKey");
-        this.apiKey = (String) config.get("apiKey");
         this.connectTimeout = Integer.parseInt((String) config.get("getprice_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("getprice_wait_timeout"));
         this.order = order;
-        this.sslVersion = (String) config.get("ssl_version");
         this.passowrd = (String) config.get("getPricePassword");
         this.customerCode = (String) config.get("cuscode");
         this.account = (String) config.get("account");
+        this.fulfillment = fulfillment;
 
     }
 
@@ -138,6 +137,9 @@ public class GetPrice extends SyncDispatcher {
             bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
             priceResult.price = bd;
             priceResult.resultCode = 0;
+            priceResult.interval = null;
+            priceResult.fulfillment = fulfillment.getFulfillment();
+
 
         } else {
 

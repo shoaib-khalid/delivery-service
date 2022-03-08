@@ -10,5 +10,5 @@ package com.kalsym.deliveryservice.models.enums;
  */
 public enum VehicleType {
     CAR,
-    MOTORCYCLE
+    MOTORCYCLE,TRUCK,VAN
 }

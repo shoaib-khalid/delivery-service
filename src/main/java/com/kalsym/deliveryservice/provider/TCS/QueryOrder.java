@@ -3,11 +3,10 @@ package com.kalsym.deliveryservice.provider.TCS;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
+import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.QueryOrderResult;
-import com.kalsym.deliveryservice.provider.SubmitOrderResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
@@ -18,26 +17,17 @@ import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
 public class QueryOrder extends SyncDispatcher {
-    private final String baseUrl;
-    private final String endpointUrl;
     private final String queryOrder_url;
     private final int connectTimeout;
     private final int waitTimeout;
     private final String systemTransactionId;
-    private Order order;
-    private HashMap productMap;
-    private String atxProductCode = "";
-    private String sessionToken;
-    private String sslVersion = "SSL";
     private String logprefix;
     private String location = "TCSQueryOrder";
-    private String secretKey;
-    private String apiKey;
     private String spOrderId;
 
     private String username;
-    private String password ;
-    private String clientId ;
+    private String password;
+    private String clientId;
 
     public QueryOrder(CountDownLatch latch, HashMap config, String spOrderId, String systemTransactionId) {
         super(latch);
@@ -46,14 +36,10 @@ public class QueryOrder extends SyncDispatcher {
         LogUtil.info(logprefix, location, "TCS QueryOrder class initiliazed!!", "");
 
         //TODO : ADD IN DB DETAILS
-        this.baseUrl = (String) config.get("domainUrl");
         this.queryOrder_url = (String) config.get("queryorder_url");
-        this.secretKey = (String) config.get("secretKey");
-        this.apiKey = "x1Wbjv";
-        this.endpointUrl = (String) config.get("place_orderUrl");
+
         this.connectTimeout = Integer.parseInt((String) config.get("queryorder_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("queryorder_wait_timeout"));
-        productMap = (HashMap) config.get("productCodeMapping");
         this.spOrderId = spOrderId;
 
         this.username = (String) config.get("username");
@@ -72,9 +58,12 @@ public class QueryOrder extends SyncDispatcher {
         httpHeader.put("Content-Type", "application/json");
         httpHeader.put("X-IBM-Client-Id", clientId);
 
-        String requestUrl = queryOrder_url + "?userName=" + username+"&password="+password+"&referenceNo="+spOrderId;
+        String requestUrl = queryOrder_url + "?userName=" + username + "&password=" + password + "&referenceNo=" + spOrderId.replaceAll(" ", "%20");
+        System.err.println(" QUERY :  " + spOrderId);
+        System.err.println(" requestUrl :  " + requestUrl);
 
-        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("GET", this.systemTransactionId, requestUrl, httpHeader, "", this.connectTimeout, this.waitTimeout);
+        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("GET", this.systemTransactionId, requestUrl, httpHeader, null, this.connectTimeout, this.waitTimeout);
+
         if (httpResult.httpResponseCode == 200) {
             response.resultCode = 0;
             LogUtil.info(logprefix, location, "TCS Response for Submit Order: " + httpResult.responseString, "");
@@ -90,28 +79,66 @@ public class QueryOrder extends SyncDispatcher {
 
     private QueryOrderResult extractResponseBody(String respString) {
         QueryOrderResult queryOrderResult = new QueryOrderResult();
-        try{
+        try {
             JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
             JsonObject returnStatus = jsonResp.get("returnStatus").getAsJsonObject();
             String message = returnStatus.get("message").getAsString();
             String code = returnStatus.get("code").getAsString();
-            if (code == "0200"){
+            if (code == "0200") {
                 JsonObject trackDeliveryReply = jsonResp.get("TrackDeliveryReply").getAsJsonObject();
                 JsonArray deliveryInfo = trackDeliveryReply.get("DeliveryInfo").getAsJsonArray();
                 String status = deliveryInfo.get(0).getAsJsonObject().get("status").getAsString();
                 DeliveryOrder orderFound = new DeliveryOrder();
                 orderFound.setSpOrderId(spOrderId);
                 orderFound.setStatus(status);
+
+                switch (status) {
+                    case "SUCCESS":
+                        orderFound.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                        LogUtil.info(logprefix, location, "TCS: Success: " + status, "");
+
+                    case "FAILED":
+                        orderFound.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
+                        break;
+
+                }
                 queryOrderResult.orderFound = orderFound;
-            } else if (code == "0400"){
+            } else if (code == "0400") {
+                DeliveryOrder orderFound = new DeliveryOrder();
+                orderFound.setSpOrderId(spOrderId);
+                orderFound.setStatus("FAILED");
+                orderFound.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
+                queryOrderResult.orderFound = orderFound;
+
                 LogUtil.info(logprefix, location, "TCS: Bad Request / Custom validation message. Message: " + message, "");
-            } else if (code == "0404"){
+            } else if (code == "0404") {
+                DeliveryOrder orderFound = new DeliveryOrder();
+                orderFound.setSpOrderId(spOrderId);
+                orderFound.setStatus("FAILED");
+                orderFound.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
+                queryOrderResult.orderFound = orderFound;
+
                 LogUtil.info(logprefix, location, "TCS: Data Not Found.", "");
             } else if (code == "0408") {
+                DeliveryOrder orderFound = new DeliveryOrder();
+                orderFound.setSpOrderId(spOrderId);
+                orderFound.setStatus("FAILED");
+                orderFound.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
+                queryOrderResult.orderFound = orderFound;
+
                 LogUtil.info(logprefix, location, "TCS: The server is taking too long to respond, please try later.", "");
             } else {
+                DeliveryOrder orderFound = new DeliveryOrder();
+                orderFound.setSpOrderId(spOrderId);
+                orderFound.setStatus("FAILED");
+                orderFound.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
+                queryOrderResult.orderFound = orderFound;
+
                 LogUtil.info(logprefix, location, "TCS: An internal error has occurred.", "");
             }
+
+
+
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
         }

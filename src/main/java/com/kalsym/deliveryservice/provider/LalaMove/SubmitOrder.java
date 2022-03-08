@@ -3,14 +3,15 @@ package com.kalsym.deliveryservice.provider.LalaMove;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
-import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.RequestBodies.lalamoveGetPrice.*;
+import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SubmitOrderResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.DateTimeUtil;
-import com.kalsym.deliveryservice.utils.LalamoveUtils;
+import com.kalsym.deliveryservice.utils.HttpResult;
+import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import org.json.JSONObject;
 import org.springframework.http.HttpEntity;
@@ -79,7 +80,7 @@ public class SubmitOrder extends SyncDispatcher {
 
         String BASE_URL = this.baseUrl;
         String ENDPOINT_URL_PLACEORDER = this.endpointUrl;
-        LogUtil.info(logprefix, location, "BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER, "");
+        LogUtil.info(logprefix, location, "BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER, "" + order.getDeliveryType());
 
         String METHOD = "POST";
         Mac mac = null;
@@ -107,46 +108,103 @@ public class SubmitOrder extends SyncDispatcher {
         HttpHeaders headers = new HttpHeaders();
 
         JSONObject orderBody = new JSONObject(new Gson().toJson(requestBody));
+//
+//        HttpEntity<String> orderRequest = null;
+//        try {
+//            orderRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_PLACEORDER, "POST", orderBody, headers, secretKey, apiKey);
+//        } catch (NoSuchAlgorithmException e) {
+//            e.printStackTrace();
+//        } catch (InvalidKeyException e) {
+//            e.printStackTrace();
+//        }
 
-        HttpEntity<String> orderRequest = null;
+//        Mac mac = Mac.getInstance("HmacSHA256");
+//        SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
+//        mac.init(secret_key);
+//
+//        String timeStamp = String.valueOf(System.currentTimeMillis());
+//        String rawSignature = timeStamp+"\r\n"+METHOD+"\r\n"+ENDPOINT_URL+"\r\n\r\n"+bodyJson.toString();
+//        byte[] byteSig = mac.doFinal(rawSignature.getBytes());
+//        String signature = DatatypeConverter.printHexBinary(byteSig);
+//        signature = signature.toLowerCase();
+//
+//        String authToken = apiKey+":"+timeStamp+":"+signature;
+
+        HashMap httpHeader = new HashMap();
+        httpHeader.put("Content-Type", "application/json");
+        httpHeader.put("Authorization", "hmac " + authToken);
+        httpHeader.put("X-LLM-Country", "MY_KUL");
+
+
         try {
-            orderRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_PLACEORDER, "POST", orderBody, headers,secretKey, apiKey);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        }
+            HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, BASE_URL + ENDPOINT_URL_PLACEORDER, httpHeader, orderBody.toString(), this.connectTimeout, this.waitTimeout);
 
-        ResponseEntity<String> responseEntity = restTemplate.exchange(BASE_URL + ENDPOINT_URL_PLACEORDER, HttpMethod.POST, orderRequest, String.class);
-        LogUtil.info(logprefix, location, "Response", responseEntity.getBody());
+//
+//            ResponseEntity<String> responseEntity = restTemplate.exchange(BASE_URL + ENDPOINT_URL_PLACEORDER, HttpMethod.POST, orderRequest, String.class);
+//            LogUtil.info(logprefix, location, "Response : ", responseEntity.getBody());
 
-        int statusCode = responseEntity.getStatusCode().value();
+            int statusCode = httpResult.httpResponseCode;
 
-        if (statusCode == 200) {
-            response.resultCode = 0;
-            JsonObject jsonResp = new Gson().fromJson(responseEntity.getBody(), JsonObject.class);
-            spOrderId = jsonResp.get("orderRef").getAsString();
-            LogUtil.info(logprefix, location, "OrderNumber in process function:" + spOrderId, "");
-            getDetails(spOrderId);
+            if (statusCode == 200) {
+                response.resultCode = 0;
+                JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
+                spOrderId = jsonResp.get("orderRef").getAsString();
+                LogUtil.info(logprefix, location, "OrderNumber in process function:" + spOrderId, "");
+                getDetails(spOrderId);
+                response.returnObject = extractResponseBody(httpResult.responseString);
+            } else {
+                JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
+                System.err.println("RESPONSE CODE : " + jsonResp.get("message").getAsString());
+                SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+                submitOrderResult.message = jsonResp.get("message").getAsString();
+                if (jsonResp.get("message").getAsString().equals("ERR_PRICE_MISMATCH")) {
+                    submitOrderResult.resultCode = 2;
+                } else if (jsonResp.get("message").getAsString().equals("ERR_OUT_OF_SERVICE_AREA")) {
+                    submitOrderResult.resultCode = -1;
+                } else {
+                    submitOrderResult.resultCode = -1;
 
-            response.returnObject = extractResponseBody(responseEntity.getBody());
-        } else {
+                }
+                response.returnObject = submitOrderResult;
+            }
 
-            LogUtil.info(logprefix, location, "Request failed", "");
+            LogUtil.info(logprefix, location, "Process finish", "");
+        } catch (Exception e) {
             response.resultCode = -1;
+            SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+            submitOrderResult.resultCode = -1;
+            response.returnObject = submitOrderResult;
+            LogUtil.info(logprefix, location, "Request failed", e.getMessage());
+
         }
 
-        LogUtil.info(logprefix, location, "Process finish", "");
         return response;
     }
 
     private PlaceOrder generateRequestBody() {
         List<Delivery> deliveries = new ArrayList<>();
 
+        String pickupContactNO;
+        String deliveryContactNo;
+        if (order.getPickup().getPickupContactPhone().startsWith("6")) {
+            //national format
+            pickupContactNO = order.getPickup().getPickupContactPhone().substring(1);
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(1);
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        } else if (order.getPickup().getPickupContactPhone().startsWith("+6")) {
+            pickupContactNO = order.getPickup().getPickupContactPhone().substring(2);
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(2);
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        } else {
+            pickupContactNO = order.getPickup().getPickupContactPhone();
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        }
+
         deliveries.add(
                 new Delivery(
                         1,
-                        new Contact(order.getDelivery().getDeliveryContactName(), order.getDelivery().getDeliveryContactPhone()),
+                        new Contact(order.getDelivery().getDeliveryContactName(), deliveryContactNo),
                         ""
                 )
         );
@@ -154,6 +212,11 @@ public class SubmitOrder extends SyncDispatcher {
         GetPrices req = new GetPrices();
         req.serviceType = order.getPickup().getVehicleType().name();
         req.specialRequests = null;
+
+        System.err.println("order.getDeliveryPeriod() : " + order.getDeliveryPeriod());
+        if (order.getDeliveryPeriod().equals("FOURHOURS") || order.getDeliveryPeriod().equals("NEXTDAY") || order.getDeliveryPeriod().equals("FOURDAYS")) {
+            req.scheduleAt = order.getPickupTime();
+        }
         Stop s1 = new Stop();
         s1.addresses = new Addresses(
                 new MsMY(order.getPickup().getPickupAddress(),
@@ -168,7 +231,7 @@ public class SubmitOrder extends SyncDispatcher {
         stopList.add(s2);
 
         req.stops = stopList;
-        req.requesterContact = new Contact(order.getPickup().getPickupContactName(), order.getPickup().getPickupContactPhone());
+        req.requesterContact = new Contact(order.getPickup().getPickupContactName(), pickupContactNO);
         req.deliveries = deliveries;
 
 
@@ -202,6 +265,8 @@ public class SubmitOrder extends SyncDispatcher {
             orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
             orderCreated.setCustomerTrackingUrl(shareLink);
             orderCreated.setStatus(status);
+            orderCreated.setStatusDescription(status);
+            orderCreated.setStatus("ASSIGNING_DRIVER");
 
             submitOrderResult.orderCreated = orderCreated;
         } catch (Exception ex) {

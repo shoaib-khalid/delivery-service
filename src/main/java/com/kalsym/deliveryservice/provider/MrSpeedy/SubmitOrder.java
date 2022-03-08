@@ -67,6 +67,9 @@ public class SubmitOrder extends SyncDispatcher {
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
             response.resultCode = -1;
+            SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+            submitOrderResult.resultCode =-1;
+            response.returnObject = submitOrderResult;
         }
         LogUtil.info(logprefix, location, "Process finish", "");
         return response;
@@ -79,17 +82,32 @@ public class SubmitOrder extends SyncDispatcher {
         jsonReq.addProperty("total_weight_kg", order.getTotalWeightKg());
         jsonReq.addProperty("vehicle_type_id", VehicleType.valueOf(order.getPickup().getVehicleType().name()).getCode());
         JsonArray addressList = new JsonArray();
-
+        String pickupContactNO;
+        String deliveryContactNo;
+        if (order.getPickup().getPickupContactPhone().startsWith("6")) {
+            //national format
+            pickupContactNO = order.getPickup().getPickupContactPhone().substring(1);
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(1);
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        } else if (order.getPickup().getPickupContactPhone().startsWith("+6")) {
+            pickupContactNO = order.getPickup().getPickupContactPhone().substring(2);
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(2);
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        } else {
+            pickupContactNO = order.getPickup().getPickupContactPhone();
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        }
         JsonObject pickupAddress = new JsonObject();
         pickupAddress.addProperty("address", order.getPickup().getPickupAddress());
         JsonObject contactPerson2 = new JsonObject();
-        contactPerson2.addProperty("phone", order.getPickup().getPickupContactPhone());
+        contactPerson2.addProperty("phone",pickupContactNO);
         contactPerson2.addProperty("name", order.getPickup().getPickupContactName());
         pickupAddress.add("contact_person", contactPerson2);
         addressList.add(pickupAddress);
 
         JsonObject deliveryAddress = new JsonObject();
-        deliveryAddress.addProperty("address", order.getDelivery().getDeliveryAddress());
+        deliveryAddress.addProperty("address", deliveryContactNo);
         JsonObject contactPerson = new JsonObject();
         contactPerson.addProperty("phone", order.getDelivery().getDeliveryContactPhone());
         contactPerson.addProperty("name", order.getDelivery().getDeliveryContactName());
@@ -124,6 +142,8 @@ public class SubmitOrder extends SyncDispatcher {
             orderCreated.setVehicleType(vehicleType.toString());
             orderCreated.setMerchantTrackingUrl(merchantTrackingUrl);
             orderCreated.setCustomerTrackingUrl(customerTrackingUrl);
+            orderCreated.setStatusDescription(orderObject.get("status").getAsString());
+            orderCreated.setStatus("ASSIGNING_DRIVER");
             submitOrderResult.orderCreated = orderCreated;
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);

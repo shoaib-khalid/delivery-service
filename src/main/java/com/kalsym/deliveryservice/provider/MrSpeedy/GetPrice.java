@@ -7,6 +7,7 @@ package com.kalsym.deliveryservice.provider.MrSpeedy;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.kalsym.deliveryservice.models.Fulfillment;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
@@ -34,8 +35,9 @@ public class GetPrice extends SyncDispatcher {
     private String sslVersion = "SSL";
     private String logprefix;
     private String location = "MrSpeedyGetPrice";
+    private Fulfillment fulfillment;
 
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
+    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment) {
 
         super(latch);
         this.systemTransactionId = systemTransactionId;
@@ -48,6 +50,7 @@ public class GetPrice extends SyncDispatcher {
         productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
         this.sslVersion = (String) config.get("ssl_version");
+        this.fulfillment = fulfillment;
     }
 
     @Override
@@ -76,6 +79,7 @@ public class GetPrice extends SyncDispatcher {
 
                 result.message = invalidResponse;
                 result.isError = true;
+                result.interval = null;
                 response.resultCode = -1;
                 response.returnObject = result;
             }
@@ -97,7 +101,25 @@ public class GetPrice extends SyncDispatcher {
         JsonObject pickupAddress = new JsonObject();
         pickupAddress.addProperty("address", order.getPickup().getPickupAddress());
         JsonObject contactPerson2 = new JsonObject();
-        contactPerson2.addProperty("phone", order.getPickup().getPickupContactPhone());
+
+        String pickupContactNO;
+        String deliveryContactNo;
+        if (order.getPickup().getPickupContactPhone().startsWith("6")) {
+            //national format
+            pickupContactNO = order.getPickup().getPickupContactPhone().substring(1);
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(1);
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        } else if (order.getPickup().getPickupContactPhone().startsWith("+6")) {
+            pickupContactNO = order.getPickup().getPickupContactPhone().substring(2);
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(2);
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        } else {
+            pickupContactNO = order.getPickup().getPickupContactPhone();
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+        }
+
+        contactPerson2.addProperty("phone", pickupContactNO);
         contactPerson2.addProperty("name", order.getPickup().getPickupContactName());
         pickupAddress.add("contact_person", contactPerson2);
         addressList.add(pickupAddress);
@@ -105,7 +127,7 @@ public class GetPrice extends SyncDispatcher {
         JsonObject deliveryAddress = new JsonObject();
         deliveryAddress.addProperty("address", order.getDelivery().getDeliveryAddress());
         JsonObject contactPerson = new JsonObject();
-        contactPerson.addProperty("phone", order.getDelivery().getDeliveryContactPhone());
+        contactPerson.addProperty("phone", deliveryContactNo);
         contactPerson.addProperty("name", order.getDelivery().getDeliveryContactName());
         deliveryAddress.add("contact_person", contactPerson);
         addressList.add(deliveryAddress);
@@ -134,6 +156,8 @@ public class GetPrice extends SyncDispatcher {
         BigDecimal bd = new BigDecimal(Double.parseDouble(payAmount));
         bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
         priceResult.price = bd;
+        priceResult.fulfillment = fulfillment.getFulfillment();
+        priceResult.interval = null;
         return priceResult;
     }
 

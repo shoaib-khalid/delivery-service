@@ -1,12 +1,12 @@
 package com.kalsym.deliveryservice.provider;
 
 import com.kalsym.deliveryservice.controllers.ProcessRequest;
+import com.kalsym.deliveryservice.models.Fulfillment;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.daos.Provider;
 import com.kalsym.deliveryservice.models.daos.Store;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
-import com.kalsym.deliveryservice.service.utility.Response.StoreResponseData;
 import com.kalsym.deliveryservice.utils.LogUtil;
 
 import java.lang.reflect.Constructor;
@@ -28,8 +28,25 @@ public class ProviderThread extends Thread implements Runnable {
     private final HashMap providerConfig;
     private ProcessRequest caller;
     private String functionName;
+    private Fulfillment fulfillment;
     private Object requestBody;
     private SequenceNumberRepository sequenceNumberRepository;
+
+    public ProviderThread(ProcessRequest caller, String sysTransactionId,
+                          Provider provider, HashMap providerConfig, Order order, String functionName,
+                          SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment) {
+        this.sysTransactionId = sysTransactionId;
+        this.provider = provider;
+        this.order = order;
+        this.providerConfig = providerConfig;
+        this.caller = caller;
+        this.functionName = functionName;
+        this.spOrderId = null;
+        this.sequenceNumberRepository = sequenceNumberRepository;
+        this.deliveryOrder = null;
+        this.store = null;
+        this.fulfillment = fulfillment;
+    }
 
     public ProviderThread(ProcessRequest caller, String sysTransactionId,
                           Provider provider, HashMap providerConfig, Order order, String functionName,
@@ -132,7 +149,7 @@ public class ProviderThread extends Thread implements Runnable {
 
             //get the java class name from SPId->JavaClass mapping
             String className = "";
-            if (functionName.equalsIgnoreCase("GetPrices")) {
+            if (functionName.equalsIgnoreCase("GetPrice")) {
                 className = provider.getGetPriceClassname();
                 LogUtil.info(logprefix, location, "GetPrices class name for SP ID:" + provider.getId() + " -> " + className, "");
             } else if (functionName.equalsIgnoreCase("SubmitOrder")) {
@@ -165,8 +182,7 @@ public class ProviderThread extends Thread implements Runnable {
             } else if (functionName.equalsIgnoreCase("GetAdditionalInfo")) {
                 className = provider.getAdditionalQueryClassName();
                 LogUtil.info(logprefix, location, "GetAdditionalInfo class name for SP ID:" + provider.getId() + " -> " + className, "");
-            }
-            else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
+            } else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
                 className = provider.getAddPriorityClassName();
                 LogUtil.info(logprefix, location, "AddPriorityFee class name for SP ID:" + provider.getId() + " -> " + className, "");
             }
@@ -190,8 +206,10 @@ public class ProviderThread extends Thread implements Runnable {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
                 } else if (functionName.equalsIgnoreCase("GetAdditionalInfo")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, store, this.sysTransactionId, this.sequenceNumberRepository);
-                }else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
+                } else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
+                }else if (functionName.equalsIgnoreCase("GetPrice")) {
+                    reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository, this.fulfillment);
                 }
                 else {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository);
@@ -214,13 +232,13 @@ public class ProviderThread extends Thread implements Runnable {
 
             LogUtil.info(logprefix, location, "ProviderThread finish", "");
             ProcessResult response = reqFactoryObj.getProcessResult();
-            if (functionName.equalsIgnoreCase("GetPrices")) {
+            if (functionName.equalsIgnoreCase("GetPrice")) {
                 PriceResult priceResult = (PriceResult) response.returnObject;
                 priceResult.providerId = provider.getId();
                 caller.addPriceResult(priceResult);
             } else if (functionName.equalsIgnoreCase("SubmitOrder")) {
                 SubmitOrderResult submitOrderResult = (SubmitOrderResult) response.returnObject;
-                submitOrderResult.providerId = provider.getId();
+                submitOrderResult.deliveryProviderId = provider.getId();
                 caller.setSubmitOrderResult(submitOrderResult);
             } else if (functionName.equalsIgnoreCase("CancelOrder")) {
                 CancelOrderResult cancelOrderResult = (CancelOrderResult) response.returnObject;
@@ -258,10 +276,9 @@ public class ProviderThread extends Thread implements Runnable {
                 AdditionalInfoResult additionalInfoResult = (AdditionalInfoResult) response.returnObject;
                 additionalInfoResult.providerId = provider.getId();
                 caller.setAdditionalInfoResult(additionalInfoResult);
-            }
-            else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
+            } else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
                 PriceResult priceResult = (PriceResult) response.returnObject;
-                System.err.println("PRINT ID HERE " +provider.getId());
+                System.err.println("PRINT ID HERE " + provider.getId());
                 priceResult.providerId = provider.getId();
                 caller.setPriceResultList(priceResult);
             }

@@ -1,4 +1,392 @@
 ##############################################################################################
+# Version v.2.6.7| 07-March-2022
+###############################################################################################
+### Code Changes:
+
+1. Bug Fixed - For Query Order Status
+
+##############################################################################################
+# Version v.2.6.6| 07-March-2022
+###############################################################################################
+### Code Changes:
+
+1. Bug Fixed For Bulk Order Processing Endpoint
+2. Get Price Bug Fixed Response Body
+
+##############################################################################################
+# Version v.2.6.5| 04-March-2022
+###############################################################################################
+### Code Changes:
+
+ALTER TABLE symplified.delivery_sp ADD retry TINYINT DEFAULT 0 NOT NULL;
+1. Bug Fixed For PICKUPP AND Order Status Update to order service
+
+
+##############################################################################################
+# Version v.2.6.4| 04-March-2022
+###############################################################################################
+### Code Changes:
+1. Bug Fixed - Schedule Date Bug Fixed 
+
+##############################################################################################
+# Version v.2.6.3| 04-March-2022
+###############################################################################################
+### Code Changes:
+1. Bug Fixed - Phone No Normalization- Get Price And Submit Order
+
+##############################################################################################
+# Version v.2.6.2| 04-March-2022
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Get Price - Fixed Height And Weight And Length
+
+##############################################################################################
+# Version v.2.6.1| 04-March-2022
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Get Price - Include Tax Price in the get quotation
+
+##############################################################################################
+# Version v.2.6.0| 03-March-2022
+###############################################################################################
+### Code Changes:
+1. Production bug fixed- Rider Details and Query Status bug fixed 
+
+##############################################################################################
+# Version v.2.5.9| 03-March-2022
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Get Price
+
+##############################################################################################
+# Version v.2.5.8| 03-March-2022
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Submit Order 
+
+##############################################################################################
+# Version v.2.5.7| 03-March-2022
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Submit Order Remove The Line 
+
+##############################################################################################
+# Version v.2.5.6| 03-March-2022
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Get Price
+### Release Note Changes:
+1. Release Note Update 
+
+##############################################################################################
+# Version v.2.5.5| 03-March-2022
+###############################################################################################
+### Code Changes:
+1. Confirm Delivery Bug Fixed
+- delivery_sp_config
+     INSERT INTO SYMPLIFIED.DELIVERY_SP_CONFIG (spId,configField,configValue) VALUES
+    (6,'domainUrl','https://gateway.my.pickupp.io/v2'),
+    (6,'getprice_connect_timeout','10000'),
+    (6,'getprice_url','/merchant/orders/quote'),
+    (6,'getprice_wait_timeout','30000'),
+    (6,'queryorder_connect_timeout','30000'),
+    (6,'queryorder_url','https://gateway.my.pickupp.io/v2/merchant/orders/,?include_history=true'),
+    (6,'queryorder_wait_timeout','30000'),
+    (6,'serviceType','EXPRESS:express=120;FOURHOURS:four_hours=-1;SAMEDAY:same_day=-1;NEXTDAY:next_day=1;'),
+    (6,'submitorder_connect_timeout','20000'),
+    (6,'submitorder_url','/merchant/orders/single');
+    INSERT INTO SYMPLIFIED.DELIVERY_SP_CONFIG (spId,configField,configValue) VALUES
+    (6,'submitorder_wait_timeout','25000'),
+    (6,'token','c3ltcGxpZmllZEBrYWxzeW0uY29tOjI1NDZmMjNjYjgxM2E5ZThiNjdmMzFhNWQ5MDk4MWVl'),
+    (6,'trackingUrl','https://my.pickupp.io/en/tracking?orderNumber=');
+
+- delivery_sp
+- INSERT INTO SYMPLIFIED.DELIVERY_SP (ID,NAME,ADDRESS,CONTACTNO,CONTACTPERSON,GETPRICECLASSNAME,SUBMITORDERCLASSNAME,CANCELORDERCLASSNAME,QUERYORDERCLASSNAME,SPCALLBACKCLASSNAME,PICKUPDATECLASSNAME,PICKUPTIMECLASSNAME,LOCATIONIDCLASSNAME,PROVIDERIMAGE,REGIONCOUNTRYID,AIRWAYBILLCLASSNAME,DRIVERDETAILSCLASSNAME,ADDITIONALQUERYCLASSNAME,MINIMUMORDERQUANTITY,ADDPRIORITYCLASSNAME,SCHEDULEDATE,REMARK) VALUES
+  ('6','PICKUPP',NULL,NULL,NULL,'com.kalsym.deliveryservice.provider.Pickupp.GetPrice','com.kalsym.deliveryservice.provider.Pickupp.SubmitOrder',NULL,'com.kalsym.deliveryservice.provider.Pickupp.QueryOrder',NULL,NULL,NULL,NULL,'https://symplified.it/delivery-assets/provider-logo/pickupp.png','MYS',NULL,NULL,NULL,1,NULL,0,0);
+
+-delivery_period
+CREATE TABLE `delivery_period` (
+`id` varchar(20) NOT NULL,
+`name` varchar(50) DEFAULT NULL,
+`description` varchar(100) DEFAULT NULL,
+PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3
+
+values
+INSERT INTO SYMPLIFIED.DELIVERY_PERIOD (ID,NAME,DESCRIPTION) VALUES
+('EXPRESS','Express','Pickup between 30 min - 2 hours'),
+('FOURDAYS','3-5 Days','Within city 2 days, intercity up to 5 days'),
+('FOURHOURS','2-4 Hours','Pickup & Drop-off between 2 - 4 hours'),
+('NEXTDAY','Next Day','Pickup & Delivery next day');
+
+##############################################################################################
+# Version v.2.5.4| 03-March-2022
+###############################################################################################
+### Code Changes:
+1. Confirm Delivery Bug Fixed
+  
+##############################################################################################
+# Version v.2.5.3| 02-March-2022
+###############################################################################################
+### Code Changes:
+ALTER TABLE symplified.delivery_quotation ADD intervalTime INT NULL;
+1. bug fixed get price
+
+
+##############################################################################################
+# Version v.2.5.2| 02-March-2022
+###############################################################################################
+### Code Changes:
+1. Bug fixed for PICKUPP Query and Place Order Time
+2. Get Price sort by merchant choose
+3. Pickupp change time zone format
+
+
+##############################################################################################
+# Version v.2.5.1| 02-March-2022
+###############################################################################################
+### Code Changes:
+1. Query Pending Transaction Pending time Changed
+2. Pickupp Region country id change
+
+##############################################################################################
+# Version v.2.5.0| 01-March-2022
+###############################################################################################
+### Code Changes:
+
+ALTER TABLE symplified.delivery_quotation ADD pickupTime DATETIME NULL;
+ALTER TABLE symplified.delivery_quotation MODIFY COLUMN pickupTime varchar(200) NULL;
+1. Bug fixed get price and confirm delivery
+
+
+##############################################################################################
+# Version v.2.4.9| 01-March-2022
+###############################################################################################
+### Code Changes:
+
+1. patch this version order service in production order-service-3.7.0
+2. Bug fixed get price and confirm delivery
+3. Get price response body changed
+
+
+##############################################################################################
+# Version v.2.4.8| 25-February-2022
+###############################################################################################
+### Code Changes:
+
+Bug Fixed - Added Length, Height, Weight, Width Configuration In Table.
+
+
+ALTER TABLE symplified.delivery_quotation ADD fulfillmentType varchar(100) NULL;
+
+
+CREATE TABLE symplified.delivery_vehicle_types (
+vehicleType enum('MOTORCYCLE','CAR','VAN','PICKUP','LARGEVAN','SMALLLORRY','MEDIUMLORRY','LARGELORRY')CREATE TABLE symplified.delivery_vehicle_types (
+NOT NULL,
+height DECIMAL(15,2) NOT NULL,
+width DECIMAL(15,2) NOT NULL,
+`length` DECIMAL(15,2) NOT NULL,
+weight DECIMAL(15,2) NOT NULL
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8
+COLLATE=utf8_general_ci;
+
+INSERT INTO SYMPLIFIED.DELIVERY_VEHICLE_TYPES (VEHICLETYPE,HEIGHT,WIDTH,`length`,WEIGHT) VALUES
+('MOTORCYCLE',30.00,30.00,30.00,10.00),
+('CAR',50.00,50.00,50.00,40.00),
+('PICKUP',120.00,90.00,90.00,200.00),
+('VAN',170.00,120.00,120.00,500.00),
+('SMALLLORRY',290.00,150.00,150.00,1000.00);
+
+
+##############################################################################################
+# Version v.2.4.7| 25-February-2022
+###############################################################################################
+### Code Changes:
+Get Price Bug Fixed- Added Fulfillment Type in the Response
+
+##############################################################################################
+# Version v.2.4.6 | 21-February-2022
+###############################################################################################
+### Code Changes:
+Bulk Order - Bug Fixed 
+
+##############################################################################################
+# Version v.2.4.5 | 21-February-2022
+###############################################################################################
+### Code Changes:
+Get Price backend logic enhance. Update Get quotaion response
+    CREATE TABLE `delivery_sp_type` (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `deliverySpId` varchar(50) NOT NULL,
+    `deliveryType` enum('ADHOC','SCHEDULED','SELF') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+    `regionCountry` varchar(3) NOT NULL,
+    `fulfilment` enum('EXPRESS','FOURHOURS','NEXTDAY','FOURDAYS') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+    `interval` int DEFAULT NULL,
+    PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+values
+    INSERT INTO s.delivery_sp_type (DELIVERYSPID,DELIVERYTYPE,REGIONCOUNTRY,FULFILMENT,`interval`) VALUES
+    ('1','SCHEDULED','MYS','EXPRESS',0),
+    ('1','SCHEDULED','MYS','FOURHOURS',0),
+    ('3','SCHEDULED','MYS','EXPRESS',0),
+    ('3','SCHEDULED','MYS','FOURHOURS',4),
+    ('4','SCHEDULED','PAK','NEXTDAY',0),
+    ('5','SCHEDULED','MYS','FOURDAYS',0),
+    ('6','SCHEDULED','MYS','NEXTDAY',0),
+    ('6','SCHEDULED','MYS','FOURHOURS',0),
+    ('1','ADHOC','MYS','EXPRESS',NULL),
+    ('3','ADHOC','MYS','FOURHOURS',4);
+    INSERT INTO SYMPLIFIED.DELIVERY_SP_TYPE (DELIVERYSPID,DELIVERYTYPE,REGIONCOUNTRY,FULFILMENT,`interval`) VALUES
+    ('3','ADHOC','MYS','EXPRESS',0),
+    ('6','ADHOC','MYS','EXPRESS',NULL);
+
+
+
+
+[//]: # (ALTER TABLE symplified.delivery_sp_type ADD `interval` INT NULL;)
+
+##############################################################################################
+# Version v.2.4.4 | 21-February-2022
+###############################################################################################
+### Code Changes:
+Bug fixed - Get Price - Fixed- For FNB
+
+##############################################################################################
+# Version v.2.4.3 | 18-February-2022
+###############################################################################################
+### Code Changes:
+Bug fixed - Get Price - Fixed
+
+##############################################################################################
+# Version v.2.4.2 | 18-February-2022
+###############################################################################################
+### Code Changes:
+Bug fixed - bulk order processing - fixed
+
+##############################################################################################
+# Version v.2.4.1 | 18-February-2022
+###############################################################################################
+### Code Changes:
+Bug fixed - bulk order processing
+
+
+##############################################################################################
+# Version v.2.4.0 | 16-February-2022
+###############################################################################################
+### Code Changes:
+1. New provider Integration  "PICKUPP"
+   1. Update table delivery_sp_config - production credential 
+   2. Update table delivery_sp
+      - getPriceClassName - com.kalsym.deliveryservice.provider.Pickupp.GetPrice
+      - submitOrderClassName - com.kalsym.deliveryservice.provider.Pickupp.SubmitOrder
+      - queryOrderClassName - com.kalsym.deliveryservice.provider.Pickupp.QueryOrder
+      - spCallbackClassname - com.kalsym.deliveryservice.provider.Pickupp.OrderCallback
+      - 
+ALTER TABLE symplified.delivery_orders ADD pickupTime TIME NULL;
+ALTER TABLE symplified.delivery_orders ADD pickupdate TIMESTAMP NULL;
+
+
+##############################################################################################
+# Version v.2.3.20 | 16-February-2022
+###############################################################################################
+### Code Changes:
+
+1. Bug fixed for schedule and adhoc delivery 
+
+
+##############################################################################################
+# Version v.2.3.19 | 14-February-2022
+###############################################################################################
+### Code Changes:
+
+1. Added new point for delivery type 
+
+CREATE TABLE symplified.delivery_main_type (
+id BIGINT auto_increment NOT NULL,
+`type` enum('SCHEDULED','ADHOC') NOT NULL,
+CONSTRAINT delivery_main_type_PK PRIMARY KEY (id)
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8
+COLLATE=utf8_general_ci;
+
+ALTER TABLE symplified.delivery_main_type MODIFY COLUMN `type` enum('SCHEDULED','ADHOC','EXPRESS','4HOURS','SAMEDAY','NEXTDAY','3-5DAYS') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+ALTER TABLE symplified.delivery_main_type ADD main_id BIGINT NULL;
+
+-values
+INSERT INTO symplified.delivery_main_type (`type`,MAIN_ID) VALUES
+('SCHEDULED',NULL),
+('ADHOC',NULL),
+('EXPRESS',2),
+('4HOURS',2),
+('SAMEDAY',2),
+('NEXTDAY',1),
+('3-5DAYS',1);
+
+
+ALTER TABLE symplified.delivery_quotation CHANGE productCode `type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL;
+
+ALTER TABLE symplified.delivery_quotation DROP COLUMN spId;
+
+2. Get Price backend fixed the delivery vehicle type. 
+
+
+##############################################################################################
+# Version v.2.3.18 | 10-February-2022
+###############################################################################################
+### Code Changes:
+1. bug fixed
+ALTER TABLE symplified.delivery_sp ADD remark TINYINT NOT NULL;
+
+##############################################################################################
+# Version v.2.3.17 | 10-February-2022
+###############################################################################################
+### Code Changes:
+
+1. Get Delivery Provider details response updated. 
+
+ALTER TABLE symplified.delivery_sp MODIFY COLUMN remarks INT NULL;
+ALTER TABLE symplified.delivery_sp ADD minimumOrderQuantity INT NULL;
+
+
+CREATE TABLE symplified.delivery_remarks (
+id INT auto_increment NOT NULL,
+title varchar(100) NOT NULL,
+message varchar(500) NOT NULL,
+CONSTRAINT delivery_remarks_PK PRIMARY KEY (id)
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8
+COLLATE=utf8_general_ci;
+
+ALTER TABLE symplified.delivery_remarks MODIFY COLUMN id int auto_increment NOT NULL;
+ALTER TABLE symplified.delivery_remarks ADD deliveryType varchar(100) NOT NULL;
+
+values
+INSERT INTO SYMPLIFIED.DELIVERY_REMARKS (TITLE,MESSAGE,DELIVERYTYPE) VALUES
+('Minimum item for pickup does not meet','Please drop your shipment to nearest Logistic.','DROPSHIP'),
+('Logistic provider will collect order item ','Logitstic partner will contact to you to for collect the order','PICKUP');
+
+
+##############################################################################################
+# Version v.2.3.16 | 09-February-2022
+###############################################################################################
+### Code Changes:
+1. Get Delivery Provider endpoint updated - added remarks
+ALTER TABLE symplified.delivery_sp DROP COLUMN scheduleDate;
+ALTER TABLE symplified.delivery_sp ADD scheduleDate TINYINT DEFAULT 0 NOT NULL;
+
+
+##############################################################################################
+# Version v.2.3.15 | 08-February-2022
+###############################################################################################
+### Code Changes:
+Request body changed for Bulk Order Processing 
+
+##############################################################################################
 # Version v.2.3.14 | 27-January-2022
 ###############################################################################################
 ### Code Changes:
@@ -42,7 +430,7 @@ Improved - Bug fixed testing - Reasign rider if still cannot assign rider. retur
 ### Code Changes:
 
 Improved - Bug fixed testing - cron run every five minutes
-- udpate order -service final call after place order
+- update order -service final call after place order
 
 ##############################################################################################
 # Version v.2.3.8 | 14-January-2022

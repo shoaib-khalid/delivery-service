@@ -102,25 +102,41 @@ public class SubmitOrder extends SyncDispatcher {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/x-www-form-urlencoded");
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(postParameters, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> responses = restTemplate.exchange(submitOrder_url, HttpMethod.POST, request, String.class);
 
-        int statusCode = responses.getStatusCode().value();
-        LogUtil.info(logprefix, location, "Responses", responses.getBody());
-        if (statusCode == 200) {
-            response.resultCode = 0;
-            LogUtil.info(logprefix, location, "JnT Response for Submit Order: " + responses.getBody(), "");
-            SubmitOrderResult result = extractResponseBody(responses.getBody());
-            if (result.isSuccess) {
-                response.returnObject = extractResponseBody(responses.getBody());
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> responses = restTemplate.exchange(submitOrder_url, HttpMethod.POST, request, String.class);
+
+            int statusCode = responses.getStatusCode().value();
+            LogUtil.info(logprefix, location, "Responses", responses.getBody());
+            if (statusCode == 200) {
+                response.resultCode = 0;
+                LogUtil.info(logprefix, location, "JnT Response for Submit Order: " + responses.getBody(), "");
+                SubmitOrderResult result = extractResponseBody(responses.getBody());
+                if (result.isSuccess) {
+                    response.returnObject = extractResponseBody(responses.getBody());
+                } else {
+                    response.returnObject = extractResponseBody(responses.getBody());
+                }
             } else {
-                response.returnObject = extractResponseBody(responses.getBody());
+                LogUtil.info(logprefix, location, "Request failed", "");
+                SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+                submitOrderResult.resultCode = -1;
+                response.returnObject = submitOrderResult;
+                response.resultCode = -1;
             }
-        } else {
-            LogUtil.info(logprefix, location, "Request failed", "");
+            LogUtil.info(logprefix, location, "Process finish", "");
+
+        } catch (Exception e) {
             response.resultCode = -1;
+            SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+            response.returnObject = submitOrderResult;
+            LogUtil.info(logprefix, location, "Request failed JNT EXCEPTION", e.getMessage());
+
         }
-        LogUtil.info(logprefix, location, "Process finish", "");
+
+        //TODO : handle varity execption
+
         return response;
     }
 
@@ -171,10 +187,10 @@ public class SubmitOrder extends SyncDispatcher {
         details.addProperty("expresstype", "EZ");
         details.addProperty("goodType", order.getItemType().name());
         if (!order.getServiceType()) {
-            LogUtil.info(logprefix, location, "This order is Pickup" , "");
+            LogUtil.info(logprefix, location, "This order is Pickup", "");
             details.addProperty("servicetype", "1");
         } else {
-            LogUtil.info(logprefix, location, "This order is Dropoff" , "");
+            LogUtil.info(logprefix, location, "This order is Dropoff", "");
             details.addProperty("servicetype", "6");
         }
 //        if (startPickScheduleDate != null) {
@@ -214,8 +230,10 @@ public class SubmitOrder extends SyncDispatcher {
                 orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
                 submitOrderResult.orderCreated = orderCreated;
                 submitOrderResult.isSuccess = true;
+                submitOrderResult.resultCode = 0;
             } else {
                 submitOrderResult.isSuccess = false;
+                submitOrderResult.resultCode = -1;
                 submitOrderResult.message = detailsData.get("msg").getAsString();
                 LogUtil.info(logprefix, location, "Request failed", "");
             }

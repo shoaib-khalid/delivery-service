@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface StoreDeliveryDetailRepository extends JpaRepository<StoreDeliveryDetail, String> {
 
     StoreDeliveryDetail findByStoreIdAndType(String storeId, String deliveryType);
+    StoreDeliveryDetail findByStoreId(String storeId);
 
 }
