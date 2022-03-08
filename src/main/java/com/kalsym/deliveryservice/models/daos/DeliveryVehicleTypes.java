@@ -1,5 +1,6 @@
 package com.kalsym.deliveryservice.models.daos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,9 +21,15 @@ public class DeliveryVehicleTypes {
 
     @Id
     public String vehicleType;
-    public BigDecimal height;
-    public BigDecimal width;
-    public BigDecimal length;
-    public BigDecimal weight;
+    @JsonIgnore
+    private BigDecimal height;
+    @JsonIgnore
+    private BigDecimal width;
+    @JsonIgnore
+    private BigDecimal length;
+    @JsonIgnore
+    private BigDecimal weight;
+    @JsonIgnore
+    private Boolean view;
 
 }
