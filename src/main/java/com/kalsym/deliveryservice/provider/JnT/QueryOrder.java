@@ -165,6 +165,8 @@ public class QueryOrder extends SyncDispatcher {
                 orderFound.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
             } else if (status.equals("On Return")) {
                 orderFound.setSystemStatus(DeliveryCompletionStatus.FAILED.name());
+            } else if (status.equals("CANCEL_ORDER")) {
+                orderFound.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
             } else if (status.equals("PUSAT_DISPATCH")) {
                 orderFound.setSystemStatus(DeliveryCompletionStatus.NEW_ORDER.name());
             } else {
