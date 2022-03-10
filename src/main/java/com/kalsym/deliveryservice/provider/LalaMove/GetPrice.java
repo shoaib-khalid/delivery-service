@@ -89,7 +89,7 @@ public class GetPrice extends SyncDispatcher {
             e.printStackTrace();
         }
         String pickupTime = "";
-        if (order.getDeliveryType().equals("SCHEDULED")) {
+        if (fulfillment.getFulfillment().equals("FOURHOURS") ||fulfillment.getFulfillment().equals("NEXTDAY") || fulfillment.getFulfillment().equals("FOURDAYS")) {
             Calendar cal = Calendar.getInstance(); // creates calendar
             cal.setTime(new Date());               // sets calendar time/date
             cal.add(Calendar.HOUR_OF_DAY, fulfillment.getInterval());      // adds one hour
