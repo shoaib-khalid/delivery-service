@@ -208,14 +208,15 @@ public class ProviderThread extends Thread implements Runnable {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, store, this.sysTransactionId, this.sequenceNumberRepository);
                 } else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
-                }else if (functionName.equalsIgnoreCase("GetPrice")) {
+                } else if (functionName.equalsIgnoreCase("GetPrice")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository, this.fulfillment);
-                }
-                else {
+                } else {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                LogUtil.info(logprefix, location, "Request Provider Exception : " + e.getMessage(), "");
+
             }
 
             LogUtil.info(logprefix, location, "Forking a new thread", "");

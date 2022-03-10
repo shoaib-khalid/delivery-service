@@ -164,7 +164,8 @@ public class SymplifiedService {
                 logger.debug("Request sent to live service, responseCode: {}, responseBody: {}", res.getStatusCode(), res.getBody());
 
             } catch (Exception exception) {
-                logger.error("Error getting Update Status against orderID:{}, url: {}", orderId, url, exception.getMessage());
+                logger.error("Error getting Update Status against orderID:{}, url: {}, message:{}", orderId, url, exception.getMessage());
+//                System.err.println("MESSAGE :  " + exception.getMessage());
             }
 
         } catch (RestClientException e) {

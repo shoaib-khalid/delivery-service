@@ -89,7 +89,7 @@ public class GetPrice extends SyncDispatcher {
             e.printStackTrace();
         }
         String pickupTime = "";
-        if (order.getDeliveryType().equals("SCHEDULED")) {
+        if (fulfillment.getFulfillment().equals("FOURHOURS") || fulfillment.getFulfillment().equals("NEXTDAY") || fulfillment.getFulfillment().equals("FOURDAYS")) {
             Calendar cal = Calendar.getInstance(); // creates calendar
             cal.setTime(new Date());               // sets calendar time/date
             cal.add(Calendar.HOUR_OF_DAY, fulfillment.getInterval());      // adds one hour
@@ -150,24 +150,32 @@ public class GetPrice extends SyncDispatcher {
         String deliveryContactNo;
         if (order.getPickup().getPickupContactPhone().startsWith("6")) {
             //national format
-            pickupContactNO = order.getPickup().getPickupContactPhone().substring(1);
-            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(1);
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+            pickupContactNO = (order.getPickup().getPickupContactPhone().substring(1)).replaceAll(" ", "");
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:" + pickupContactNO, "");
         } else if (order.getPickup().getPickupContactPhone().startsWith("+6")) {
-            pickupContactNO = order.getPickup().getPickupContactPhone().substring(2);
-            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(2);
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+            pickupContactNO = (order.getPickup().getPickupContactPhone().substring(2)).replaceAll(" ", "");
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO, "");
         } else {
-            pickupContactNO = order.getPickup().getPickupContactPhone();
-            deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+            pickupContactNO = (order.getPickup().getPickupContactPhone()).replaceAll(" ", "");
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO, "");
+        }
+        if (order.getDelivery().getDeliveryContactPhone().startsWith("6")) {
+            //national format
+            deliveryContactNo = (order.getDelivery().getDeliveryContactPhone().substring(1)).replaceAll(" ", "");
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn: & Delivery : " + deliveryContactNo, "");
+        } else if (order.getDelivery().getDeliveryContactPhone().startsWith("+6")) {
+            deliveryContactNo = (order.getDelivery().getDeliveryContactPhone().substring(2));
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn: & Delivery : " + deliveryContactNo, "");
+        } else {
+            deliveryContactNo = (order.getDelivery().getDeliveryContactPhone()).replaceAll(" ", "");
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn: & Delivery : " + deliveryContactNo, "");
         }
 
 
         deliveries.add(
                 new Delivery(
                         1,
-                        new Contact(order.getDelivery().getDeliveryContactName(),deliveryContactNo),
+                        new Contact(order.getDelivery().getDeliveryContactName(), deliveryContactNo),
                         ""
                 )
         );
@@ -176,7 +184,7 @@ public class GetPrice extends SyncDispatcher {
         req.serviceType = order.getPickup().getVehicleType().name();
         req.specialRequests = null;
 
-        if (fulfillment.getFulfillment().equals("FOURHOURS") ||fulfillment.getFulfillment().equals("NEXTDAY") || fulfillment.getFulfillment().equals("FOURDAYS")) {
+        if (fulfillment.getFulfillment().equals("FOURHOURS") || fulfillment.getFulfillment().equals("NEXTDAY") || fulfillment.getFulfillment().equals("FOURDAYS")) {
             req.scheduleAt = pickupTime;
         }
         Stop s1 = new Stop();
@@ -193,7 +201,7 @@ public class GetPrice extends SyncDispatcher {
         stopList.add(s2);
 
         req.stops = stopList;
-        req.requesterContact = new Contact(order.getPickup().getPickupContactName(),pickupContactNO);
+        req.requesterContact = new Contact(order.getPickup().getPickupContactName(), pickupContactNO);
         req.deliveries = deliveries;
         return req;
     }

@@ -100,6 +100,9 @@ public class OrdersController {
     @Autowired
     DeliveryPeriodRepository deliveryPeriodRepository;
 
+    @Autowired
+    DeliveryVehicleTypesRepository deliveryVehicleTypesRepository;
+
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
                                                 @Valid @RequestBody Order orderDetails) {
@@ -1000,6 +1003,24 @@ public class OrdersController {
 
 
         response.setData(sortedList);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+
+    }
+
+    @GetMapping(path = {"/getDeliveryVehicleType"}, name = "get-delivery-vehicle-type")
+    public ResponseEntity<HttpReponse> getDeliveryVehicleType(HttpServletRequest request) {
+
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = new HttpReponse(request.getRequestURI());
+
+        List<DeliveryVehicleTypes> deliveryVehicleTypes = deliveryVehicleTypesRepository.findAllByView(true);
+
+//        String id = "EXPRESS";
+//
+//        DeliveryPeriod deliveryPeriod = deliveryPeriodRepository.getOne(id);
+//        System.err.println("test - " + deliveryPeriod.toString());
+        response.setData(deliveryVehicleTypes);
         return ResponseEntity.status(HttpStatus.OK).body(response);
 
     }

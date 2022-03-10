@@ -134,7 +134,7 @@ public class ProcessRequest {
             for (Fulfillment f : fulfillments) {
                 List<DeliverySpType> deliverySpTypes = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountryAndFulfilment(order.getDeliveryType(), order.getRegionCountry(), f.getFulfillment());
                 for (int i = 0; i < deliverySpTypes.size(); i++) {
-                    LogUtil.info(logprefix, location, "Get Price The Provider ID IS NULL  : " + sysTransactionId + " FulfillmentType : "+ deliverySpTypes.get(i).getFulfilment() , "");
+                    LogUtil.info(logprefix, location, "Get Price The Provider ID IS NULL  : " + sysTransactionId + " FulfillmentType : " + deliverySpTypes.get(i).getFulfilment(), "");
 
                     Fulfillment fulfillment = new Fulfillment();
                     fulfillment.setFulfillment(deliverySpTypes.get(i).getFulfilment());
@@ -153,14 +153,13 @@ public class ProcessRequest {
                 }
             }
         } else {
-            System.err.println("HERE ");
             List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(order.getDeliveryProviderId());
             Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
             List<StoreDeliverySp> storeDeliverySps = storeDeliveryDetailSp.findByStoreId(order.getStoreId());
             if (storeDeliverySps.isEmpty()) {
                 List<DeliverySpType> deliverySpTypes = deliverySpTypeRepository.findAllByProviderAndDeliveryTypeAndRegionCountryAndFulfilment(provider, order.getDeliveryType(), order.getRegionCountry(), order.getDeliveryPeriod());
                 for (DeliverySpType deliverySpType : deliverySpTypes) {
-                    LogUtil.info(logprefix, location, "Get Price The Store DeliverySP is Empty : " + sysTransactionId + " FulfillmentType : "+ deliverySpType.getFulfilment() , "");
+                    LogUtil.info(logprefix, location, "Get Price The Store DeliverySP is Empty : " + sysTransactionId + " FulfillmentType : " + deliverySpType.getFulfilment(), "");
 
                     Fulfillment fulfillment = new Fulfillment();
 
@@ -178,11 +177,16 @@ public class ProcessRequest {
 
                 }
             } else {
-                for (StoreDeliverySp storeDeliverySp : storeDeliverySps) {
-                    LogUtil.info(logprefix, location, "Get Price The Store DeliverySP : " + storeDeliverySp.getStoreId() + " FulfillmentType : "+ storeDeliverySp.getFulfilment() , "");
-                    Fulfillment fulfillment = new Fulfillment();
+                LogUtil.info(logprefix, location, "If Store Store Delivery SP Is Not Empty ", "");
 
+                for (StoreDeliverySp storeDeliverySp : storeDeliverySps) {
+                    LogUtil.info(logprefix, location, "Get Price The Store DeliverySP : " + storeDeliverySp.getStoreId() + " FulfillmentType : " + storeDeliverySp.getFulfilment(), "");
+                    Fulfillment fulfillment = new Fulfillment();
                     fulfillment.setFulfillment(storeDeliverySp.getFulfilment());
+                    if (fulfillment.getFulfillment().equals("FOURHOURS") || fulfillment.getFulfillment().equals("NEXTDAY") || fulfillment.getFulfillment().equals("FOURDAYS")) {
+                        List<DeliverySpType> deliverySpTypes = deliverySpTypeRepository.findAllByProviderAndDeliveryTypeAndRegionCountryAndFulfilment(storeDeliverySp.getProvider(), order.getDeliveryType(), order.getRegionCountry(), storeDeliverySp.getFulfilment());
+                        fulfillment.setInterval(deliverySpTypes.get(0).getInterval());
+                    }
 
                     HashMap config = new HashMap();
                     for (int j = 0; j < providerConfigList.size(); j++) {
