@@ -25,9 +25,10 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 public class SubmitOrder extends SyncDispatcher {
@@ -94,6 +95,7 @@ public class SubmitOrder extends SyncDispatcher {
             e.printStackTrace();
         }
 
+
         JSONObject bodyJson = new JSONObject(new Gson().toJson(requestBody));
         String timeStamp = String.valueOf(System.currentTimeMillis());
         String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + endpointUrl + "\r\n\r\n" + bodyJson.toString();
@@ -108,27 +110,6 @@ public class SubmitOrder extends SyncDispatcher {
         HttpHeaders headers = new HttpHeaders();
 
         JSONObject orderBody = new JSONObject(new Gson().toJson(requestBody));
-//
-//        HttpEntity<String> orderRequest = null;
-//        try {
-//            orderRequest = LalamoveUtils.composeRequest(ENDPOINT_URL_PLACEORDER, "POST", orderBody, headers, secretKey, apiKey);
-//        } catch (NoSuchAlgorithmException e) {
-//            e.printStackTrace();
-//        } catch (InvalidKeyException e) {
-//            e.printStackTrace();
-//        }
-
-//        Mac mac = Mac.getInstance("HmacSHA256");
-//        SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
-//        mac.init(secret_key);
-//
-//        String timeStamp = String.valueOf(System.currentTimeMillis());
-//        String rawSignature = timeStamp+"\r\n"+METHOD+"\r\n"+ENDPOINT_URL+"\r\n\r\n"+bodyJson.toString();
-//        byte[] byteSig = mac.doFinal(rawSignature.getBytes());
-//        String signature = DatatypeConverter.printHexBinary(byteSig);
-//        signature = signature.toLowerCase();
-//
-//        String authToken = apiKey+":"+timeStamp+":"+signature;
 
         HashMap httpHeader = new HashMap();
         httpHeader.put("Content-Type", "application/json");
@@ -138,11 +119,6 @@ public class SubmitOrder extends SyncDispatcher {
 
         try {
             HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, BASE_URL + ENDPOINT_URL_PLACEORDER, httpHeader, orderBody.toString(), this.connectTimeout, this.waitTimeout);
-
-//
-//            ResponseEntity<String> responseEntity = restTemplate.exchange(BASE_URL + ENDPOINT_URL_PLACEORDER, HttpMethod.POST, orderRequest, String.class);
-//            LogUtil.info(logprefix, location, "Response : ", responseEntity.getBody());
-
             int statusCode = httpResult.httpResponseCode;
 
             if (statusCode == 200) {
@@ -215,7 +191,30 @@ public class SubmitOrder extends SyncDispatcher {
 
         System.err.println("order.getDeliveryPeriod() : " + order.getDeliveryPeriod());
         if (order.getDeliveryPeriod().equals("FOURHOURS") || order.getDeliveryPeriod().equals("NEXTDAY") || order.getDeliveryPeriod().equals("FOURDAYS")) {
-            req.scheduleAt = order.getPickupTime();
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+            Date schedule = null;
+            Date currentDate = null;
+            try {
+//                schedule = dateFormat.parse(order.getPickupTime());
+                dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+//                currentDate =  dateFormat.parse(new Date().toString());
+                schedule = dateFormat.parse(order.getPickupTime().toString());
+
+                LogUtil.info(logprefix, location, "Schedule Time", schedule.toString());
+
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            LogUtil.info(logprefix, location, "Current Time", new Date().toString());
+
+
+            if (new Date().compareTo(schedule) < 0) {
+                LogUtil.info(logprefix, location, "Date 1 occurs after Date 2", "");
+                req.scheduleAt = order.getPickupTime();
+            } else {
+                LogUtil.info(logprefix, location, "Date Does Not Match", "");
+            }
+
         }
         Stop s1 = new Stop();
         s1.addresses = new Addresses(

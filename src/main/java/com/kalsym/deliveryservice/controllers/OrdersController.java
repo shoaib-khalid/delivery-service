@@ -921,36 +921,50 @@ public class OrdersController {
                 Provider provider = providerRepository.getOne(order.getDeliveryProviderId());
 
                 AirwayBillResult airwayBillResult = (AirwayBillResult) processResult.returnObject;
+                if (airwayBillResult.consignmentNote != null) {
 
-                LogUtil.info(logprefix, location, "Consignment Response  FILE : ", airwayBillResult.consignmentNote.toString());
-                try {
-                    Date date = new Date();
-                    String path = folderPath + date.getMonth() + "-" + (date.getYear() + 1900);
-                    File directory = new File(path);
-                    if (!directory.exists()) {
-                        directory.mkdir();
-                        // If you require it to make the entire directory path including parents,
-                        // use directory.mkdirs(); here instead.
-                    }
+                    LogUtil.info(logprefix, location, "Consignment Response  FILE : ", airwayBillResult.consignmentNote.toString());
+                    try {
+                        Date date = new Date();
+                        String path = folderPath + date.getMonth() + "-" + (date.getYear() + 1900);
+                        File directory = new File(path);
+                        if (!directory.exists()) {
+                            directory.mkdir();
+                            // If you require it to make the entire directory path including parents,
+                            // use directory.mkdirs(); here instead.
+                        }
 
-                    String filename = provider.getName() + "_" + invoiceId + "_" + order.getSpOrderId() + ".pdf";
-                    Files.write(Paths.get(path + "/" + filename), airwayBillResult.consignmentNote);
-                    LogUtil.info(logprefix, location, path + filename, "");
-                    System.err.println("MONTH :" + date.getMonth());
-                    String fileUrl = airwayBillHost + date.getMonth() + "-" + (date.getYear() + 1900) + "/" + filename;
-                    order.setAirwayBillURL(fileUrl);
+                        String filename = provider.getName() + "_" + invoiceId + "_" + order.getSpOrderId() + ".pdf";
+                        Files.write(Paths.get(path + "/" + filename), airwayBillResult.consignmentNote);
+                        LogUtil.info(logprefix, location, path + filename, "");
+                        System.err.println("MONTH :" + date.getMonth());
+                        String fileUrl = airwayBillHost + date.getMonth() + "-" + (date.getYear() + 1900) + "/" + filename;
+                        order.setAirwayBillURL(fileUrl);
 //                    order.setAirwayBillURL(folderPath + order.getOrderId() + ".pdf");
 //                    order.setUpdatedDate(new Date().toString());
+
+                        deliveryOrdersRepository.save(order);
+
+                        RiderDetails riderDetails = new RiderDetails();
+                        riderDetails.setAirwayBill(order.getAirwayBillURL());
+                        riderDetails.setOrderNumber(order.getSpOrderId());
+                        response.setData(riderDetails);
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    } catch (IOException e) {
+                        LogUtil.info(logprefix, location, "Consignment Response ", airwayBillResult.consignmentNote.toString());
+                        response.setMessage(e.getMessage());
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }
+                } else {
+
+                    order.setAirwayBillURL(airwayBillResult.airwayBillUrl);
+
                     deliveryOrdersRepository.save(order);
 
                     RiderDetails riderDetails = new RiderDetails();
                     riderDetails.setAirwayBill(order.getAirwayBillURL());
                     riderDetails.setOrderNumber(order.getSpOrderId());
                     response.setData(riderDetails);
-                    return ResponseEntity.status(HttpStatus.OK).body(response);
-                } catch (IOException e) {
-                    LogUtil.info(logprefix, location, "Consignment Response ", airwayBillResult.consignmentNote.toString());
-                    response.setMessage(e.getMessage());
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
             } else {
