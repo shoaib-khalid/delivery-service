@@ -993,7 +993,7 @@ public class DeliveryService {
                         LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
                     }
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.CANCELED.name()) || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.REJECTED.name()) || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.EXPIRED.name())) {
-                    orderStatus = "REJECTED_BY_STORE";
+                    orderStatus = "FAILED_FIND_DRIVER";
                     try {
                         res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
                     } catch (Exception ex) {

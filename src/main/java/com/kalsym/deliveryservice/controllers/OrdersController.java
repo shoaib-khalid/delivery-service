@@ -651,7 +651,7 @@ public class OrdersController {
                     orderStatus = "DELIVERED_TO_CUSTOMER";
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("canceled")) {
-                    orderStatus = "REJECTED_BY_STORE";
+                    orderStatus = "FAILED_FIND_DRIVER";
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else {
@@ -747,7 +747,7 @@ public class OrdersController {
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
-                    orderStatus = "REJECTED_BY_STORE";
+                    orderStatus = "FAILED_FIND_DRIVER";
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 }
