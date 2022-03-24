@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -112,7 +113,14 @@ public class OrdersController {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = deliveryService.getPrice(orderDetails, request.getRequestURI());
 
+        final Date currentTime = new Date();
 
+        final SimpleDateFormat sdf =
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+
+// Give it to me in GMT time.
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+        LogUtil.info(logprefix, location, "Get Current Time From System : " + sdf.format(currentTime), "");
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
@@ -942,7 +950,6 @@ public class OrdersController {
                         order.setAirwayBillURL(fileUrl);
 //                    order.setAirwayBillURL(folderPath + order.getOrderId() + ".pdf");
 //                    order.setUpdatedDate(new Date().toString());
-
                         deliveryOrdersRepository.save(order);
 
                         RiderDetails riderDetails = new RiderDetails();

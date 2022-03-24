@@ -48,11 +48,15 @@ public class OrderCallback extends SyncDispatcher {
         try {
             String status = jsonBody.get("status").getAsString();
             String spOrderId = jsonBody.get("order_number").getAsString();
+            String spDriverId = "";
             if(status.equals("CONTACTING_AGENT")){
                 callbackResult.status = "new";
             }
             else if(status.equals("ACCEPTED")){
                 callbackResult.status = "on_going";
+                callbackResult.driverId = spDriverId;
+                callbackResult.riderName = jsonBody.get("delivery_agent_name").getAsString();
+                callbackResult.riderPhone = jsonBody.get("delivery_agent_phone").getAsString();
             }
             else if(status.equals("ENROUTE")){
                 callbackResult.status="active";
@@ -63,12 +67,9 @@ public class OrderCallback extends SyncDispatcher {
             else{
                 callbackResult.status = status;
             }
-            String spDriverId = "";
             callbackResult.spOrderId = spOrderId;
 //            callbackResult.status = status;
-            callbackResult.driverId = spDriverId;
-            callbackResult.riderName = jsonBody.get("delivery_agent_name").getAsString();
-            callbackResult.riderPhone = jsonBody.get("delivery_agent_phone").getAsString();
+
             LogUtil.info(logprefix, location, "SpOrderId:" + spOrderId + " Status:" + status, "");
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
