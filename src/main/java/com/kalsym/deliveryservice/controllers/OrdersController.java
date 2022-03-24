@@ -119,7 +119,7 @@ public class OrdersController {
                 new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
 
 // Give it to me in GMT time.
-        sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));
         LogUtil.info(logprefix, location, "Get Current Time From System : " + sdf.format(currentTime), "");
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
