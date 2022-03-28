@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface DeliveryRemarksRepository extends JpaRepository<DeliveryRemarks,Long > {
 
     DeliveryRemarks findByDeliveryType(String type);
-    DeliveryRemarks findByDeliveryTypeAndProviderId(String type, String providerId);
+    DeliveryRemarks findByDeliveryTypeAndProviderId(String type, Integer providerId);
 }

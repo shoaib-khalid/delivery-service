@@ -25,5 +25,5 @@ public class DeliveryRemarks implements Serializable {
     String title;
     String message;
     String deliveryType;
-    Long providerId;
+    Integer providerId;
 }
