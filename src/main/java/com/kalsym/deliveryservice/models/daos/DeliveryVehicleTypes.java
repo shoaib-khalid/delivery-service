@@ -21,7 +21,7 @@ public class DeliveryVehicleTypes {
 
     @Id
     public String vehicleType;
-//    public String name;
+    public String name;
     @JsonIgnore
     private BigDecimal height;
     @JsonIgnore

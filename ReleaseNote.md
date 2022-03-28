@@ -1,4 +1,16 @@
 ##############################################################################################
+# Version v.2.6.19| 28-March-2022
+###############################################################################################
+### Code Changes:
+1. Bug Fixed - Get delivery type added new field
+
+ALTER TABLE symplified.delivery_sp ADD dialog TINYINT DEFAULT 0 NOT NULL;
+
+ALTER TABLE symplified.delivery_remarks ADD providerId varchar(50) NOT NULL;
+ALTER TABLE symplified.delivery_remarks MODIFY COLUMN providerId varchar(50) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL;
+
+
+##############################################################################################
 # Version v.2.6.18| 26-March-2022
 ###############################################################################################
 ### Code Changes:

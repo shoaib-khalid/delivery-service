@@ -885,12 +885,12 @@ public class OrdersController {
         if (provider != null) {
             if (quantity != null) {
                 if (Integer.parseInt(quantity) >= provider.getMinimumOrderQuantity()) {
-                    DeliveryRemarks deliveryRemarks = deliveryRemarksDb.findByDeliveryType(DeliveryTypeRemarks.PICKUP.name());
+                    DeliveryRemarks deliveryRemarks = deliveryRemarksDb.findByDeliveryTypeAndProviderId(DeliveryTypeRemarks.PICKUP.name(), providerId);
                     if (provider.getRemark()) {
                         provider.setRemarks(deliveryRemarks);
                     }
                 } else {
-                    DeliveryRemarks deliveryRemarks = deliveryRemarksDb.findByDeliveryType(DeliveryTypeRemarks.DROPSHIP.name());
+                    DeliveryRemarks deliveryRemarks = deliveryRemarksDb.findByDeliveryTypeAndProviderId(DeliveryTypeRemarks.DROPSHIP.name(), providerId);
                     if (provider.getRemark()) {
                         provider.setRemarks(deliveryRemarks);
                     }

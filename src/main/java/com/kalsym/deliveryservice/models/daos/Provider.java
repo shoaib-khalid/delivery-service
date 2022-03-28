@@ -68,4 +68,5 @@ public class Provider implements Serializable {
     @Transient
     DeliveryRemarks remarks;
     Boolean scheduleDate;
+    Boolean dialog;
 }
