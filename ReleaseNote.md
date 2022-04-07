@@ -1,3 +1,20 @@
+
+- delivery order tracking table
+
+CREATE TABLE symplified.delivery_orders_status (
+id BIGINT auto_increment NOT NULL,
+orderId varchar(100) NOT NULL,
+spOrderId varchar(100) NOT NULL,
+status varchar(100) NOT NULL,
+description varchar(100) NOT NULL,
+updated varchar(100) NOT NULL,
+CONSTRAINT delivery_orders_status_PK PRIMARY KEY (id)
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8
+COLLATE=utf8_general_ci;
+
+
 ##############################################################################################
 # Version v.2.6.20| 28-March-2022
 ###############################################################################################

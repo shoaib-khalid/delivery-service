@@ -105,6 +105,10 @@ public class DeliveryService {
     @Autowired
     DeliveryPeriodRepository deliveryPeriodRepository;
 
+
+    @Autowired
+    DeliveryOrderStatusRepository deliveryOrderStatusRepository;
+
     public HttpReponse getPrice(Order orderDetails, String url) {
         String logprefix = "DeliveryService GetPrice";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
