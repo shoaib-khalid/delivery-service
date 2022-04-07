@@ -60,18 +60,44 @@ public class SubmitOrder extends SyncDispatcher {
         httpHeader.put("Connection", "close");
         String requestBody = generateRequestBody();
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.submitOrder_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
-        if (httpResult.resultCode == 0) {
+
+        int statusCode = httpResult.httpResponseCode;
+
+        if (statusCode == 200) {
             LogUtil.info(logprefix, location, "Request successful", "");
             response.resultCode = 0;
             response.returnObject = extractResponseBody(httpResult.responseString);
         } else {
-            LogUtil.info(logprefix, location, "Request failed", "");
-            response.resultCode = -1;
+            JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
             SubmitOrderResult submitOrderResult = new SubmitOrderResult();
-            submitOrderResult.resultCode =-1;
+            boolean isSuccess = jsonResp.get("is_successful").getAsBoolean();
+            if (!isSuccess) {
+                String description;
+                try {
+                    description = jsonResp.get("errors").getAsJsonArray().get(0).getAsString();
+                    submitOrderResult.resultCode = 2;
+                    submitOrderResult.message = description;
+
+                } catch (Exception e) {
+                    LogUtil.info(logprefix, location, "Request failed", e.getMessage());
+                    submitOrderResult.resultCode = -1;
+                }
+            }
             response.returnObject = submitOrderResult;
         }
-        LogUtil.info(logprefix, location, "Process finish", "");
+
+//        if (httpResult.resultCode == 0) {
+//            LogUtil.info(logprefix, location, "Request successful", "");
+//            response.resultCode = 0;
+//            response.returnObject = extractResponseBody(httpResult.responseString);
+//        } else {
+//            LogUtil.info(logprefix, location, "Request failed", "");
+//            response.resultCode = -1;
+//            SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+//            submitOrderResult.resultCode = -1;
+//            response.returnObject = submitOrderResult;
+//        }
+//        LogUtil.info(logprefix, location, "Process finish", "");
         return response;
     }
 
@@ -101,13 +127,13 @@ public class SubmitOrder extends SyncDispatcher {
         JsonObject pickupAddress = new JsonObject();
         pickupAddress.addProperty("address", order.getPickup().getPickupAddress());
         JsonObject contactPerson2 = new JsonObject();
-        contactPerson2.addProperty("phone",pickupContactNO);
+        contactPerson2.addProperty("phone", pickupContactNO);
         contactPerson2.addProperty("name", order.getPickup().getPickupContactName());
         pickupAddress.add("contact_person", contactPerson2);
         addressList.add(pickupAddress);
 
         JsonObject deliveryAddress = new JsonObject();
-        deliveryAddress.addProperty("address", deliveryContactNo);
+        deliveryAddress.addProperty("address", order.getDelivery().getDeliveryAddress());
         JsonObject contactPerson = new JsonObject();
         contactPerson.addProperty("phone", order.getDelivery().getDeliveryContactPhone());
         contactPerson.addProperty("name", order.getDelivery().getDeliveryContactName());

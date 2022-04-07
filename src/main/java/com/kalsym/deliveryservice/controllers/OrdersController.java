@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -112,7 +113,14 @@ public class OrdersController {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = deliveryService.getPrice(orderDetails, request.getRequestURI());
 
+        final Date currentTime = new Date();
 
+        final SimpleDateFormat sdf =
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+
+// Give it to me in GMT time.
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+        LogUtil.info(logprefix, location, "Get Current Time From System : " + sdf.format(currentTime), "");
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
@@ -643,7 +651,7 @@ public class OrdersController {
                     orderStatus = "DELIVERED_TO_CUSTOMER";
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("canceled")) {
-                    orderStatus = "REJECTED_BY_STORE";
+                    orderStatus = "FAILED_FIND_DRIVER";
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else {
@@ -739,7 +747,7 @@ public class OrdersController {
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
-                    orderStatus = "REJECTED_BY_STORE";
+                    orderStatus = "FAILED_FIND_DRIVER";
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 }
@@ -877,12 +885,12 @@ public class OrdersController {
         if (provider != null) {
             if (quantity != null) {
                 if (Integer.parseInt(quantity) >= provider.getMinimumOrderQuantity()) {
-                    DeliveryRemarks deliveryRemarks = deliveryRemarksDb.findByDeliveryType(DeliveryTypeRemarks.PICKUP.name());
+                    DeliveryRemarks deliveryRemarks = deliveryRemarksDb.findByDeliveryTypeAndProviderId(DeliveryTypeRemarks.PICKUP.name(), Integer.valueOf(providerId));
                     if (provider.getRemark()) {
                         provider.setRemarks(deliveryRemarks);
                     }
                 } else {
-                    DeliveryRemarks deliveryRemarks = deliveryRemarksDb.findByDeliveryType(DeliveryTypeRemarks.DROPSHIP.name());
+                    DeliveryRemarks deliveryRemarks = deliveryRemarksDb.findByDeliveryTypeAndProviderId(DeliveryTypeRemarks.DROPSHIP.name(), Integer.valueOf(providerId));
                     if (provider.getRemark()) {
                         provider.setRemarks(deliveryRemarks);
                     }
@@ -921,36 +929,49 @@ public class OrdersController {
                 Provider provider = providerRepository.getOne(order.getDeliveryProviderId());
 
                 AirwayBillResult airwayBillResult = (AirwayBillResult) processResult.returnObject;
+                if (airwayBillResult.consignmentNote != null) {
 
-                LogUtil.info(logprefix, location, "Consignment Response  FILE : ", airwayBillResult.consignmentNote.toString());
-                try {
-                    Date date = new Date();
-                    String path = folderPath + date.getMonth() + "-" + (date.getYear() + 1900);
-                    File directory = new File(path);
-                    if (!directory.exists()) {
-                        directory.mkdir();
-                        // If you require it to make the entire directory path including parents,
-                        // use directory.mkdirs(); here instead.
-                    }
+                    LogUtil.info(logprefix, location, "Consignment Response  FILE : ", airwayBillResult.consignmentNote.toString());
+                    try {
+                        Date date = new Date();
+                        String path = folderPath + date.getMonth() + "-" + (date.getYear() + 1900);
+                        File directory = new File(path);
+                        if (!directory.exists()) {
+                            directory.mkdir();
+                            // If you require it to make the entire directory path including parents,
+                            // use directory.mkdirs(); here instead.
+                        }
 
-                    String filename = provider.getName() + "_" + invoiceId + "_" + order.getSpOrderId() + ".pdf";
-                    Files.write(Paths.get(path + "/" + filename), airwayBillResult.consignmentNote);
-                    LogUtil.info(logprefix, location, path + filename, "");
-                    System.err.println("MONTH :" + date.getMonth());
-                    String fileUrl = airwayBillHost + date.getMonth() + "-" + (date.getYear() + 1900) + "/" + filename;
-                    order.setAirwayBillURL(fileUrl);
+                        String filename = provider.getName() + "_" + invoiceId + "_" + order.getSpOrderId() + ".pdf";
+                        Files.write(Paths.get(path + "/" + filename), airwayBillResult.consignmentNote);
+                        LogUtil.info(logprefix, location, path + filename, "");
+                        System.err.println("MONTH :" + date.getMonth());
+                        String fileUrl = airwayBillHost + date.getMonth() + "-" + (date.getYear() + 1900) + "/" + filename;
+                        order.setAirwayBillURL(fileUrl);
 //                    order.setAirwayBillURL(folderPath + order.getOrderId() + ".pdf");
 //                    order.setUpdatedDate(new Date().toString());
+                        deliveryOrdersRepository.save(order);
+
+                        RiderDetails riderDetails = new RiderDetails();
+                        riderDetails.setAirwayBill(order.getAirwayBillURL());
+                        riderDetails.setOrderNumber(order.getSpOrderId());
+                        response.setData(riderDetails);
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    } catch (IOException e) {
+                        LogUtil.info(logprefix, location, "Consignment Response ", airwayBillResult.consignmentNote.toString());
+                        response.setMessage(e.getMessage());
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }
+                } else {
+
+                    order.setAirwayBillURL(airwayBillResult.airwayBillUrl);
+
                     deliveryOrdersRepository.save(order);
 
                     RiderDetails riderDetails = new RiderDetails();
                     riderDetails.setAirwayBill(order.getAirwayBillURL());
                     riderDetails.setOrderNumber(order.getSpOrderId());
                     response.setData(riderDetails);
-                    return ResponseEntity.status(HttpStatus.OK).body(response);
-                } catch (IOException e) {
-                    LogUtil.info(logprefix, location, "Consignment Response ", airwayBillResult.consignmentNote.toString());
-                    response.setMessage(e.getMessage());
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
             } else {
