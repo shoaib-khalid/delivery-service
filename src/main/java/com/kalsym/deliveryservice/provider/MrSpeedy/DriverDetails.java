@@ -58,6 +58,8 @@ public class DriverDetails extends SyncDispatcher {
         String url = this.queryDriverUrl + "?order_id=" + order.getSpOrderId();
 
         HttpResult httpResult = HttpsGetConn.SendHttpsRequest("GET", systemTransactionId, url, httpHeader, this.connectTimeout, this.waitTimeout);
+        LogUtil.info(logprefix, location, "Http Response Get Rider Details : ", httpResult.responseString);
+
         if (httpResult.resultCode == 0) {
             JsonObject jsonReponse = new Gson().fromJson(httpResult.responseString, JsonObject.class);
             if (jsonReponse.get("is_successful").getAsBoolean()) {

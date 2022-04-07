@@ -637,17 +637,19 @@ public class OrdersController {
                 deliveryOrder.setStatus(status);
                 String orderStatus = "";
                 String res;
+                String deliveryId = spCallbackResult.driverId;
                 // change from order status codes to delivery status codes.
                 if (status.equals("new")) {
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                 } else if (status.equals("available")) {
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
                 } else if (status.equals("active")) {
+                    deliveryOrder.setDriverId(deliveryId);
                     orderStatus = "BEING_DELIVERED";
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("finished")) {
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.DELIVERED_TO_CUSTOMER.name());
+                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
                     orderStatus = "DELIVERED_TO_CUSTOMER";
                     res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                 } else if (status.equals("canceled")) {
@@ -657,9 +659,12 @@ public class OrdersController {
                 } else {
                     deliveryOrder.setStatus(status);
                 }
-
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                 deliveryOrdersRepository.save(deliveryOrder);
+
+                if (!deliveryId.isEmpty()) {
+                    getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
+                }
             } else {
                 LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
 
