@@ -1,4 +1,22 @@
 ##############################################################################################
+# Version v.2.6.21| 07-April-2022
+###############################################################################################
+### Code Changes:
+1. Testing delivery-v2
+    -separate module
+2. DB Changes
+
+    ALTER TABLE symplified.delivery_sp ADD externalRequest TINYINT DEFAULT 0 NOT NULL;
+    ALTER TABLE symplified.delivery_vehicle_types ADD `view` TINYINT(1) DEFAULT 1 NULL;
+    ALTER TABLE symplified.delivery_sp ADD classLoaderName varchar(500) NULL;
+    ALTER TABLE symplified.delivery_quotation ADD pickupLatitude varchar(100) NULL;
+    ALTER TABLE symplified.delivery_quotation ADD pickupLongitude varchar(100) NULL;
+    ALTER TABLE symplified.delivery_quotation ADD deliveryLatitude varchar(100) NULL;
+    ALTER TABLE symplified.delivery_quotation ADD deliveryLongitude varchar(100) NULL;
+
+
+
+##############################################################################################
 # Version v.2.6.20| 28-March-2022
 ###############################################################################################
 ### Code Changes:
