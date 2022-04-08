@@ -207,14 +207,16 @@ public class ProviderThread extends Thread implements Runnable {
                 className = provider.getAddPriorityClassName();
                 LogUtil.info(logprefix, location, "AddPriorityFee class name for SP ID:" + provider.getId() + " -> " + className, "");
             }
-
-
-            Class<?> classObject = Class.forName(className);
+            Class<?> classObject = null;
+            if (!provider.isExternalRequest()) {
+                classObject = Class.forName(className);
+            }
             DispatchRequest reqFactoryObj = null;
             CountDownLatch latch = new CountDownLatch(1);
 
 
             //get all constructors
+            assert classObject != null;
             Constructor<?>[] cons = classObject.getConstructors();
             LogUtil.info(logprefix, location, "Constructors:" + cons[0].toString(), "");
             ProcessResult processResult = new ProcessResult();
@@ -223,7 +225,7 @@ public class ProviderThread extends Thread implements Runnable {
             try {
                 if (functionName.equalsIgnoreCase("QueryOrder") || functionName.equalsIgnoreCase("CancelOrder")) {
                     if (provider.isExternalRequest()) {
-                        URL[] classLoaderUrls = new URL[]{new URL("file:\\C:\\Users\\kumar\\Documents\\provider-tcs-1.0-SNAPSHOT.jar")};
+                        URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
 
                         // Create a new URLClassLoader
                         URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
@@ -281,7 +283,7 @@ public class ProviderThread extends Thread implements Runnable {
                     // Getting a method from the loaded class and invoke it
 
                     if (provider.isExternalRequest()) {
-                        System.err.println("FILE URL : " + provider.getClassLoaderName());
+                        LogUtil.info(logprefix, location, "Load the file location: ", provider.getClassLoaderName());
                         URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
 
                         // Create a new URLClassLoader
