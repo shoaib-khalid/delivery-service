@@ -4,6 +4,7 @@
  */
 package com.kalsym.deliveryservice.models;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -38,7 +39,6 @@ public class Delivery {
     String deliveryContactEmail;
     String deliveryZone;
 
-
-    BigDecimal latitude;
-    BigDecimal longitude;
+//    BigDecimal latitude;
+//    BigDecimal longitude;
 }

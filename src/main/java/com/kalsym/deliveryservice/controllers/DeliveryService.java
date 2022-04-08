@@ -172,8 +172,8 @@ public class DeliveryService {
         pickup.setPickupContactEmail(store.getEmail());
         pickup.setPickupState(store.getRegionCountryStateId());
         pickup.setPickupPostcode(store.getPostcode());
-        pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(store.getLongitude())));
-        pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(store.getLatitude())));
+//        pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(store.getLongitude())));
+//        pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(store.getLatitude())));
         orderDetails.setPickup(pickup);
         //More Details For Delivery
 
@@ -324,10 +324,10 @@ public class DeliveryService {
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
                     deliveryOrder.setFulfillmentType(list.fulfillment);
                     deliveryOrder.setSignature(list.signature);
-                    deliveryOrder.setDeliveryLatitude(orderDetails.getDelivery().getLatitude().toString());
-                    deliveryOrder.setDeliveryLongitude(orderDetails.getDelivery().getLongitude().toString());
-                    deliveryOrder.setPickupLatitude(orderDetails.getPickup().getLatitude().toString());
-                    deliveryOrder.setPickupLongitude(orderDetails.getPickup().getLongitude().toString());
+//                    deliveryOrder.setDeliveryLatitude(orderDetails.getDelivery().getLatitude().toString());
+//                    deliveryOrder.setDeliveryLongitude(orderDetails.getDelivery().getLongitude().toString());
+//                    deliveryOrder.setPickupLatitude(orderDetails.getPickup().getLatitude().toString());
+//                    deliveryOrder.setPickupLongitude(orderDetails.getPickup().getLongitude().toString());
 
                     if (list.interval != null) {
                         deliveryOrder.setIntervalTime(list.interval);
@@ -537,9 +537,9 @@ public class DeliveryService {
         pickup.setPickupDate(submitDelivery.getStartPickScheduleDate());
         pickup.setPickupTime(submitDelivery.getStartPickScheduleTime());
         pickup.setPickupCity(quotation.getPickupCity());
-        pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLongitude())));
+   /*     pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLongitude())));
         pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLatitude())));
-
+*/
         Store store = storeRepository.getOne(quotation.getStoreId());
 
         if (store.getRegionCountryId().equals("PAK")) {
@@ -556,8 +556,8 @@ public class DeliveryService {
         delivery.setDeliveryPostcode(quotation.getDeliveryPostcode());
         delivery.setDeliveryCity(quotation.getDeliveryCity());
 
-        delivery.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLatitude())));
-        delivery.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLongitude())));
+//        delivery.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLatitude())));
+//        delivery.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLongitude())));
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());
         orderDetails.setPickupTime(quotation.getPickupTime());
@@ -822,8 +822,8 @@ public class DeliveryService {
         pickup.setPickupDate(submitDelivery.getStartPickScheduleDate());
         pickup.setPickupTime(submitDelivery.getStartPickScheduleTime());
         pickup.setPickupCity(quotation.getPickupCity());
-        pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLongitude())));
-        pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLatitude())));
+//        pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLongitude())));
+//        pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLatitude())));
         Optional<Store> store = storeRepository.findById(quotation.getStoreId());
 
         if (store.get().getRegionCountryId().equals("PAK")) {
@@ -840,8 +840,8 @@ public class DeliveryService {
         delivery.setDeliveryPostcode(quotation.getDeliveryPostcode());
         delivery.setDeliveryCity(quotation.getDeliveryCity());
 
-        delivery.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLatitude())));
-        delivery.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLongitude())));
+//        delivery.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLatitude())));
+//        delivery.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLongitude())));
 
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());

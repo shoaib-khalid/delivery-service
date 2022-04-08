@@ -39,8 +39,8 @@ public class Pickup {
    String remarks;
    String pickupZone;
    String costCenterCode;
-   BigDecimal latitude;
-   BigDecimal longitude;
+//   BigDecimal latitude;
+//   BigDecimal longitude;
 
 
 }
