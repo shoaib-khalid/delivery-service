@@ -46,7 +46,7 @@ public class SwaggerConfig {
                 .description("Used to deliver item via delivery partners")
                 .termsOfServiceUrl("not added yet")
                 .license("not added yet")
-                .licenseUrl("").version("2.6.20-production").build();
+                .licenseUrl("").version("2.6.22-production").build();
     }
     
     @Bean

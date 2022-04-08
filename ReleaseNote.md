@@ -1,5 +1,5 @@
 ##############################################################################################
-# Version v.2.6.21| 07-April-2022
+# Version v.2.6.22| 08-April-2022
 ###############################################################################################
 ### Code Changes:
 1. Testing delivery-v2
@@ -14,7 +14,12 @@
     ALTER TABLE symplified.delivery_quotation ADD deliveryLatitude varchar(100) NULL;
     ALTER TABLE symplified.delivery_quotation ADD deliveryLongitude varchar(100) NULL;
 
-
+##############################################################################################
+# Version v.2.6.21| 07-April-2022
+###############################################################################################
+### Code Changes:
+1. Bug Fixed For Mr Speedy Callback Rider Details Fixed
+2. Final Status After Completer the Delivery
 
 ##############################################################################################
 # Version v.2.6.20| 28-March-2022
