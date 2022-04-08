@@ -282,22 +282,29 @@ public class ProviderThread extends Thread implements Runnable {
 
                     if (provider.isExternalRequest()) {
                         LogUtil.info(logprefix, location, "Load the file location: ", provider.getClassLoaderName());
-                        URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
+                        Class<?> beanClass = null;
+                        Object beanObj = new Object();
+                        try {
+                           URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
 
-                        // Create a new URLClassLoader
-                        URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
+                           // Create a new URLClassLoader
+                           URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
 
-                        // Load the target class
-                        Class<?> beanClass = urlClassLoader.loadClass("com.kalsym.pandaGo.controller.OrderController");
+                           // Load the target class
+                           beanClass = urlClassLoader.loadClass("com.kalsym.pandaGo.controller.OrderController");
 
-                        // Create a new instance from the loaded class
-                        Constructor<?> constructor = beanClass.getConstructor();
-                        Object beanObj = constructor.newInstance();
+                           // Create a new instance from the loaded class
+                           Constructor<?> constructor = beanClass.getConstructor();
+                            beanObj = constructor.newInstance();
 
+                       }catch (Exception ex){
+                           LogUtil.info(logprefix, location, "Exception ", ex.getMessage());
 
+                       }
                         ObjectMapper mapper = new ObjectMapper();
 
                         Gson gson = new Gson();
+                        assert beanClass != null;
                         Method method = beanClass.getMethod("getPrice", String.class, String.class, String.class, String.class);
                         Object value = method.invoke(beanObj, gson.toJson(providerConfig), gson.toJson(order), this.sysTransactionId, gson.toJson(fulfillment));
                         JsonObject response = new Gson().fromJson(value.toString(), JsonObject.class);
