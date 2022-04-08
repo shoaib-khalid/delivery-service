@@ -40,5 +40,6 @@ public class PriceResult {
     public String pickupZone;
     public String deliveryZone;
     public Integer interval;
+    public String signature;
 
 }

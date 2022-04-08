@@ -1,12 +1,14 @@
 /*
  * Here comes the text of your license
- * Each line should be prefixed with  * 
+ * Each line should be prefixed with  *
  */
 package com.kalsym.deliveryservice.models;
 
 import com.kalsym.deliveryservice.models.enums.VehicleType;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 /**
  *
@@ -22,14 +24,14 @@ public class Pickup {
    String endPickupTime;
    String pickupOption;
    VehicleType vehicleType;
-   
+
    String pickupAddress;
    String pickupPostcode;
    String pickupState;
    String pickupCountry;
    String pickupCity;
    Integer pickupLocationId;
-   
+
    String pickupContactName;
    String pickupContactPhone;
    String pickupContactEmail;
@@ -37,5 +39,8 @@ public class Pickup {
    String remarks;
    String pickupZone;
    String costCenterCode;
-   
+   BigDecimal latitude;
+   BigDecimal longitude;
+
+
 }

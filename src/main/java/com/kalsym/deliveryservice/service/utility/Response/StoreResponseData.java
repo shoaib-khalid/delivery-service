@@ -32,29 +32,9 @@ public class StoreResponseData {
     String regionCountryId;
     String regionCountryStateId;
     String vehicleType;
+    String latitude;
+    String longitude;
     int providerId;
 
-    @Override
-    public String toString() {
-        return "StoreResponseData{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", city='" + city + '\'' +
-                ", address='" + address + '\'' +
-                ", clientId='" + clientId + '\'' +
-                ", verticalCode='" + verticalCode + '\'' +
-                ", storeDescription='" + storeDescription + '\'' +
-                ", postcode='" + postcode + '\'' +
-                ", state='" + state + '\'' +
-                ", email='" + email + '\'' +
-                ", contactName='" + contactName + '\'' +
-                ", phone='" + phoneNumber + '\'' +
-                ", domain='" + domain + '\'' +
-                ", liveChatOrdersGroupId='" + liveChatOrdersGroupId + '\'' +
-                ", liveChatCsrGroupId='" + liveChatCsrGroupId + '\'' +
-                ", liveChatCsrGroupName='" + liveChatCsrGroupName + '\'' +
-                ", liveChatOrdersGroupName='" + liveChatOrdersGroupName + '\'' +
-                ", regionCountryId='" + regionCountryId + '\'' +
-                '}';
-    }
+
 }

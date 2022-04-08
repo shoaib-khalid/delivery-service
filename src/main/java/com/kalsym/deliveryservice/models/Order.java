@@ -32,6 +32,8 @@ public class Order {
     Integer pieces;
     boolean isInsurance;
     Double shipmentValue;
+    Double orderAmount;
+    String paymentType;
     String storeId;
     String cartId;
     Pickup pickup;
@@ -50,5 +52,6 @@ public class Order {
     BigDecimal width;
     BigDecimal length;
     String pickupTime;
+    String signature;
 
 }

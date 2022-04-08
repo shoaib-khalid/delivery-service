@@ -10,6 +10,7 @@ import lombok.Setter;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 
 /**
  * @author user
@@ -36,4 +37,8 @@ public class Delivery {
     @NotBlank(message = "deliveryContactEmail is mandatory")
     String deliveryContactEmail;
     String deliveryZone;
+
+
+    BigDecimal latitude;
+    BigDecimal longitude;
 }

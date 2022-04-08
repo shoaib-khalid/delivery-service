@@ -167,9 +167,9 @@ public class ProcessRequest {
                     fulfillment.setInterval(deliverySpType.getInterval());
 
                     HashMap config = new HashMap();
-                    for (int j = 0; j < providerConfigList.size(); j++) {
-                        String fieldName = providerConfigList.get(j).getId().getConfigField();
-                        String fieldValue = providerConfigList.get(j).getConfigValue();
+                    for (ProviderConfiguration providerConfiguration : providerConfigList) {
+                        String fieldName = providerConfiguration.getId().getConfigField();
+                        String fieldValue = providerConfiguration.getConfigValue();
                         config.put(fieldName, fieldValue);
                     }
                     ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetPrice", sequenceNumberRepository, fulfillment);
@@ -189,9 +189,9 @@ public class ProcessRequest {
                     }
 
                     HashMap config = new HashMap();
-                    for (int j = 0; j < providerConfigList.size(); j++) {
-                        String fieldName = providerConfigList.get(j).getId().getConfigField();
-                        String fieldValue = providerConfigList.get(j).getConfigValue();
+                    for (ProviderConfiguration providerConfiguration : providerConfigList) {
+                        String fieldName = providerConfiguration.getId().getConfigField();
+                        String fieldValue = providerConfiguration.getConfigValue();
                         config.put(fieldName, fieldValue);
                     }
                     ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetPrice", sequenceNumberRepository, fulfillment);
