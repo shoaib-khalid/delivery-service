@@ -208,19 +208,17 @@ public class ProviderThread extends Thread implements Runnable {
                 LogUtil.info(logprefix, location, "AddPriorityFee class name for SP ID:" + provider.getId() + " -> " + className, "");
             }
             Class<?> classObject = null;
+            Constructor<?>[] cons = new Constructor[0];
             if (!provider.isExternalRequest()) {
                 classObject = Class.forName(className);
+                cons = classObject.getConstructors();
+                LogUtil.info(logprefix, location, "Constructors:" + cons[0].toString(), "");
+
             }
             DispatchRequest reqFactoryObj = null;
             CountDownLatch latch = new CountDownLatch(1);
-
-
             //get all constructors
-            assert classObject != null;
-            Constructor<?>[] cons = classObject.getConstructors();
-            LogUtil.info(logprefix, location, "Constructors:" + cons[0].toString(), "");
             ProcessResult processResult = new ProcessResult();
-
 
             try {
                 if (functionName.equalsIgnoreCase("QueryOrder") || functionName.equalsIgnoreCase("CancelOrder")) {
