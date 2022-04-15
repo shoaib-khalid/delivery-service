@@ -6,6 +6,7 @@ package com.kalsym.deliveryservice.provider.MrSpeedy;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SpCallbackResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
@@ -53,9 +54,32 @@ public class OrderCallback extends SyncDispatcher {
             String status = jsonBody.get("delivery").getAsJsonObject().get("status").getAsString();
             String spOrderId = jsonBody.get("delivery").getAsJsonObject().get("order_id").getAsString();
             String driverId = jsonBody.get("delivery").getAsJsonObject().get("courier").getAsJsonObject().get("courier_id").getAsString();
+            System.err.println("DriverId" + driverId);
+            String systemStatus = "";
+            switch (status) {
+                case "new":
+                case "available":
+                    systemStatus = DeliveryCompletionStatus.ASSIGNING_RIDER.name();
+                    break;
+                case "courier_assigned":
+                case "courier_departed":
+                    systemStatus = DeliveryCompletionStatus.AWAITING_PICKUP.name();
+                    break;
+                case "parcel_picked_up":
+                case "courier_arrived":
+                    systemStatus = DeliveryCompletionStatus.BEING_DELIVERED.name();
+                case "completed":
+                    systemStatus = DeliveryCompletionStatus.COMPLETED.name();
+                case "canceled":
+                    systemStatus = DeliveryCompletionStatus.CANCELED.name();
+                    break;
+            }
+
+
             callbackResult.spOrderId = spOrderId;
             callbackResult.status = status;
             callbackResult.driverId = driverId;
+            callbackResult.systemStatus = systemStatus;
             LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId + " Status: " + status + " Rider Id : " + driverId, "");
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
