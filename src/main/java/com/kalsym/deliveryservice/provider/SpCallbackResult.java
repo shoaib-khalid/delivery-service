@@ -17,4 +17,5 @@ public class SpCallbackResult {
     public String driverId;
     public String riderName;
     public String riderPhone;
+    public String systemStatus;
 }

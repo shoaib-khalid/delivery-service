@@ -639,25 +639,36 @@ public class OrdersController {
                 String res;
                 String deliveryId = spCallbackResult.driverId;
                 // change from order status codes to delivery status codes.
-                if (status.equals("new")) {
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
-                } else if (status.equals("available")) {
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
-                } else if (status.equals("active")) {
-                    deliveryOrder.setDriverId(deliveryId);
-                    orderStatus = "BEING_DELIVERED";
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-                    res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
-                } else if (status.equals("finished")) {
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
-                    orderStatus = "DELIVERED_TO_CUSTOMER";
-                    res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
-                } else if (status.equals("canceled")) {
-                    orderStatus = "FAILED_FIND_DRIVER";
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
-                    res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
-                } else {
-                    deliveryOrder.setStatus(status);
+                switch (status) {
+                    case "new":
+                    case "available":
+                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                        break;
+                    case "courier_assigned":
+                    case "courier_departed":
+                        deliveryOrder.setDriverId(deliveryId);
+                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
+                        break;
+                    case "parcel_picked_up":
+                    case "courier_arrived":
+                        deliveryOrder.setDriverId(deliveryId);
+                        orderStatus = "BEING_DELIVERED";
+                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        break;
+                    case "finished":
+                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+                        orderStatus = "DELIVERED_TO_CUSTOMER";
+                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        break;
+                    case "canceled":
+                        orderStatus = "FAILED_FIND_DRIVER";
+                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
+                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        break;
+                    default:
+                        deliveryOrder.setStatus(status);
+                        break;
                 }
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                 deliveryOrdersRepository.save(deliveryOrder);
