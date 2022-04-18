@@ -98,8 +98,10 @@ public class QueryOrder extends SyncDispatcher {
                 case "parcel_picked_up":
                 case "courier_arrived":
                     orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+                    break;
                 case "completed":
                     orderFound.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+                    break;
                 case "canceled":
                     orderFound.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
                     break;

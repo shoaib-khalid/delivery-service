@@ -49,7 +49,6 @@ public class QueryPendingDeliveryTXN {
         List<DeliveryOrder> deliveryOrders = deliveryOrdersRepository.findBySystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
         for (DeliveryOrder o : deliveryOrders) {
             Provider provider = providerRepository.findOneById(o.getDeliveryProviderId());
-            System.err.print("TESING  L "+provider.getRetry());
             if (provider.getRetry() == true) {
                 LogUtil.info("QueryPendingDeliveryTXN", location, "Request Cancel", "");
 
@@ -148,12 +147,12 @@ public class QueryPendingDeliveryTXN {
 //                LogUtil.info("QueryPendingDeliveryTXN", location, "Request Submit Order", o.getOrderId());
                         HttpReponse placeOrder = deliveryService.placeOrder(o.getOrderId(), request.get(), submitDelivery);
                         SubmitOrderResult submitOrderResult = (SubmitOrderResult) placeOrder.getData();
-                        BigDecimal priorityFee = BigDecimal.valueOf((request.get().getAmount() * 50) / 100);
-                        priorityFee = priorityFee.setScale(2, BigDecimal.ROUND_HALF_UP);
-                        deliveryService.addPriorityFee(submitOrderResult.orderCreated.getId(), priorityFee);
+//                        BigDecimal priorityFee = BigDecimal.valueOf((request.get().getAmount() * 50) / 100);
+//                        priorityFee = priorityFee.setScale(2, BigDecimal.ROUND_HALF_UP);
+//                        deliveryService.addPriorityFee(submitOrderResult.orderCreated.getId(), priorityFee);
 
                     } else if (o.getTotalRequest() < 4) {
-                        LogUtil.info("QueryPendingDeliveryTXN", location, "Third Request After Fifteen Minutes Place Order", "");
+                        LogUtil.info("QueryPendingDeliveryTXN", location, "Four Request After Fifteen Minutes Place Order", "");
                         HttpReponse result = deliveryService.cancelOrder(o.getId(), "");
 
                         Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(o.getDeliveryQuotationId());
@@ -190,18 +189,17 @@ public class QueryPendingDeliveryTXN {
 //                LogUtil.info("QueryPendingDeliveryTXN", location, "Request Submit Order", o.getOrderId());
                         HttpReponse placeOrder = deliveryService.placeOrder(o.getOrderId(), request.get(), submitDelivery);
                         SubmitOrderResult submitOrderResult = (SubmitOrderResult) placeOrder.getData();
-                        BigDecimal priorityFee = BigDecimal.valueOf((request.get().getAmount() * 100) / 100);
-                        priorityFee = priorityFee.setScale(2, BigDecimal.ROUND_HALF_UP);
-                        deliveryService.addPriorityFee(submitOrderResult.orderCreated.getId(), priorityFee);
+//                        BigDecimal priorityFee = BigDecimal.valueOf((request.get().getAmount() * 100) / 100);
+//                        priorityFee = priorityFee.setScale(2, BigDecimal.ROUND_HALF_UP);
+//                        deliveryService.addPriorityFee(submitOrderResult.orderCreated.getId(), priorityFee);
 
                     } else if (o.getTotalRequest() < 5) {
-                        LogUtil.info("QueryPendingDeliveryTXN", location, "Third Request After Fifteen Minutes Place Order", "");
+                        LogUtil.info("QueryPendingDeliveryTXN", location, "Fifth Request After Fifteen Minutes Place Order", "");
 
                         HttpReponse result = deliveryService.cancelOrder(o.getId(), "");
 
                         String orderStatus = "FAILED_FIND_DRIVER";
                         String res = symplifiedService.updateOrderStatus(o.getOrderId(), orderStatus);
-
                     }
                 }
             }

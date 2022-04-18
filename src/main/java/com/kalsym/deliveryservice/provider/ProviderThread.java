@@ -209,12 +209,12 @@ public class ProviderThread extends Thread implements Runnable {
             }
             Class<?> classObject = null;
             Constructor<?>[] cons = new Constructor[0];
-            if (!provider.isExternalRequest()) {
+//            if (!provider.isExternalRequest()) {
                 classObject = Class.forName(className);
                 cons = classObject.getConstructors();
                 LogUtil.info(logprefix, location, "Constructors:" + cons[0].toString(), "");
-
-            }
+//
+//            }
             DispatchRequest reqFactoryObj = null;
             CountDownLatch latch = new CountDownLatch(1);
             //get all constructors
@@ -362,7 +362,7 @@ public class ProviderThread extends Thread implements Runnable {
             LogUtil.info(logprefix, location, "Forking a new thread", "");
             LogUtil.info(logprefix, location, "ProviderThread finish", "");
             ProcessResult response = new ProcessResult();
-            if (!provider.isExternalRequest()) {
+//            if (!provider.isExternalRequest()) {
                 Thread tReqFactory = new Thread(reqFactoryObj);
                 tReqFactory.start();
 
@@ -372,15 +372,15 @@ public class ProviderThread extends Thread implements Runnable {
                 } catch (Exception exp) {
                     LogUtil.error(logprefix, location, "Error in awaiting", "", exp);
                 }
-            }
+//            }
 
 
-            if (!provider.isExternalRequest()) {
+//            if (!provider.isExternalRequest()) {
                 LogUtil.info(logprefix, location, "ProviderThread finish", "");
                 response = reqFactoryObj.getProcessResult();
-            } else {
-                response = processResult;
-            }
+//            } else {
+//                response = processResult;
+//            }
 
             if (functionName.equalsIgnoreCase("GetPrice")) {
                 PriceResult priceResult = (PriceResult) response.returnObject;

@@ -68,7 +68,7 @@ public class Provider implements Serializable {
     @Transient
     DeliveryRemarks remarks;
     Boolean scheduleDate;
-    boolean externalRequest;
-    String classLoaderName;
+//    boolean externalRequest;
+//    String classLoaderName;
 
 }

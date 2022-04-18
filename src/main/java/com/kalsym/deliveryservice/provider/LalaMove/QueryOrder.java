@@ -124,27 +124,41 @@ public class QueryOrder extends SyncDispatcher {
             orderFound.setSpOrderId(spOrderId);
             orderFound.setStatus(status);
             orderFound.setCustomerTrackingUrl(shareLink);
+            LogUtil.info(logprefix, location, "Status:" + status, "");
+
             switch (status) {
                 case "ASSIGNING_DRIVER":
                     orderFound.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                     break;
                 case "ON_GOING":
+                    orderFound.setDriverId(driverId);
+//                    orderFound.setRiderName();
+//                    orderFound.setRiderPhoneNo();
+//                    orderFound.setRiderCarPlateNo();
                     orderFound.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
                     break;
                 case "PICKED_UP":
+                    orderFound.setDriverId(driverId);
                     orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
                     break;
                 case "COMPLETED":
                     orderFound.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+                    break;
+
                 case "REJECTED":
                     orderFound.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
+                    break;
+
                 case "EXPIRED":
                     orderFound.setSystemStatus(DeliveryCompletionStatus.EXPIRED.name());
+                    break;
+
                 case "CANCELED":
                     orderFound.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
                     break;
             }
 //            orderFound.setMerchantTrackingUrl(shareLink);
+
             queryOrderResult.orderFound = orderFound;
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);

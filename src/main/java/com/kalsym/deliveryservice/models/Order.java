@@ -52,6 +52,6 @@ public class Order {
     BigDecimal width;
     BigDecimal length;
     String pickupTime;
-    String signature;
+//    String signature;
 
 }

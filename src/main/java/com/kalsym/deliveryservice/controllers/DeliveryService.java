@@ -17,7 +17,9 @@ import com.kalsym.deliveryservice.utils.StringUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -140,6 +142,7 @@ public class DeliveryService {
         }
         DeliveryVehicleTypes deliveryVehicleTypes = null;
         orderDetails.setVehicleType(cartDetails.getVehicleType());
+
         if (orderDetails.getVehicleType() == null) {
             if (stores.getMaxOrderQuantityForBike() <= 10) {
                 pickup.setVehicleType(VehicleType.MOTORCYCLE);
@@ -323,7 +326,7 @@ public class DeliveryService {
                     deliveryOrder.setStoreId(store.getId());
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
                     deliveryOrder.setFulfillmentType(list.fulfillment);
-                    deliveryOrder.setSignature(list.signature);
+//                    deliveryOrder.setSignature(list.signature);
 //                    deliveryOrder.setDeliveryLatitude(orderDetails.getDelivery().getLatitude().toString());
 //                    deliveryOrder.setDeliveryLongitude(orderDetails.getDelivery().getLongitude().toString());
 //                    deliveryOrder.setPickupLatitude(orderDetails.getPickup().getLatitude().toString());
@@ -561,7 +564,7 @@ public class DeliveryService {
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());
         orderDetails.setPickupTime(quotation.getPickupTime());
-        orderDetails.setSignature(quotation.getSignature());
+//        orderDetails.setSignature(quotation.getSignature());
 
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(quotation.getStoreId());
         LogUtil.info(systemTransactionId, location, "Get Store " + stores.getType(), "");
@@ -637,7 +640,7 @@ public class DeliveryService {
 
             } else {
                 DeliveryOrder orderCreated = submitOrderResult.orderCreated;
-//                deliveryOrderOption.setDeliveryQuotationId(quotation.getId());
+                deliveryOrderOption.setDeliveryQuotationId(quotation.getId());
                 deliveryOrderOption.setCreatedDate(orderCreated.getCreatedDate());
                 deliveryOrderOption.setUpdatedDate(orderCreated.getCreatedDate());
                 deliveryOrderOption.setSpOrderId(orderCreated.getSpOrderId());
@@ -796,7 +799,7 @@ public class DeliveryService {
         Order orderDetails = new Order();
         orderDetails.setPaymentType(optProduct.get().getPaymentType());
         orderDetails.setOrderAmount(optProduct.get().getTotal());
-        orderDetails.setSignature(quotation.getSignature());
+//        orderDetails.setSignature(quotation.getSignature()); //TODO:ADD BACK
         orderDetails.setCustomerId(quotation.getCustomerId());
         if (quotation.getItemType() != null) {
             orderDetails.setItemType(ItemType.valueOf(quotation.getItemType()));
@@ -987,7 +990,9 @@ public class DeliveryService {
         LogUtil.info(systemTransactionId, location, " Find delivery order for orderId:" + orderId, "");
         Optional<DeliveryOrder> orderDetails = deliveryOrdersRepository.findById(orderId);
         if (orderDetails.isPresent()) {
-            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails.get(), providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+
+            DeliveryOrder o = deliveryOrdersRepository.getOne(orderId);
+            ProcessRequest process = new ProcessRequest(systemTransactionId, o, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
             ProcessResult processResult = process.QueryOrder();
             LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
@@ -996,20 +1001,30 @@ public class DeliveryService {
                 response.setSuccessStatus(HttpStatus.OK);
                 QueryOrderResult queryOrderResult = (QueryOrderResult) processResult.returnObject;
                 DeliveryOrder orderFound = queryOrderResult.orderFound;
-                orderDetails.get().setStatus(orderFound.getStatus());
-                orderDetails.get().setSystemStatus(orderFound.getSystemStatus());
-                orderDetails.get().setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
+                o.setStatus(orderFound.getStatus());
+                o.setSystemStatus(orderFound.getSystemStatus());
+                o.setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
                 String orderStatus = "";
                 String res;
-                System.err.println("STATUS : " + orderFound.getSystemStatus());
+                System.err.println("STATUS : " + o.getSystemStatus());
                 if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.ASSIGNING_RIDER.name())) {
                     LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
 
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.AWAITING_PICKUP.name())) {
+                    orderStatus = "AWAITING_PICKUP";
+                    o.setDriverId(orderFound.getDriverId());
+
+                    try {
+                        res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
+                    } catch (Exception ex) {
+                        LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
+                    }
                     LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
 
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.BEING_DELIVERED.name())) {
                     orderStatus = "BEING_DELIVERED";
+                    o.setDriverId(orderFound.getDriverId());
+
                     try {
                         res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
                     } catch (Exception ex) {
@@ -1018,6 +1033,8 @@ public class DeliveryService {
 
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.COMPLETED.name())) {
                     orderStatus = "DELIVERED_TO_CUSTOMER";
+                    LogUtil.info(systemTransactionId, location, "Print Here :" +orderFound.getSystemStatus(), "");
+
                     try {
                         res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
                     } catch (Exception ex) {
@@ -1031,15 +1048,13 @@ public class DeliveryService {
                         LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
                     }
                 }
-                orderDetails.get().setRiderName(orderFound.getRiderName());
-                orderDetails.get().setRiderPhoneNo(orderFound.getRiderPhoneNo());
-                orderDetails.get().setDriverId(orderFound.getDriverId());
-
-                deliveryOrdersRepository.save(orderDetails.get());
+                deliveryOrdersRepository.save(o);
+                getDeliveryRiderDetails(o.getOrderId());
                 response.setStatus(HttpStatus.OK.value());
                 LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
 //                }
-                response.setData(orderDetails);
+
+                response.setData(o);
                 return response;
             } else {
                 //fail to get status
@@ -1093,11 +1108,89 @@ public class DeliveryService {
         HttpReponse response = deliveryService.placeOrder(quotation.get().getOrderId(), request.get(), submitDelivery);
         String orderStatus = "";
         if (response.getStatus() == 200) {
-            orderStatus = "ASSIGNING_DRIVER";
+            orderStatus = "ASSIGNING_RIDER";
         } else {
             orderStatus = "REQUESTING_DELIVERY_FAILED";
         }
         String res = symplifiedService.updateOrderStatus(quotation.get().getOrderId(), orderStatus);
+    }
+
+    public ResponseEntity<HttpReponse> getDeliveryRiderDetails(String orderId) {
+
+        String logprefix = "QUERY RIDER DETAILS" + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = new HttpReponse();
+        DeliveryOrder order = deliveryOrdersRepository.findByOrderId(orderId);
+
+        if (order != null) {
+            if (order.getDriverId() != null) {
+                if (order.getRiderName() == null) {
+                    LogUtil.info(logprefix, location, "Request Rider Details From Provider  ", "");
+
+                    ProcessRequest process = new ProcessRequest(order.getSystemTransactionId(), order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+                    ProcessResult processResult = process.GetDriverDetails();
+                    if (processResult.resultCode == 0) {
+                        Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
+
+                        DriverDetailsResult driverDetailsResult = (DriverDetailsResult) processResult.returnObject;
+                        order.setRiderName(driverDetailsResult.driverDetails.getName());
+                        order.setRiderPhoneNo(driverDetailsResult.driverDetails.getPhoneNumber());
+                        order.setRiderCarPlateNo(driverDetailsResult.driverDetails.getPlateNumber());
+                        deliveryOrdersRepository.save(order);
+                        RiderDetails riderDetails = driverDetailsResult.driverDetails;
+                        riderDetails.setOrderNumber(order.getSpOrderId());
+                        riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
+                        riderDetails.setProvider(provider);
+                        riderDetails.setAirwayBill(order.getAirwayBillURL());
+                        riderDetails.setRiderStatus(order.getSystemStatus());
+                        response.setData(riderDetails);
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    } else {
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+                    }
+                } else {
+                    LogUtil.info(logprefix, location, "Query Rider Details From DB  ", "");
+
+                    Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
+                    RiderDetails riderDetails = new RiderDetails();
+                    riderDetails.setName(order.getRiderName());
+                    riderDetails.setPhoneNumber(order.getRiderPhoneNo());
+                    riderDetails.setPlateNumber(order.getRiderCarPlateNo());
+                    riderDetails.setOrderNumber(order.getSpOrderId());
+                    riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
+                    riderDetails.setProvider(provider);
+                    riderDetails.setRiderStatus(order.getSystemStatus());
+                    riderDetails.setAirwayBill(order.getAirwayBillURL());
+                    response.setData(riderDetails);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+            } else if (order.getAirwayBillURL() != null) {
+                Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
+                RiderDetails riderDetails = new RiderDetails();
+                riderDetails.setOrderNumber(order.getSpOrderId());
+                riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
+                riderDetails.setProvider(provider);
+                riderDetails.setAirwayBill(order.getAirwayBillURL());
+                riderDetails.setRiderStatus(order.getSystemStatus());
+                response.setData(riderDetails);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            } else {
+                Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
+
+                RiderDetails riderDetails = new RiderDetails();
+                riderDetails.setOrderNumber(order.getSpOrderId());
+                riderDetails.setTrackingUrl(order.getCustomerTrackingUrl());
+                riderDetails.setProvider(provider);
+                riderDetails.setRiderStatus(order.getSystemStatus());
+                riderDetails.setAirwayBill(order.getAirwayBillURL());
+                response.setData(riderDetails);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+        } else {
+            RiderDetails riderDetails = new RiderDetails();
+            response.setData(riderDetails);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
     }
 
 }
