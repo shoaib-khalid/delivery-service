@@ -1010,14 +1010,14 @@ public class DeliveryService {
                     LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
 
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.AWAITING_PICKUP.name())) {
-                    orderStatus = "AWAITING_PICKUP";
+//                    orderStatus = "AWAITING_PICKUP";
                     orderDetails.get().setDriverId(orderFound.getDriverId());
 
-                    try {
-                        res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
-                    } catch (Exception ex) {
-                        LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
-                    }
+//                    try {
+//                        res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
+//                    } catch (Exception ex) {
+//                        LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
+//                    }
                     LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
 
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.BEING_DELIVERED.name())) {
@@ -1107,7 +1107,7 @@ public class DeliveryService {
         HttpReponse response = deliveryService.placeOrder(quotation.get().getOrderId(), request.get(), submitDelivery);
         String orderStatus = "";
         if (response.getStatus() == 200) {
-            orderStatus = "ASSIGNING_RIDER";
+            orderStatus = "ASSIGNING_DRIVER";
         } else {
             orderStatus = "REQUESTING_DELIVERY_FAILED";
         }

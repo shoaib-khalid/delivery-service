@@ -100,7 +100,6 @@ public class QueryOrder extends SyncDispatcher {
                     case "FAILED":
                         orderFound.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
                         break;
-
                 }
                 queryOrderResult.orderFound = orderFound;
             } else if (code == "0400") {

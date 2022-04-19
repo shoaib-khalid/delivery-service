@@ -3,6 +3,7 @@ package com.kalsym.deliveryservice.models.enums;
 public enum DeliveryCompletionStatus {
     NEW_ORDER,
     ASSIGNING_RIDER,
+    ASSIGNING_DRIVER,
     AWAITING_PICKUP,
     BEING_DELIVERED,
     DELIVERED_TO_CUSTOMER,
