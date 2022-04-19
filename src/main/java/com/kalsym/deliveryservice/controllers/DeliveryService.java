@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -991,8 +990,8 @@ public class DeliveryService {
         Optional<DeliveryOrder> orderDetails = deliveryOrdersRepository.findById(orderId);
         if (orderDetails.isPresent()) {
 
-            DeliveryOrder o = deliveryOrdersRepository.getOne(orderId);
-            ProcessRequest process = new ProcessRequest(systemTransactionId, o, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+//            DeliveryOrder o = deliveryOrdersRepository.getOne(orderId);
+            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails.get(), providerRatePlanRepository, providerConfigurationRepository, providerRepository);
             ProcessResult processResult = process.QueryOrder();
             LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
@@ -1001,18 +1000,18 @@ public class DeliveryService {
                 response.setSuccessStatus(HttpStatus.OK);
                 QueryOrderResult queryOrderResult = (QueryOrderResult) processResult.returnObject;
                 DeliveryOrder orderFound = queryOrderResult.orderFound;
-                o.setStatus(orderFound.getStatus());
-                o.setSystemStatus(orderFound.getSystemStatus());
-                o.setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
+                orderDetails.get().setStatus(orderFound.getStatus());
+                orderDetails.get().setSystemStatus(orderFound.getSystemStatus());
+                orderDetails.get().setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
                 String orderStatus = "";
                 String res;
-                System.err.println("STATUS : " + o.getSystemStatus());
+                System.err.println("STATUS : " + orderDetails.get().getSystemStatus());
                 if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.ASSIGNING_RIDER.name())) {
                     LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
 
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.AWAITING_PICKUP.name())) {
                     orderStatus = "AWAITING_PICKUP";
-                    o.setDriverId(orderFound.getDriverId());
+                    orderDetails.get().setDriverId(orderFound.getDriverId());
 
                     try {
                         res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
@@ -1023,7 +1022,7 @@ public class DeliveryService {
 
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.BEING_DELIVERED.name())) {
                     orderStatus = "BEING_DELIVERED";
-                    o.setDriverId(orderFound.getDriverId());
+                    orderDetails.get().setDriverId(orderFound.getDriverId());
 
                     try {
                         res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
@@ -1033,7 +1032,7 @@ public class DeliveryService {
 
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.COMPLETED.name())) {
                     orderStatus = "DELIVERED_TO_CUSTOMER";
-                    LogUtil.info(systemTransactionId, location, "Print Here :" +orderFound.getSystemStatus(), "");
+                    LogUtil.info(systemTransactionId, location, "Print Here :" + orderFound.getSystemStatus(), "");
 
                     try {
                         res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
@@ -1048,13 +1047,13 @@ public class DeliveryService {
                         LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
                     }
                 }
-                deliveryOrdersRepository.save(o);
-                getDeliveryRiderDetails(o.getOrderId());
+                deliveryOrdersRepository.save(orderDetails.get());
+                getDeliveryRiderDetails(orderDetails.get().getOrderId());
                 response.setStatus(HttpStatus.OK.value());
                 LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
 //                }
 
-                response.setData(o);
+                response.setData(orderDetails.get());
                 return response;
             } else {
                 //fail to get status
