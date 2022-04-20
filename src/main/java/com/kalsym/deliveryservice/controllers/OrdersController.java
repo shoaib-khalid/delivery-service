@@ -711,9 +711,9 @@ public class OrdersController {
 
     }
 
-    @PostMapping(path = {"lalamove/callback"}, consumes = {MediaType.APPLICATION_JSON_UTF8_VALUE}, name = "orders-lalamove-callback")
+    @PostMapping(path = {"lalamove/callback"}, name = "orders-lalamove-callback")
     public ResponseEntity<HttpReponse> lalamoveCallback(HttpServletRequest request
-            , @RequestBody Map<String, Object> json
+//            , @RequestBody Map<String, Object> json
     ) {
         HttpReponse response = new HttpReponse(request.getRequestURI());
 //        if (!json.isEmpty()) {
