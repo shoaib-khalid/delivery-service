@@ -125,7 +125,7 @@ public class OrdersController {
     }
 
 
-    @GetMapping(path = {"/getQuotation/{id}"}, name = "get-airwayBill-delivery")
+    @GetMapping(path = {"/getQuotation/{id}"}, name = "get-quotation-details")
     public ResponseEntity<HttpReponse> getQuotation(HttpServletRequest request,
                                                     @PathVariable("id") Long id) {
 
@@ -559,7 +559,7 @@ public class OrdersController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/queryorder/{order-id}", name = "orders-query-order")
+    @RequestMapping(method = RequestMethod.GET, value = "/queryorder/{order-id}", name = "delivery-order-query")
     public ResponseEntity<HttpReponse> queryOrder(HttpServletRequest request,
                                                   @PathVariable("order-id") Long orderId) {
         String logprefix = request.getRequestURI() + " ";
@@ -714,72 +714,73 @@ public class OrdersController {
     public ResponseEntity<HttpReponse> lalamoveCallback(HttpServletRequest request
             , @RequestBody Map<String, Object> json
     ) {
-
-        String logprefix = request.getRequestURI() + " ";
-        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
 
-        JSONObject bodyJson = new JSONObject(new Gson().toJson(json));
-        LogUtil.info(logprefix, location, "data: ", bodyJson.get("data").toString());
+        if (!json.isEmpty()) {
+            String logprefix = request.getRequestURI() + " ";
+            String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+
+            JSONObject bodyJson = new JSONObject(new Gson().toJson(json));
+            LogUtil.info(logprefix, location, "data: ", bodyJson.get("data").toString());
 
 
-        String systemTransactionId = StringUtility.CreateRefID("CB");
-        String IP = request.getRemoteAddr();
-        ProcessRequest process = new ProcessRequest(systemTransactionId, bodyJson, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 3);
-        LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+            String systemTransactionId = StringUtility.CreateRefID("CB");
+            String IP = request.getRemoteAddr();
+            ProcessRequest process = new ProcessRequest(systemTransactionId, bodyJson, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+            ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 3);
+            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
-        if (processResult.resultCode == 0) {
-            //update order status in db
-            SpCallbackResult spCallbackResult = (SpCallbackResult) processResult.returnObject;
-            String spOrderId = spCallbackResult.spOrderId;
-            String status = spCallbackResult.status;
-            String deliveryId = spCallbackResult.driverId;
-            int spId = spCallbackResult.providerId;
-            DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
-            if (deliveryOrder != null) {
-                LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
-                deliveryOrder.setStatus(status);
-                String orderStatus = "";
-                String res;
-                // change from order status codes to delivery status codes.
-                if (status.equals("ASSIGNING_DRIVER")) {
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
-                } else if (status.equals("ON_GOING")) {
-                    if (deliveryOrder.getDriverId() == null) {
+            if (processResult.resultCode == 0) {
+                //update order status in db
+                SpCallbackResult spCallbackResult = (SpCallbackResult) processResult.returnObject;
+                String spOrderId = spCallbackResult.spOrderId;
+                String status = spCallbackResult.status;
+                String deliveryId = spCallbackResult.driverId;
+                int spId = spCallbackResult.providerId;
+                DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
+                if (deliveryOrder != null) {
+                    LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
+                    deliveryOrder.setStatus(status);
+                    String orderStatus = "";
+                    String res;
+                    // change from order status codes to delivery status codes.
+                    if (status.equals("ASSIGNING_DRIVER")) {
+                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                    } else if (status.equals("ON_GOING")) {
+                        if (deliveryOrder.getDriverId() == null) {
+                            deliveryOrder.setDriverId(deliveryId);
+                        } else if (!deliveryOrder.getDriverId().equals(deliveryId)) {
+                            deliveryOrder.setDriverId(deliveryId);
+                            deliveryOrder.setRiderName(null);
+                        }
+                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
+                    } else if (status.equals("PICKED_UP")) {
                         deliveryOrder.setDriverId(deliveryId);
-                    } else if (!deliveryOrder.getDriverId().equals(deliveryId)) {
-                        deliveryOrder.setDriverId(deliveryId);
-                        deliveryOrder.setRiderName(null);
+                        orderStatus = "BEING_DELIVERED";
+                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                    } else if (status.equals("COMPLETED")) {
+                        orderStatus = "DELIVERED_TO_CUSTOMER";
+                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                    } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
+                        orderStatus = "FAILED_FIND_DRIVER";
+                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
+                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                     }
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
-                } else if (status.equals("PICKED_UP")) {
-                    deliveryOrder.setDriverId(deliveryId);
-                    orderStatus = "BEING_DELIVERED";
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-                    res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
-                } else if (status.equals("COMPLETED")) {
-                    orderStatus = "DELIVERED_TO_CUSTOMER";
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
-                    res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
-                } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
-                    orderStatus = "FAILED_FIND_DRIVER";
-                    deliveryOrder.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
-                    res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                    deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
+                    deliveryOrdersRepository.save(deliveryOrder);
+                    getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
+                } else {
+                    LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
                 }
-                deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
-                deliveryOrdersRepository.save(deliveryOrder);
-                getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
-
+                response.setSuccessStatus(HttpStatus.OK);
+                response.setData(processResult.returnObject);
+                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
             } else {
-                LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
-
+                return ResponseEntity.status(HttpStatus.OK).body(response);
             }
-            response.setSuccessStatus(HttpStatus.OK);
-            response.setData(processResult.returnObject);
-            LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-
         } else {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }
@@ -891,7 +892,7 @@ public class OrdersController {
     }
 
 
-    @GetMapping(path = {"/getDeliveryProviderDetails/{providerId}/{quantity}"}, name = "delivery-provider-details")
+    @GetMapping(path = {"/getDeliveryProviderDetails/{providerId}/{quantity}"}, name = "get-provider-remarks")
     public ResponseEntity<HttpReponse> getDeliveryProviderDetails(HttpServletRequest request,
                                                                   @PathVariable("providerId") String providerId, @PathVariable("quantity") String quantity) {
         String logprefix = request.getRequestURI() + " ";
@@ -999,7 +1000,7 @@ public class OrdersController {
     }
 
 
-    @PostMapping(path = {"/addPriorityFee/{id}"}, name = "get-airwayBill-delivery")
+    @PostMapping(path = {"/addPriorityFee/{id}"}, name = "add-priority-fee")
     public ResponseEntity<HttpReponse> getAirwayBill(HttpServletRequest request,
                                                      @PathVariable("id") Long id) {
 

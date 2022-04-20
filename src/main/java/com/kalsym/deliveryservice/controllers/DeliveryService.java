@@ -631,7 +631,7 @@ public class DeliveryService {
                 quotation.setOrderId(orderId);
                 quotation.setUpdatedDate(new Date());
                 submitOrderResult.orderCreated = deliveryOrder;
-                submitOrderResult.status = deliveryOrder.getSystemStatus();
+                submitOrderResult.status = deliveryOrder.getStatus();
                 submitOrderResult.message = processResult.resultString;
                 submitOrderResult.systemTransactionId = systemTransactionId;
                 submitOrderResult.orderId = orderId;
@@ -971,7 +971,7 @@ public class DeliveryService {
             response.setStatus(HttpStatus.OK.value());
         } else {
             response.setMessage("FAILED");
-            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            response.setStatus(HttpStatus.NOT_ACCEPTABLE.value());
         }
 
         return response;
@@ -1005,10 +1005,8 @@ public class DeliveryService {
                 orderDetails.get().setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
                 String orderStatus = "";
                 String res;
-                System.err.println("STATUS : " + orderDetails.get().getSystemStatus());
                 if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.ASSIGNING_RIDER.name())) {
                     LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
-
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.AWAITING_PICKUP.name())) {
 //                    orderStatus = "AWAITING_PICKUP";
                     orderDetails.get().setDriverId(orderFound.getDriverId());
@@ -1057,7 +1055,7 @@ public class DeliveryService {
                 return response;
             } else {
                 //fail to get status
-                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                response.setStatus(HttpStatus.NOT_ACCEPTABLE.value());
                 return response;
             }
         } else {

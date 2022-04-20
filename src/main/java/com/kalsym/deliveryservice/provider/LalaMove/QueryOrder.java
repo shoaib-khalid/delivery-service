@@ -89,10 +89,10 @@ public class QueryOrder extends SyncDispatcher {
         headers.set("X-LLM-Country", "MY_KUL");
         headers.set("X-Request-ID", transactionId);
         HttpEntity<String> request = new HttpEntity(headers);
-        System.err.println("url for orderDetails" + url);
+        LogUtil.info(logprefix, location, "Url for orderDetails", url);
         ResponseEntity<String> responses = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
         int statusCode = responses.getStatusCode().value();
-        System.err.println("responses for order details: " + responses);
+        LogUtil.info(logprefix, location, "Responses for order details: ", responses.toString());
 
         if (statusCode == 200) {
             LogUtil.info(logprefix, location, "Request successful", "");
@@ -110,7 +110,7 @@ public class QueryOrder extends SyncDispatcher {
         QueryOrderResult queryOrderResult = new QueryOrderResult();
         try {
             JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
-            System.err.println("jsonResp from orderDetail: " + jsonResp);
+            LogUtil.info(logprefix, location, "Response: ", jsonResp.toString());
             boolean isSuccess = true;
 //            JsonArray pod = jsonResp.get("pod").getAsJsonArray();
             LogUtil.info(logprefix, location, "isSuccess:" + isSuccess, "");

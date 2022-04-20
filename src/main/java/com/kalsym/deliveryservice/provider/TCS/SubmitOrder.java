@@ -132,7 +132,7 @@ public class SubmitOrder extends SyncDispatcher {
                 orderCreated.setSpOrderId(extractedCN);
                 orderCreated.setSpOrderName(extractedCN);
                 orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
-                orderCreated.setStatus(status);
+                orderCreated.setStatus("ASSIGNING_DRIVER");
                 submitOrderResult.orderCreated = orderCreated;
                 submitOrderResult.isSuccess = true;
 

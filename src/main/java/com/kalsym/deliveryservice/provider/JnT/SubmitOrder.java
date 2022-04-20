@@ -226,7 +226,7 @@ public class SubmitOrder extends SyncDispatcher {
                 JsonObject data = detailsData.get("data").getAsJsonObject();
                 DeliveryOrder orderCreated = new DeliveryOrder();
                 orderCreated.setSpOrderId(awbNo);
-
+                orderCreated.setStatus("ASSIGNING_DRIVER");
                 orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
                 submitOrderResult.orderCreated = orderCreated;
                 submitOrderResult.isSuccess = true;
