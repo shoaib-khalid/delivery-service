@@ -21,6 +21,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -710,80 +711,81 @@ public class OrdersController {
 
     }
 
-    @PostMapping(path = {"lalamove/callback"}, name = "orders-lalamove-callback")
+    @PostMapping(path = {"lalamove/callback"}, consumes = {MediaType.APPLICATION_JSON_UTF8_VALUE}, name = "orders-lalamove-callback")
     public ResponseEntity<HttpReponse> lalamoveCallback(HttpServletRequest request
             , @RequestBody Map<String, Object> json
     ) {
         HttpReponse response = new HttpReponse(request.getRequestURI());
-
-        if (!json.isEmpty()) {
-            String logprefix = request.getRequestURI() + " ";
-            String location = Thread.currentThread().getStackTrace()[1].getMethodName();
-
-            JSONObject bodyJson = new JSONObject(new Gson().toJson(json));
-            LogUtil.info(logprefix, location, "data: ", bodyJson.get("data").toString());
-
-
-            String systemTransactionId = StringUtility.CreateRefID("CB");
-            String IP = request.getRemoteAddr();
-            ProcessRequest process = new ProcessRequest(systemTransactionId, bodyJson, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-            ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 3);
-            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
-
-            if (processResult.resultCode == 0) {
-                //update order status in db
-                SpCallbackResult spCallbackResult = (SpCallbackResult) processResult.returnObject;
-                String spOrderId = spCallbackResult.spOrderId;
-                String status = spCallbackResult.status;
-                String deliveryId = spCallbackResult.driverId;
-                int spId = spCallbackResult.providerId;
-                DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
-                if (deliveryOrder != null) {
-                    LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
-                    deliveryOrder.setStatus(status);
-                    String orderStatus = "";
-                    String res;
-                    // change from order status codes to delivery status codes.
-                    if (status.equals("ASSIGNING_DRIVER")) {
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
-                    } else if (status.equals("ON_GOING")) {
-                        if (deliveryOrder.getDriverId() == null) {
-                            deliveryOrder.setDriverId(deliveryId);
-                        } else if (!deliveryOrder.getDriverId().equals(deliveryId)) {
-                            deliveryOrder.setDriverId(deliveryId);
-                            deliveryOrder.setRiderName(null);
-                        }
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
-                    } else if (status.equals("PICKED_UP")) {
-                        deliveryOrder.setDriverId(deliveryId);
-                        orderStatus = "BEING_DELIVERED";
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
-                    } else if (status.equals("COMPLETED")) {
-                        orderStatus = "DELIVERED_TO_CUSTOMER";
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
-                    } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
-                        orderStatus = "FAILED_FIND_DRIVER";
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
-                    }
-                    deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
-                    deliveryOrdersRepository.save(deliveryOrder);
-                    getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
-                } else {
-                    LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
-                }
-                response.setSuccessStatus(HttpStatus.OK);
-                response.setData(processResult.returnObject);
-                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
-                return ResponseEntity.status(HttpStatus.OK).body(response);
-            } else {
-                return ResponseEntity.status(HttpStatus.OK).body(response);
-            }
-        } else {
+//        if (!json.isEmpty()) {
+//            String logprefix = request.getRequestURI() + " ";
+//            String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+//
+//            JSONObject bodyJson = new JSONObject(new Gson().toJson(json));
+//            LogUtil.info(logprefix, location, "data: ", bodyJson.get("data").toString());
+//
+//
+//            String systemTransactionId = StringUtility.CreateRefID("CB");
+//            String IP = request.getRemoteAddr();
+//            ProcessRequest process = new ProcessRequest(systemTransactionId, bodyJson, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+//            ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 3);
+//            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+//
+//            if (processResult.resultCode == 0) {
+//                //update order status in db
+//                SpCallbackResult spCallbackResult = (SpCallbackResult) processResult.returnObject;
+//                String spOrderId = spCallbackResult.spOrderId;
+//                String status = spCallbackResult.status;
+//                String deliveryId = spCallbackResult.driverId;
+//                int spId = spCallbackResult.providerId;
+//                DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
+//                if (deliveryOrder != null) {
+//                    LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
+//                    deliveryOrder.setStatus(status);
+//                    String orderStatus = "";
+//                    String res;
+//                    // change from order status codes to delivery status codes.
+//                    if (status.equals("ASSIGNING_DRIVER")) {
+//                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+//                    } else if (status.equals("ON_GOING")) {
+//                        if (deliveryOrder.getDriverId() == null) {
+//                            deliveryOrder.setDriverId(deliveryId);
+//                        } else if (!deliveryOrder.getDriverId().equals(deliveryId)) {
+//                            deliveryOrder.setDriverId(deliveryId);
+//                            deliveryOrder.setRiderName(null);
+//                        }
+//                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
+//                    } else if (status.equals("PICKED_UP")) {
+//                        deliveryOrder.setDriverId(deliveryId);
+//                        orderStatus = "BEING_DELIVERED";
+//                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+//                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+//                    } else if (status.equals("COMPLETED")) {
+//                        orderStatus = "DELIVERED_TO_CUSTOMER";
+//                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+//                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+//                    } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
+//                        orderStatus = "FAILED_FIND_DRIVER";
+//                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
+//                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+//                    }
+//                    deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
+//                    deliveryOrdersRepository.save(deliveryOrder);
+//                    getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
+//                } else {
+//                    LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
+//                }
+//                response.setSuccessStatus(HttpStatus.OK);
+//                response.setData(processResult.returnObject);
+//                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
+//                return ResponseEntity.status(HttpStatus.OK).body(response);
+//            } else {
+//                return ResponseEntity.status(HttpStatus.OK).body(response);
+//            }
+//        } else {
             return ResponseEntity.status(HttpStatus.OK).body(response);
-        }
+//        }
+
+
     }
 
     @GetMapping(path = {"/getDeliveryProvider/{type}/{country}"}, name = "delivery-get-provider")

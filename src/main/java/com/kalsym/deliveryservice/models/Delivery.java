@@ -39,6 +39,6 @@ public class Delivery {
     String deliveryContactEmail;
     String deliveryZone;
 
-//    BigDecimal latitude;
-//    BigDecimal longitude;
+    BigDecimal latitude;
+    BigDecimal longitude;
 }
