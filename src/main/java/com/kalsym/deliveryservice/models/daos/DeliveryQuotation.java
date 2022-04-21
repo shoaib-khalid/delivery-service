@@ -60,9 +60,9 @@ public class DeliveryQuotation {
     private String fulfillmentType;
     private String pickupTime;
     private Integer intervalTime;
-//    private String signature;
-//    private String pickupLatitude;
-//    private String pickupLongitude;
-//    private String deliveryLatitude;
-//    private String deliveryLongitude;
+    private String signature;
+    private String pickupLatitude;
+    private String pickupLongitude;
+    private String deliveryLatitude;
+    private String deliveryLongitude;
 }
