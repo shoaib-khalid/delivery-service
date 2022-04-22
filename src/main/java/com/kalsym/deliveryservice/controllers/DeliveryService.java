@@ -326,8 +326,8 @@ public class DeliveryService {
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
                     deliveryOrder.setFulfillmentType(list.fulfillment);
                     deliveryOrder.setSignature(list.signature);
-                    deliveryOrder.setDeliveryLatitude(orderDetails.getDelivery().getLatitude().toString());
-                    deliveryOrder.setDeliveryLongitude(orderDetails.getDelivery().getLongitude().toString());
+//                    deliveryOrder.setDeliveryLatitude(orderDetails.getDelivery().getLatitude().toString());
+//                    deliveryOrder.setDeliveryLongitude(orderDetails.getDelivery().getLongitude().toString());
                     deliveryOrder.setPickupLatitude(orderDetails.getPickup().getLatitude().toString());
                     deliveryOrder.setPickupLongitude(orderDetails.getPickup().getLongitude().toString());
 
