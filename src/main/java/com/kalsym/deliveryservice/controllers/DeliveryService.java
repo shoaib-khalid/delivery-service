@@ -1000,51 +1000,47 @@ public class DeliveryService {
                 response.setSuccessStatus(HttpStatus.OK);
                 QueryOrderResult queryOrderResult = (QueryOrderResult) processResult.returnObject;
                 DeliveryOrder orderFound = queryOrderResult.orderFound;
-                orderDetails.get().setStatus(orderFound.getStatus());
-                orderDetails.get().setSystemStatus(orderFound.getSystemStatus());
-                orderDetails.get().setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
                 String orderStatus = "";
                 String res;
                 if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.ASSIGNING_RIDER.name())) {
                     LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.AWAITING_PICKUP.name())) {
-//                    orderStatus = "AWAITING_PICKUP";
                     orderDetails.get().setDriverId(orderFound.getDriverId());
-
-//                    try {
-//                        res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
-//                    } catch (Exception ex) {
-//                        LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
-//                    }
                     LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
-
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.BEING_DELIVERED.name())) {
                     orderStatus = "BEING_DELIVERED";
                     orderDetails.get().setDriverId(orderFound.getDriverId());
-
-                    try {
-                        res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
-                    } catch (Exception ex) {
-                        LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
+                    if (!orderDetails.get().getSystemStatus().equals(DeliveryCompletionStatus.BEING_DELIVERED.name())) {
+                        try {
+                            res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
+                        } catch (Exception ex) {
+                            LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
+                        }
                     }
-
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.COMPLETED.name())) {
                     orderStatus = "DELIVERED_TO_CUSTOMER";
                     LogUtil.info(systemTransactionId, location, "Print Here :" + orderFound.getSystemStatus(), "");
-
-                    try {
-                        res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
-                    } catch (Exception ex) {
-                        LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
+                    if (!orderDetails.get().getSystemStatus().equals(DeliveryCompletionStatus.COMPLETED.name())) {
+                        try {
+                            res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
+                        } catch (Exception ex) {
+                            LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
+                        }
                     }
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.CANCELED.name()) || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.REJECTED.name()) || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.EXPIRED.name())) {
                     orderStatus = "FAILED_FIND_DRIVER";
-                    try {
-                        res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
-                    } catch (Exception ex) {
-                        LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
+                    if (!orderDetails.get().getSystemStatus().equals(DeliveryCompletionStatus.CANCELED.name()) || !orderDetails.get().getSystemStatus().equals(DeliveryCompletionStatus.REJECTED.name()) || !orderDetails.get().getSystemStatus().equals(DeliveryCompletionStatus.EXPIRED.name())) {
+                        try {
+                            res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
+                        } catch (Exception ex) {
+                            LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
+                        }
                     }
                 }
+                orderDetails.get().setStatus(orderFound.getStatus());
+                orderDetails.get().setSystemStatus(orderFound.getSystemStatus());
+                orderDetails.get().setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
+
                 deliveryOrdersRepository.save(orderDetails.get());
                 getDeliveryRiderDetails(orderDetails.get().getOrderId());
                 response.setStatus(HttpStatus.OK.value());

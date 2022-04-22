@@ -21,7 +21,6 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -654,21 +653,29 @@ public class OrdersController {
                     case "courier_arrived":
                         deliveryOrder.setDriverId(deliveryId);
                         orderStatus = "BEING_DELIVERED";
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        if (!deliveryOrder.getSystemStatus().equals(DeliveryCompletionStatus.BEING_DELIVERED.name())) {
+                            deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        }
                         break;
                     case "finished":
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
                         orderStatus = "DELIVERED_TO_CUSTOMER";
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        if (!deliveryOrder.getSystemStatus().equals(DeliveryCompletionStatus.COMPLETED.name())) {
+                            deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        }
                         break;
                     case "canceled":
                         orderStatus = "FAILED_FIND_DRIVER";
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        if (!deliveryOrder.getSystemStatus().equals(DeliveryCompletionStatus.COMPLETED.name())) {
+
+                            deliveryOrder.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        }
                         break;
                     default:
                         deliveryOrder.setStatus(status);
+                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.EXPIRED.name());
                         break;
                 }
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
@@ -745,8 +752,10 @@ public class OrdersController {
                     String res;
                     // change from order status codes to delivery status codes.
                     if (status.equals("ASSIGNING_DRIVER")) {
+                        LogUtil.info(systemTransactionId, location, "DeliveryOrder found.Order Status : ", deliveryOrder.getSystemStatus());
                         deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                     } else if (status.equals("ON_GOING")) {
+                        LogUtil.info(systemTransactionId, location, "DeliveryOrder found.Order Status : ", deliveryOrder.getSystemStatus());
                         if (deliveryOrder.getDriverId() == null) {
                             deliveryOrder.setDriverId(deliveryId);
                         } else if (!deliveryOrder.getDriverId().equals(deliveryId)) {
@@ -755,18 +764,30 @@ public class OrdersController {
                         }
                         deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
                     } else if (status.equals("PICKED_UP")) {
+                        LogUtil.info(systemTransactionId, location, "DeliveryOrder found.Order Status : ", deliveryOrder.getSystemStatus());
+
                         deliveryOrder.setDriverId(deliveryId);
                         orderStatus = "BEING_DELIVERED";
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        if (!deliveryOrder.getSystemStatus().equals(DeliveryCompletionStatus.BEING_DELIVERED.name())) {
+                            deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        }
                     } else if (status.equals("COMPLETED")) {
+                        LogUtil.info(systemTransactionId, location, "DeliveryOrder found.Order Status : ", deliveryOrder.getSystemStatus());
+
                         orderStatus = "DELIVERED_TO_CUSTOMER";
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        if (!deliveryOrder.getSystemStatus().equals(DeliveryCompletionStatus.COMPLETED.name())) {
+                            deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        }
                     } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
+                        LogUtil.info(systemTransactionId, location, "DeliveryOrder found.Order Status : ", deliveryOrder.getSystemStatus());
+
                         orderStatus = "FAILED_FIND_DRIVER";
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        if (!deliveryOrder.getSystemStatus().equals(DeliveryCompletionStatus.CANCELED.name())) {
+                            deliveryOrder.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        }
                     }
                     deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                     deliveryOrdersRepository.save(deliveryOrder);
