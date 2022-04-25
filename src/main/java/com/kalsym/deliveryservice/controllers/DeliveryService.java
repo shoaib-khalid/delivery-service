@@ -174,8 +174,15 @@ public class DeliveryService {
         pickup.setPickupContactEmail(store.getEmail());
         pickup.setPickupState(store.getRegionCountryStateId());
         pickup.setPickupPostcode(store.getPostcode());
-        pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(store.getLongitude())));
-        pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(store.getLatitude())));
+        try {
+            pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(store.getLongitude())));
+            pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(store.getLatitude())));
+
+        } catch (Exception ex) {
+
+            LogUtil.error(logprefix, location, "Exception " + ex.getMessage(), "Get Lat & Lang ", ex);
+
+        }
         orderDetails.setPickup(pickup);
         //More Details For Delivery
 
@@ -326,11 +333,13 @@ public class DeliveryService {
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
                     deliveryOrder.setFulfillmentType(list.fulfillment);
                     deliveryOrder.setSignature(list.signature);
+                    if (store.getLatitude() != null) {
 //                    deliveryOrder.setDeliveryLatitude(orderDetails.getDelivery().getLatitude().toString());
 //                    deliveryOrder.setDeliveryLongitude(orderDetails.getDelivery().getLongitude().toString());
-                    deliveryOrder.setPickupLatitude(orderDetails.getPickup().getLatitude().toString());
-                    deliveryOrder.setPickupLongitude(orderDetails.getPickup().getLongitude().toString());
 
+                        deliveryOrder.setPickupLatitude(orderDetails.getPickup().getLatitude().toString());
+                        deliveryOrder.setPickupLongitude(orderDetails.getPickup().getLongitude().toString());
+                    }
                     if (list.interval != null) {
                         deliveryOrder.setIntervalTime(list.interval);
                     }
