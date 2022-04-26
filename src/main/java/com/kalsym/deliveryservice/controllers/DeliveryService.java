@@ -565,9 +565,12 @@ public class DeliveryService {
         delivery.setDeliveryContactPhone(quotation.getDeliveryContactPhone());
         delivery.setDeliveryPostcode(quotation.getDeliveryPostcode());
         delivery.setDeliveryCity(quotation.getDeliveryCity());
-
-        delivery.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLatitude())));
-        delivery.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLongitude())));
+        try {
+            delivery.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLatitude())));
+            delivery.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLongitude())));
+        } catch (Exception exception) {
+            LogUtil.error(systemTransactionId, location, "Exception", "", exception);
+        }
         orderDetails.setDelivery(delivery);
         orderDetails.setCartId(quotation.getCartId());
         orderDetails.setPickupTime(quotation.getPickupTime());
