@@ -42,4 +42,7 @@ public class PriceResult {
     public Integer interval;
     public String signature;
 
+    public BigDecimal lat;
+    public BigDecimal log;
+
 }

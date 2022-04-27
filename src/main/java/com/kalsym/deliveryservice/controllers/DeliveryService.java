@@ -333,13 +333,6 @@ public class DeliveryService {
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
                     deliveryOrder.setFulfillmentType(list.fulfillment);
                     deliveryOrder.setSignature(list.signature);
-                    if (store.getLatitude() != null) {
-//                    deliveryOrder.setDeliveryLatitude(orderDetails.getDelivery().getLatitude().toString());
-//                    deliveryOrder.setDeliveryLongitude(orderDetails.getDelivery().getLongitude().toString());
-
-                        deliveryOrder.setPickupLatitude(orderDetails.getPickup().getLatitude().toString());
-                        deliveryOrder.setPickupLongitude(orderDetails.getPickup().getLongitude().toString());
-                    }
                     if (list.interval != null) {
                         deliveryOrder.setIntervalTime(list.interval);
                     }
@@ -429,6 +422,17 @@ public class DeliveryService {
                             double dPrice = Double.parseDouble(decimalFormat.format(list.price));
                             bd = new BigDecimal(dPrice);
                             bd = bd.setScale(2, RoundingMode.HALF_UP);
+                        }
+                        if (store.getLatitude() != null) {
+                            try {
+                                deliveryOrder.setDeliveryLatitude(list.lat.toString());
+                                deliveryOrder.setDeliveryLongitude(list.log.toString());
+                                deliveryOrder.setPickupLatitude(orderDetails.getPickup().getLatitude().toString());
+                                deliveryOrder.setPickupLongitude(orderDetails.getPickup().getLongitude().toString());
+                            } catch (Exception ex) {
+                                LogUtil.info(systemTransactionId, location, "Cannot Store Lat And Long  ", "");
+
+                            }
                         }
 
                     } else {
@@ -556,6 +560,7 @@ public class DeliveryService {
             if (store.getCostCenterCode() != null) {
                 pickup.setCostCenterCode(store.getCostCenterCode());
             }
+            orderDetails.setCodAmount(BigDecimal.valueOf(optProduct.get().getTotal()));
         }
 
         orderDetails.setPickup(pickup);

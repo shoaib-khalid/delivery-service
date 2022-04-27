@@ -5,11 +5,9 @@
 package com.kalsym.deliveryservice.models.daos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
+
+import javax.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -36,6 +34,7 @@ public class DeliveryOrder {
     String productCode;
     String pickupAddress;
     String deliveryAddress;
+
     String systemTransactionId;
     String itemType;
     String pickupContactName;
@@ -67,4 +66,6 @@ public class DeliveryOrder {
 
     BigDecimal priorityFee;
     BigDecimal deliveryFee;
+
+    BigDecimal codAmount;
 }

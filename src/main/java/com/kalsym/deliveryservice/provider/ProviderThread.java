@@ -229,7 +229,7 @@ public class ProviderThread extends Thread implements Runnable {
                         URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
 
                         // Load the target class
-                        Class<?> beanClass = urlClassLoader.loadClass("com.kalsym.lalamoveProvider.controller.OrderController");
+                        Class<?> beanClass = urlClassLoader.loadClass(provider.getAdditionalQueryClassName());
 
                         // Create a new instance from the loaded class
                         Constructor<?> constructor = beanClass.getConstructor();
@@ -291,7 +291,7 @@ public class ProviderThread extends Thread implements Runnable {
                             URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
 
                             // Load the target class
-                            beanClass = urlClassLoader.loadClass("com.kalsym.pandaGo.controller.OrderController");
+                            beanClass = urlClassLoader.loadClass(provider.getAdditionalQueryClassName());
 
                             // Create a new instance from the loaded class
                             Constructor<?> constructor = beanClass.getConstructor();
@@ -307,19 +307,29 @@ public class ProviderThread extends Thread implements Runnable {
                         assert beanClass != null;
                         Method method = beanClass.getMethod("getPrice", String.class, String.class, String.class, String.class);
                         Object value = method.invoke(beanObj, gson.toJson(providerConfig), gson.toJson(order), this.sysTransactionId, gson.toJson(fulfillment));
+                        LogUtil.info(logprefix, location, "Response FROM CLASS : ", value.toString());
+
                         JsonObject response = new Gson().fromJson(value.toString(), JsonObject.class);
-                        System.err.println("RESPONSE : " + response.toString());
                         PriceResult priceResult = new PriceResult();
-                        priceResult.fulfillment = response.getAsJsonObject("returnObject").get("fulfillment").getAsString();
-                        priceResult.isError = response.getAsJsonObject("returnObject").get("isError").getAsBoolean();
-                        priceResult.pickupDateTime = response.getAsJsonObject("returnObject").get("pickupDateTime").getAsString();
-                        priceResult.price = response.getAsJsonObject("returnObject").get("price").getAsBigDecimal();
-                        priceResult.resultCode = response.getAsJsonObject("returnObject").get("resultCode").getAsInt();
-                        priceResult.signature = response.getAsJsonObject("returnObject").get("signature").getAsString();
+                        if (!response.getAsJsonObject("returnObject").get("isError").getAsBoolean()) {
+                            priceResult.fulfillment = response.getAsJsonObject("returnObject").get("fulfillment").getAsString();
+                            priceResult.isError = response.getAsJsonObject("returnObject").get("isError").getAsBoolean();
+                            priceResult.pickupDateTime = response.getAsJsonObject("returnObject").get("pickupDateTime").getAsString();
+                            priceResult.price = response.getAsJsonObject("returnObject").get("price").getAsBigDecimal();
+                            priceResult.resultCode = response.getAsJsonObject("returnObject").get("resultCode").getAsInt();
+                            priceResult.signature = response.getAsJsonObject("returnObject").get("signature").getAsString();
+                            priceResult.lat = response.getAsJsonObject("returnObject").get("lat").getAsBigDecimal();
+                            priceResult.log = response.getAsJsonObject("returnObject").get("log").getAsBigDecimal();
 
 //                    ProcessResult processResult = new ProcessResult();
-                        processResult.returnObject = priceResult;
-                        processResult.resultCode = response.get("resultCode").getAsInt();
+                            processResult.returnObject = priceResult;
+                            processResult.resultCode = response.get("resultCode").getAsInt();
+                        } else {
+                            priceResult.message = response.getAsJsonObject("returnObject").get("message").getAsString();
+                            priceResult.isError = response.getAsJsonObject("returnObject").get("isError").getAsBoolean();
+                            processResult.returnObject = priceResult;
+                            processResult.resultCode = -1;
+                        }
 
                         LogUtil.info(logprefix, location, "Response From The Class ", value.toString());
                     } else {
@@ -333,7 +343,7 @@ public class ProviderThread extends Thread implements Runnable {
                         URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
 
                         // Load the target class
-                        Class<?> beanClass = urlClassLoader.loadClass(provider.getClassLoaderName());
+                        Class<?> beanClass = urlClassLoader.loadClass(provider.getAdditionalQueryClassName());
 
                         // Create a new instance from the loaded class
                         Constructor<?> constructor = beanClass.getConstructor();
@@ -349,6 +359,23 @@ public class ProviderThread extends Thread implements Runnable {
                         System.err.println("Submit Order Response :  " + response.toString());
                         SubmitOrderResult submitOrderResult = new SubmitOrderResult();
                         DeliveryOrder o = new DeliveryOrder();
+                        LogUtil.info(logprefix, location, "Response : ", response.toString());
+                        if (response.get("resultCode").getAsInt() == 0) {
+                            o.setSpOrderId(response.get("returnObject").getAsJsonObject().getAsJsonObject("orderCreated").get("spOrderId").getAsString());
+                            o.setSpOrderName(response.get("returnObject").getAsJsonObject().getAsJsonObject("orderCreated").get("spOrderName").getAsString());
+                            o.setCreatedDate(response.get("returnObject").getAsJsonObject().getAsJsonObject("orderCreated").get("createdDate").getAsString());
+                            o.setStatus(response.get("returnObject").getAsJsonObject().getAsJsonObject("orderCreated").get("status").getAsString());
+                            o.setStatusDescription(response.get("returnObject").getAsJsonObject().getAsJsonObject("orderCreated").get("statusDescription").getAsString());
+                            o.setSystemStatus(response.get("returnObject").getAsJsonObject().getAsJsonObject("orderCreated").get("systemStatus").getAsString());
+                            submitOrderResult.orderCreated = o;
+                            submitOrderResult.resultCode = response.get("resultCode").getAsInt();
+                        } else {
+                            submitOrderResult.resultCode = -1;
+                            submitOrderResult.message = response.get("resultString").getAsString();
+                            submitOrderResult.deliveryProviderId = response.getAsJsonObject("returnObject").get("deliveryProviderId").getAsInt();
+                        }
+                        processResult.returnObject = submitOrderResult;
+                        processResult.resultCode = response.get("resultCode").getAsInt();
 
                     } else {
 

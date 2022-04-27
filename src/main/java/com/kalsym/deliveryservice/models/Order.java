@@ -53,5 +53,6 @@ public class Order {
     BigDecimal length;
     String pickupTime;
     String signature;
+    BigDecimal codAmount;
 
 }
