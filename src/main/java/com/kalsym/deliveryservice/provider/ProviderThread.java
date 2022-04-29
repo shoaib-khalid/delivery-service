@@ -239,28 +239,35 @@ public class ProviderThread extends Thread implements Runnable {
                         ObjectMapper mapper = new ObjectMapper();
 
                         Gson gson = new Gson();
-                        Method method = beanClass.getMethod("queryOrder", String.class, String.class, String.class);
+                        Method method = beanClass.getMethod(functionName, String.class, String.class, String.class);
                         Object value = method.invoke(beanObj, gson.toJson(providerConfig), spOrderId, this.sysTransactionId);
                         JsonObject response = new Gson().fromJson(value.toString(), JsonObject.class);
-                        System.err.println("RESPONSE : " + response.toString());
                         QueryOrderResult queryOrderResult = new QueryOrderResult();
+                        if (response.getAsJsonObject("returnObject").get("isSuccess").getAsBoolean()) {
+                            DeliveryOrder orderFound = new DeliveryOrder();
+                            orderFound.setSpOrderId(response.getAsJsonObject("returnObject").get("orderFound").getAsJsonObject().get("spOrderId").getAsString());
+                            orderFound.setStatus(response.getAsJsonObject("returnObject").get("orderFound").getAsJsonObject().get("status").getAsString());
+                            orderFound.setCustomerTrackingUrl(response.getAsJsonObject("returnObject").get("orderFound").getAsJsonObject().get("customerTrackingUrl").getAsString());
 
-                        DeliveryOrder orderFound = new DeliveryOrder();
-                        orderFound.setSpOrderId(response.getAsJsonObject("returnObject").get("queryOrderResult").getAsJsonObject().get("orderFound").getAsJsonObject().get("spOrderId").getAsString());
-                        orderFound.setStatus(response.getAsJsonObject("returnObject").get("queryOrderResult").getAsJsonObject().get("orderFound").getAsJsonObject().get("status").getAsString());
-                        orderFound.setCustomerTrackingUrl(response.getAsJsonObject("returnObject").get("queryOrderResult").getAsJsonObject().get("orderFound").getAsJsonObject().get("customerTrackingUrl").getAsString());
+                            orderFound.setSystemStatus(response.getAsJsonObject("returnObject").get("orderFound").getAsJsonObject().get("systemStatus").getAsString());
 
-                        orderFound.setSystemStatus(response.getAsJsonObject("returnObject").get("queryOrderResult").getAsJsonObject().get("orderFound").getAsJsonObject().get("systemStatus").getAsString());
-
-                        queryOrderResult.orderFound = orderFound;
-                        queryOrderResult.isSuccess = response.getAsJsonObject("returnObject").get("queryOrderResult").getAsJsonObject().get("success").getAsBoolean();
+                            queryOrderResult.orderFound = orderFound;
+                            queryOrderResult.isSuccess = response.getAsJsonObject("returnObject").get("isSuccess").getAsBoolean();
 
 //                    ProcessResult processResult = new ProcessResult();
 //                        processResult.returnObject = priceResult;
-                        processResult.resultCode = response.get("resultCode").getAsInt();
-                        processResult.returnObject = queryOrderResult;
+                            processResult.resultCode = response.get("resultCode").getAsInt();
+                            processResult.returnObject = queryOrderResult;
 
-                        LogUtil.info(logprefix, location, "Response From The Class ", value.toString());
+                            LogUtil.info(logprefix, location, "Response From The Class ", value.toString());
+                        } else {
+                            LogUtil.info(logprefix, location, "Response From The Class ", response.toString());
+                            queryOrderResult.providerId = response.getAsJsonObject("returnObject").get("providerId").getAsInt();
+                            processResult.returnObject = queryOrderResult;
+                            processResult.resultCode = response.get("resultCode").getAsInt();
+
+
+                        }
                     } else {
                         reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, spOrderId, this.sysTransactionId);
                     }

@@ -70,7 +70,10 @@ public class QueryOrder extends SyncDispatcher {
             response.returnObject = extractResponseBody(httpResult.responseString);
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
+            QueryOrderResult queryOrderResult = new QueryOrderResult();
+            queryOrderResult.isSuccess = false;
             response.resultCode = -1;
+            response.returnObject = queryOrderResult;
         }
         LogUtil.info(logprefix, location, "Process finish", "");
 

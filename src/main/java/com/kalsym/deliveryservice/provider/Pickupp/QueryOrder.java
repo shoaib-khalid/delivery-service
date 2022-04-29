@@ -73,13 +73,12 @@ public class QueryOrder extends SyncDispatcher {
             response.returnObject = extractResponseBody(httpResult.responseString);
         } else {
             JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
-            PriceResult result = new PriceResult();
-            LogUtil.info(logprefix, location, "Request failed", jsonResp.get("message").getAsString());
-
-            result.message = jsonResp.get("message").getAsString();
-            result.isError = true;
-            response.returnObject = result;
+            QueryOrderResult queryOrderResult = new QueryOrderResult();
+            queryOrderResult.isSuccess = false;
             response.resultCode = -1;
+            response.resultString = jsonResp.get("message").getAsString();
+            response.returnObject = queryOrderResult;
+            LogUtil.info(logprefix, location, "Request failed", jsonResp.get("message").getAsString());
         }
         LogUtil.info(logprefix, location, "Process finish", "");
         return response;
@@ -113,7 +112,7 @@ public class QueryOrder extends SyncDispatcher {
                 orderFound.setRiderName(deliveryAgent.get("name").getAsString());
                 orderFound.setRiderPhoneNo(deliveryAgent.get("phone").getAsString());
                 orderFound.setDriverId(deliveryAgent.get("id").getAsString());
-            }catch (Exception exception){
+            } catch (Exception exception) {
                 LogUtil.info(logprefix, location, "Exception Cannot Get Rider Details :" + deliveryAgent, "");
             }
             switch (status) {

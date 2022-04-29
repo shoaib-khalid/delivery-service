@@ -369,8 +369,13 @@ public class ProcessRequest {
         }
 
         ProcessResult response = new ProcessResult();
+        if(queryOrderResult.isSuccess){
         response.resultCode = 0;
-        response.returnObject = queryOrderResult;
+        response.returnObject = queryOrderResult;}
+        else {
+            response.resultCode = -1;
+
+        }
         LogUtil.info(logprefix, location, "SubmitOrder finish. resultCode:" + response.resultCode, " queryOrderResult:" + queryOrderResult);
         return response;
     }

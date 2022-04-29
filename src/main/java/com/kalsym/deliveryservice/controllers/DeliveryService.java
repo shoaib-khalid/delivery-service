@@ -32,7 +32,6 @@ import java.util.*;
  * @author Irasakumar
  */
 
-
 @Service
 public class DeliveryService {
     @Autowired
@@ -52,7 +51,6 @@ public class DeliveryService {
 
     @Autowired
     SequenceNumberRepository sequenceNumberRepository;
-
 
     @Autowired
     DeliveryQuotationRepository deliveryQuotationRepository;
@@ -74,7 +72,6 @@ public class DeliveryService {
 
     @Autowired
     RegionCountryRepository regionCountryRepository;
-
 
     @Autowired
     DeliveryZoneCityRepository deliveryZoneCityRepository;
@@ -109,12 +106,20 @@ public class DeliveryService {
     @Autowired
     StoreOrderRepository storeOrderRepository;
 
-
     public HttpReponse getPrice(Order orderDetails, String url) {
         String logprefix = "DeliveryService GetPrice";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         ProcessResult processResult;
         String systemTransactionId = StringUtility.CreateRefID("DL");
+
+        Calendar c1 = Calendar.getInstance();
+
+        c1.set(Calendar.HOUR, 11);
+        c1.set(Calendar.AM_PM, Calendar.AM);
+        c1.set(Calendar.MINUTE, 0);
+
+        Date dateOne = c1.getTime();
+        System.err.println(" TIME NEED TO PRINT : " + dateOne.getTime()/1000);
 
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
         CartDetails cartDetails = symplifiedService.getTotalWeight(orderDetails.getCartId());
@@ -126,14 +131,15 @@ public class DeliveryService {
         StoreResponseData store = symplifiedService.getStore(orderDetails.getStoreId());
         orderDetails.setRegionCountry(store.getRegionCountryId());
 
-        //PICKUP ADDRESS
+        // PICKUP ADDRESS
         Pickup pickup = new Pickup();
-        //If Store Is PAKISTAN SEARCH DB
+        // If Store Is PAKISTAN SEARCH DB
         if (store.getRegionCountryId().equals("PAK")) {
             DeliveryZoneCity zoneCity = deliveryZoneCityRepository.findByCityContains(store.getCity());
             pickup.setPickupZone(zoneCity.getZone());
             try {
-                DeliveryZoneCity deliveryZone = deliveryZoneCityRepository.findByCityContains(orderDetails.getDelivery().getDeliveryCity());
+                DeliveryZoneCity deliveryZone = deliveryZoneCityRepository
+                        .findByCityContains(orderDetails.getDelivery().getDeliveryCity());
                 orderDetails.getDelivery().setDeliveryZone(deliveryZone.getZone());
             } catch (Exception ex) {
                 orderDetails.getDelivery().setDeliveryZone("null");
@@ -158,14 +164,17 @@ public class DeliveryService {
             }
         } else {
             pickup.setVehicleType(orderDetails.getVehicleType());
-            deliveryVehicleTypes = deliveryVehicleTypesRepository.findByVehicleType(orderDetails.getVehicleType().name());
+            deliveryVehicleTypes = deliveryVehicleTypesRepository
+                    .findByVehicleType(orderDetails.getVehicleType().name());
         }
 
         LogUtil.info(logprefix, location, "Vehicle Type: ", pickup.getVehicleType().name());
 
-        String deliveryAddress = orderDetails.getDelivery().getDeliveryAddress() + "," + orderDetails.getDelivery().getDeliveryPostcode() + "," + orderDetails.getDelivery().getDeliveryCity() + "," + orderDetails.getDelivery().getDeliveryState();
-        String pickupAddress = store.getAddress() + "," + store.getPostcode() + "," + store.getCity() + "," + store.getRegionCountryStateId();
-
+        String deliveryAddress = orderDetails.getDelivery().getDeliveryAddress() + ","
+                + orderDetails.getDelivery().getDeliveryPostcode() + "," + orderDetails.getDelivery().getDeliveryCity()
+                + "," + orderDetails.getDelivery().getDeliveryState();
+        String pickupAddress = store.getAddress() + "," + store.getPostcode() + "," + store.getCity() + ","
+                + store.getRegionCountryStateId();
 
         pickup.setPickupAddress(pickupAddress);
         pickup.setPickupCity(store.getCity());
@@ -184,7 +193,7 @@ public class DeliveryService {
 
         }
         orderDetails.setPickup(pickup);
-        //More Details For Delivery
+        // More Details For Delivery
 
         orderDetails.setInsurance(false);
         if (cartDetails.getTotalWeight() == null) {
@@ -207,7 +216,8 @@ public class DeliveryService {
         orderDetails.setDeliveryType(stores.getType());
 
         if (stores.getType().equalsIgnoreCase("self")) {
-            DeliveryOptions deliveryOptions = deliveryOptionRepository.findByStoreIdAndToState(orderDetails.getStoreId(), orderDetails.getDelivery().getDeliveryState());
+            DeliveryOptions deliveryOptions = deliveryOptionRepository
+                    .findByStoreIdAndToState(orderDetails.getStoreId(), orderDetails.getDelivery().getDeliveryState());
             PriceResult priceResult = new PriceResult();
             Set<PriceResult> priceResultList = new HashSet<>();
             orderDetails.setItemType(ItemType.SELF);
@@ -270,17 +280,17 @@ public class DeliveryService {
             return response;
         }
 
-        //other than self delivery
+        // other than self delivery
         else {
             List<Fulfillment> fulfillments = new ArrayList<>();
-//            if (!stores.getStoreDeliveryPeriodList().isEmpty()) {
+            // if (!stores.getStoreDeliveryPeriodList().isEmpty()) {
             for (StoreDeliveryPeriod storeDeliveryPeriod : stores.getStoreDeliveryPeriodList()) {
                 if (storeDeliveryPeriod.isEnabled()) {
                     Fulfillment fulfillment = new Fulfillment();
                     fulfillment.setFulfillment(storeDeliveryPeriod.getDeliveryPeriod());
                     fulfillments.add(fulfillment);
                 }
-//                }
+                // }
             }
 
             orderDetails.setItemType(stores.getItemType());
@@ -295,11 +305,14 @@ public class DeliveryService {
                     periods.add(s.getFulfilment());
                 }
             }
-            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository, fulfillments);
+            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository,
+                    providerConfigurationRepository, providerRepository, sequenceNumberRepository,
+                    deliverySpTypeRepository, storeDeliverySpRepository, fulfillments);
             processResult = process.GetPrice();
-            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode,
+                    "");
             if (processResult.resultCode == 0) {
-                //successfully get price from provider
+                // successfully get price from provider
                 Set<PriceResult> priceResultList = new HashSet<>();
                 List<PriceResult> lists = (List<PriceResult>) processResult.returnObject;
                 for (PriceResult list : lists) {
@@ -343,12 +356,13 @@ public class DeliveryService {
                         deliveryOrder.setDeliveryZone(list.deliveryZone);
                     }
 
-
                     BigDecimal bd = new BigDecimal("0.00");
                     if (!list.isError) {
 
                         if (deliveryType.equalsIgnoreCase("adhoc")) {
-                            DeliveryServiceCharge deliveryServiceCharge = deliveryMarkupPriceRepository.findByDeliverySpIdAndStartTimeNotNull(deliveryOrder.getDeliveryProviderId().toString());
+                            DeliveryServiceCharge deliveryServiceCharge = deliveryMarkupPriceRepository
+                                    .findByDeliverySpIdAndStartTimeNotNull(
+                                            deliveryOrder.getDeliveryProviderId().toString());
 
                             if (deliveryServiceCharge != null) {
                                 String pattern = "HH:mm:ss";
@@ -367,7 +381,8 @@ public class DeliveryService {
 
                                 Date start = null;
                                 try {
-                                    start = new SimpleDateFormat("HH:mm:ss").parse(deliveryServiceCharge.getStartTime());
+                                    start = new SimpleDateFormat("HH:mm:ss")
+                                            .parse(deliveryServiceCharge.getStartTime());
                                 } catch (ParseException e) {
                                     e.printStackTrace();
                                 }
@@ -384,11 +399,20 @@ public class DeliveryService {
                                 Calendar calendar3 = Calendar.getInstance();
                                 calendar3.setTime(end);
                                 calendar3.add(Calendar.DATE, 1);
-                                LogUtil.info(systemTransactionId, location, "CHECK TIME :  " + String.valueOf(calendar1.getTime().after(calendar2.getTime()) && calendar1.getTime().before(calendar3.getTime())), "");
-                                LogUtil.info(systemTransactionId, location, "Start TIME :  " + String.valueOf(calendar2.getTime()), "System Time : " + calendar1.getTime());
-                                LogUtil.info(systemTransactionId, location, "End Time :  " + String.valueOf(calendar3.getTime()), "System Time : " + calendar1.getTime());
-                                if (calendar1.getTime().after(calendar2.getTime()) && calendar1.getTime().before(calendar3.getTime())) {
-                                    Double totalPrice = Double.parseDouble(list.price.toString()) + deliveryServiceCharge.getServiceFee().doubleValue();
+                                LogUtil.info(systemTransactionId, location,
+                                        "CHECK TIME :  " + String.valueOf(calendar1.getTime().after(calendar2.getTime())
+                                                && calendar1.getTime().before(calendar3.getTime())),
+                                        "");
+                                LogUtil.info(systemTransactionId, location,
+                                        "Start TIME :  " + String.valueOf(calendar2.getTime()),
+                                        "System Time : " + calendar1.getTime());
+                                LogUtil.info(systemTransactionId, location,
+                                        "End Time :  " + String.valueOf(calendar3.getTime()),
+                                        "System Time : " + calendar1.getTime());
+                                if (calendar1.getTime().after(calendar2.getTime())
+                                        && calendar1.getTime().before(calendar3.getTime())) {
+                                    Double totalPrice = Double.parseDouble(list.price.toString())
+                                            + deliveryServiceCharge.getServiceFee().doubleValue();
                                     deliveryOrder.setAmount(totalPrice);
                                     deliveryOrder.setStatus("PENDING");
                                     deliveryOrder.setServiceFee(deliveryServiceCharge.getServiceFee().doubleValue());
@@ -397,7 +421,9 @@ public class DeliveryService {
                                     bd = new BigDecimal(dPrice);
                                     bd = bd.setScale(2, RoundingMode.HALF_UP);
                                 } else {
-                                    Double totalPrice = deliveryMarkupPriceRepository.getMarkupPrice(deliveryOrder.getDeliveryProviderId().toString(), Double.parseDouble(list.price.toString()));
+                                    Double totalPrice = deliveryMarkupPriceRepository.getMarkupPrice(
+                                            deliveryOrder.getDeliveryProviderId().toString(),
+                                            Double.parseDouble(list.price.toString()));
                                     deliveryOrder.setAmount(totalPrice);
                                     deliveryOrder.setStatus("PENDING");
                                     deliveryOrder.setServiceFee(totalPrice - Double.parseDouble(list.price.toString()));
@@ -411,7 +437,8 @@ public class DeliveryService {
                                 deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
                                 deliveryOrder.setStatus("PENDING");
                                 DecimalFormat decimalFormat = new DecimalFormat("##.00");
-                                double dPrice = Double.parseDouble(decimalFormat.format(Double.parseDouble(list.price.toString())));
+                                double dPrice = Double
+                                        .parseDouble(decimalFormat.format(Double.parseDouble(list.price.toString())));
                                 bd = new BigDecimal(dPrice);
                                 bd = bd.setScale(2, RoundingMode.HALF_UP);
                             }
@@ -466,7 +493,7 @@ public class DeliveryService {
                         Optional<DeliveryPeriod> deliveryPeriod = deliveryPeriodRepository.findById(list.fulfillment);
                         result.deliveryPeriod = deliveryPeriod.get();
                     }
-//                    result.deliveryPeriod = deliveryPeriod;
+                    // result.deliveryPeriod = deliveryPeriod;
                     result.vehicleType = cartDetails.getVehicleType().name();
                     result.price = bd;
                     result.refId = res.getId();
@@ -480,9 +507,9 @@ public class DeliveryService {
                 response.setSuccessStatus(HttpStatus.OK);
                 response.setData(priceResultList);
                 LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
-//                return ResponseEntity.status(HttpStatus.OK).body(response);
+                // return ResponseEntity.status(HttpStatus.OK).body(response);
             } else {
-                //fail to get price
+                // fail to get price
                 Set<PriceResult> priceResultList = new HashSet<>();
                 PriceResult priceResult = new PriceResult();
                 priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
@@ -494,13 +521,11 @@ public class DeliveryService {
                 priceResultList.add(priceResult);
                 response.setData(priceResultList);
             }
-            //generate transaction id
+            // generate transaction id
         }
-
 
         return response;
     }
-
 
     public HttpReponse submitOrder(String orderId, Long refId, SubmitDelivery submitDelivery, String url) {
 
@@ -517,7 +542,6 @@ public class DeliveryService {
             systemTransactionId = deliveryOrderOption.getSystemTransactionId();
         }
         Optional<StoreOrder> optProduct = storeOrderRepository.findById(orderId);
-
 
         LogUtil.info(logprefix, location, "", "");
         DeliveryQuotation quotation = deliveryQuotationRepository.getOne(refId);
@@ -587,22 +611,27 @@ public class DeliveryService {
         orderDetails.setDeliveryPeriod(quotation.getFulfillmentType());
         orderDetails.setInterval(quotation.getIntervalTime());
 
-        DeliveryVehicleTypes deliveryVehicleTypes = deliveryVehicleTypesRepository.findByVehicleType(quotation.getVehicleType());
+        DeliveryVehicleTypes deliveryVehicleTypes = deliveryVehicleTypesRepository
+                .findByVehicleType(quotation.getVehicleType());
         if (deliveryVehicleTypes != null) {
             orderDetails.setHeight(deliveryVehicleTypes.getHeight());
             orderDetails.setWidth(deliveryVehicleTypes.getWidth());
             orderDetails.setLength(deliveryVehicleTypes.getLength());
         }
 
-        //generate transaction id
-        LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
-        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository);
+        // generate transaction id
+        LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode()
+                + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
+        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository,
+                providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository,
+                storeDeliverySpRepository);
         ProcessResult processResult = process.SubmitOrder();
-        LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+        LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode,
+                "");
 
         if (processResult.resultCode == 0) {
-            //successfully submit order to provider
-            //store result in delivery order
+            // successfully submit order to provider
+            // store result in delivery order
             SubmitOrderResult submitOrderResult = (SubmitOrderResult) processResult.returnObject;
 
             if (deliveryOrderOption == null) {
@@ -652,7 +681,6 @@ public class DeliveryService {
                 submitOrderResult.systemTransactionId = systemTransactionId;
                 submitOrderResult.orderId = orderId;
 
-
             } else {
                 DeliveryOrder orderCreated = submitOrderResult.orderCreated;
                 deliveryOrderOption.setDeliveryQuotationId(quotation.getId());
@@ -680,14 +708,15 @@ public class DeliveryService {
 
             }
             deliveryQuotationRepository.save(quotation);
-            //assign back to orderCreated to get deliveryOrder Id
+            // assign back to orderCreated to get deliveryOrder Id
             submitOrderResult.isSuccess = true;
             response.setSuccessStatus(HttpStatus.OK);
             response.setData(submitOrderResult);
             LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
             return response;
         } else if (processResult.resultCode == 2) {
-            LogUtil.info(systemTransactionId, location, "Response with Pending Status  : " + processResult.resultCode, processResult.resultString);
+            LogUtil.info(systemTransactionId, location, "Response with Pending Status  : " + processResult.resultCode,
+                    processResult.resultString);
 
             quotation.setOrderId(orderId);
             quotation.setUpdatedDate(new Date());
@@ -701,17 +730,18 @@ public class DeliveryService {
             orderResult.orderId = orderId;
             orderResult.orderCreated = null;
 
-
             response.setData(orderResult);
             response.setMessage(processResult.resultString);
-            //fail to get price
-//            retryOrder(orderDetails);
-            RetryThread thread = new RetryThread(quotation, systemTransactionId, deliveryQuotationRepository, deliveryService, symplifiedService, new PriceResult());
+            // fail to get price
+            // retryOrder(orderDetails);
+            RetryThread thread = new RetryThread(quotation, systemTransactionId, deliveryQuotationRepository,
+                    deliveryService, symplifiedService, new PriceResult());
             thread.start();
             return response;
 
         } else {
-            LogUtil.info(systemTransactionId, location, "Response with Failed Status  : " + processResult.resultCode, processResult.resultString);
+            LogUtil.info(systemTransactionId, location, "Response with Failed Status  : " + processResult.resultCode,
+                    processResult.resultString);
             quotation.setOrderId(orderId);
             quotation.setUpdatedDate(new Date());
             deliveryQuotationRepository.save(quotation);
@@ -726,7 +756,7 @@ public class DeliveryService {
 
             response.setData(orderResult);
             response.setMessage(processResult.resultString);
-            //fail to get price
+            // fail to get price
             return response;
         }
 
@@ -738,18 +768,20 @@ public class DeliveryService {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         LogUtil.info(logprefix, location, "", "");
         HttpReponse response = new HttpReponse(url);
-        //generate transaction id
+        // generate transaction id
         String systemTransactionId = StringUtility.CreateRefID("DL");
-        //find order in delivery_orders
+        // find order in delivery_orders
         Optional<DeliveryOrder> orderDetails = deliveryOrdersRepository.findById(id);
         if (orderDetails.isPresent()) {
-            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails.get(), providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails.get(),
+                    providerRatePlanRepository, providerConfigurationRepository, providerRepository);
             ProcessResult processResult = process.CancelOrder();
-            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode,
+                    "");
             CancelOrderResult result = (CancelOrderResult) processResult.returnObject;
 
             if (result.resultCode == 0) {
-                //successfully get price from provider
+                // successfully get price from provider
                 response.setSuccessStatus(HttpStatus.OK);
                 response.setData(processResult.returnObject);
                 Optional<DeliveryOrder> deliveryOrder = deliveryOrdersRepository.findById(id);
@@ -761,7 +793,7 @@ public class DeliveryService {
             } else {
                 response.setSuccessStatus(HttpStatus.BAD_REQUEST);
                 response.setData(result);
-                //fail to get price
+                // fail to get price
                 return response;
             }
         } else {
@@ -789,7 +821,6 @@ public class DeliveryService {
         return response;
     }
 
-
     public HttpReponse placeOrder(String orderId, DeliveryQuotation quotation, SubmitDelivery submitDelivery) {
 
         String logprefix = "Delivery Service Submit Order";
@@ -806,15 +837,15 @@ public class DeliveryService {
         }
         Optional<StoreOrder> optProduct = storeOrderRepository.findById(orderId);
 
-
         LogUtil.info(logprefix, location, "", "");
-//        Optional<DeliveryQuotation> quotation = deliveryQuotationRepository.findById(refId);
+        // Optional<DeliveryQuotation> quotation =
+        // deliveryQuotationRepository.findById(refId);
         LogUtil.info(systemTransactionId, location, "Quotation : ", quotation.toString());
         LogUtil.info(systemTransactionId, location, "schedule : ", submitDelivery.toString());
         Order orderDetails = new Order();
         orderDetails.setPaymentType(optProduct.get().getPaymentType());
         orderDetails.setOrderAmount(optProduct.get().getTotal());
-//        orderDetails.setSignature(quotation.getSignature()); //TODO:ADD BACK
+        // orderDetails.setSignature(quotation.getSignature()); //TODO:ADD BACK
         orderDetails.setCustomerId(quotation.getCustomerId());
         if (quotation.getItemType() != null) {
             orderDetails.setItemType(ItemType.valueOf(quotation.getItemType()));
@@ -871,23 +902,29 @@ public class DeliveryService {
         orderDetails.setDeliveryType(stores.getType());
         orderDetails.setDeliveryPeriod(quotation.getFulfillmentType());
 
-        DeliveryVehicleTypes deliveryVehicleTypes = deliveryVehicleTypesRepository.findByVehicleType(quotation.getVehicleType());
+        DeliveryVehicleTypes deliveryVehicleTypes = deliveryVehicleTypesRepository
+                .findByVehicleType(quotation.getVehicleType());
         if (deliveryVehicleTypes != null) {
             orderDetails.setHeight(deliveryVehicleTypes.getHeight());
             orderDetails.setWidth(deliveryVehicleTypes.getWidth());
             orderDetails.setLength(deliveryVehicleTypes.getLength());
         }
 
-        System.err.println("COST CENTER CODE : " + orderDetails.getPickup().getCostCenterCode() + " STORE ID " + orderDetails.getStoreId());
-        //generate transaction id
-        LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
-        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository);
+        System.err.println("COST CENTER CODE : " + orderDetails.getPickup().getCostCenterCode() + " STORE ID "
+                + orderDetails.getStoreId());
+        // generate transaction id
+        LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode()
+                + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
+        ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository,
+                providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository,
+                storeDeliverySpRepository);
         ProcessResult processResult = process.SubmitOrder();
-        LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+        LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode,
+                "");
 
         if (processResult.resultCode == 0) {
-            //successfully submit order to provider
-            //store result in delivery order
+            // successfully submit order to provider
+            // store result in delivery order
             SubmitOrderResult submitOrderResult = (SubmitOrderResult) processResult.returnObject;
 
             if (deliveryOrderOption == null) {
@@ -949,7 +986,7 @@ public class DeliveryService {
                 submitOrderResult.orderCreated = deliveryOrderOption;
             }
             deliveryQuotationRepository.save(quotation);
-            //assign back to orderCreated to get deliveryOrder Id
+            // assign back to orderCreated to get deliveryOrder Id
             submitOrderResult.isSuccess = true;
             response.setSuccessStatus(HttpStatus.OK);
             response.setData(submitOrderResult);
@@ -960,14 +997,13 @@ public class DeliveryService {
             quotation.setUpdatedDate(new Date());
             deliveryQuotationRepository.save(quotation);
             response.setMessage(processResult.resultString);
-            //fail to get price
+            // fail to get price
             return response;
         }
 
     }
 
     public HttpReponse addPriorityFee(Long id, BigDecimal priorityFee) {
-
 
         String logprefix = "DeliveryService Add Priority Fee";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -978,8 +1014,8 @@ public class DeliveryService {
         order.get().setPriorityFee(priorityFee);
         LogUtil.info(systemTransactionId, location, "PriorityFee : ", String.valueOf(order.get().getPriorityFee()));
 
-
-        ProcessRequest process = new ProcessRequest(systemTransactionId, order.get(), providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+        ProcessRequest process = new ProcessRequest(systemTransactionId, order.get(), providerRatePlanRepository,
+                providerConfigurationRepository, providerRepository);
         ProcessResult processResult = process.addPriorityFee();
         if (processResult.resultCode == 0) {
             deliveryOrdersRepository.save(order.get());
@@ -1000,19 +1036,21 @@ public class DeliveryService {
 
         HttpReponse response = new HttpReponse();
 
-        //generate transaction id
+        // generate transaction id
         String systemTransactionId = StringUtility.CreateRefID("DL");
         LogUtil.info(systemTransactionId, location, " Find delivery order for orderId:" + orderId, "");
         Optional<DeliveryOrder> orderDetails = deliveryOrdersRepository.findById(orderId);
         if (orderDetails.isPresent()) {
 
-//            DeliveryOrder o = deliveryOrdersRepository.getOne(orderId);
-            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails.get(), providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+            // DeliveryOrder o = deliveryOrdersRepository.getOne(orderId);
+            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails.get(),
+                    providerRatePlanRepository, providerConfigurationRepository, providerRepository);
             ProcessResult processResult = process.QueryOrder();
-            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode,
+                    "");
 
             if (processResult.resultCode == 0) {
-                //successfully get status from provider
+                // successfully get status from provider
                 response.setSuccessStatus(HttpStatus.OK);
                 QueryOrderResult queryOrderResult = (QueryOrderResult) processResult.returnObject;
                 DeliveryOrder orderFound = queryOrderResult.orderFound;
@@ -1024,14 +1062,16 @@ public class DeliveryService {
                 if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.ASSIGNING_RIDER.name())) {
                     LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.AWAITING_PICKUP.name())) {
-//                    orderStatus = "AWAITING_PICKUP";
+                    // orderStatus = "AWAITING_PICKUP";
                     orderDetails.get().setDriverId(orderFound.getDriverId());
 
-//                    try {
-//                        res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
-//                    } catch (Exception ex) {
-//                        LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
-//                    }
+                    // try {
+                    // res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(),
+                    // orderStatus);
+                    // } catch (Exception ex) {
+                    // LogUtil.info(systemTransactionId, location, "Response Update Status :" +
+                    // ex.getMessage(), "");
+                    // }
                     LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
 
                 } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.BEING_DELIVERED.name())) {
@@ -1053,7 +1093,9 @@ public class DeliveryService {
                     } catch (Exception ex) {
                         LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
                     }
-                } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.CANCELED.name()) || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.REJECTED.name()) || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.EXPIRED.name())) {
+                } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.CANCELED.name())
+                        || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.REJECTED.name())
+                        || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.EXPIRED.name())) {
                     orderStatus = "FAILED_FIND_DRIVER";
                     try {
                         res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
@@ -1065,12 +1107,12 @@ public class DeliveryService {
                 getDeliveryRiderDetails(orderDetails.get().getOrderId());
                 response.setStatus(HttpStatus.OK.value());
                 LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
-//                }
+                // }
 
                 response.setData(orderDetails.get());
                 return response;
             } else {
-                //fail to get status
+                // fail to get status
                 response.setStatus(HttpStatus.NOT_ACCEPTABLE.value());
                 return response;
             }
@@ -1092,7 +1134,8 @@ public class DeliveryService {
         order.setCustomerId(quotation.get().getCustomerId());
         order.setCartId(quotation.get().getCartId());
         order.setStoreId(quotation.get().getStoreId());
-        String[] address = quotation.get().getDeliveryAddress().split(quotation.get().getDeliveryPostcode().concat(","));
+        String[] address = quotation.get().getDeliveryAddress()
+                .split(quotation.get().getDeliveryPostcode().concat(","));
         delivery.setDeliveryAddress(address[0].substring(0, address[0].length() - 1));
         delivery.setDeliveryCity(quotation.get().getDeliveryCity());
         String[] state = address[1].split(",");
@@ -1140,7 +1183,8 @@ public class DeliveryService {
                 if (order.getRiderName() == null) {
                     LogUtil.info(logprefix, location, "Request Rider Details From Provider  ", "");
 
-                    ProcessRequest process = new ProcessRequest(order.getSystemTransactionId(), order, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+                    ProcessRequest process = new ProcessRequest(order.getSystemTransactionId(), order,
+                            providerRatePlanRepository, providerConfigurationRepository, providerRepository);
                     ProcessResult processResult = process.GetDriverDetails();
                     if (processResult.resultCode == 0) {
                         Provider provider = providerRepository.findOneById(order.getDeliveryProviderId());
