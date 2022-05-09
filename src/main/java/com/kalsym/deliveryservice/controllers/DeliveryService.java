@@ -307,7 +307,7 @@ public class DeliveryService {
             }
             ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository,
                     providerConfigurationRepository, providerRepository, sequenceNumberRepository,
-                    deliverySpTypeRepository, storeDeliverySpRepository, fulfillments);
+                    deliverySpTypeRepository, storeDeliverySpRepository, fulfillments, deliveryZonePriceRepository);
             processResult = process.GetPrice();
             LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode,
                     "");

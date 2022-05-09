@@ -53,6 +53,8 @@ public class ProcessRequest {
     @Autowired
     DeliveryQuotationRepository deliveryQuotationRepository;
 
+    DeliveryZonePriceRepository deliveryZonePriceRepository;
+
     public ProcessRequest(String sysTransactionId, Order order, ProviderRatePlanRepository providerRatePlanRepository,
                           ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository,
                           SequenceNumberRepository sequenceNumberRepository, DeliverySpTypeRepository deliverySpTypeRepository, StoreDeliverySpRepository storeDeliveryDetailSp, List<Fulfillment> fulfillments) {
@@ -69,6 +71,25 @@ public class ProcessRequest {
         this.deliverySpTypeRepository = deliverySpTypeRepository;
         this.storeDeliveryDetailSp = storeDeliveryDetailSp;
         this.fulfillments = fulfillments;
+    }
+
+    public ProcessRequest(String sysTransactionId, Order order, ProviderRatePlanRepository providerRatePlanRepository,
+                          ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository,
+                          SequenceNumberRepository sequenceNumberRepository, DeliverySpTypeRepository deliverySpTypeRepository, StoreDeliverySpRepository storeDeliveryDetailSp, List<Fulfillment> fulfillments,DeliveryZonePriceRepository deliveryZonePriceRepository) {
+        this.sysTransactionId = sysTransactionId;
+        this.order = order;
+        this.logprefix = sysTransactionId;
+        this.location = "ProcessRequest";
+        this.providerRatePlanRepository = providerRatePlanRepository;
+        this.providerConfigurationRepository = providerConfigurationRepository;
+        this.providerRepository = providerRepository;
+        this.providerThreadRunning = 0;
+        this.priceResultLists = new ArrayList<>();
+        this.sequenceNumberRepository = sequenceNumberRepository;
+        this.deliverySpTypeRepository = deliverySpTypeRepository;
+        this.storeDeliveryDetailSp = storeDeliveryDetailSp;
+        this.fulfillments = fulfillments;
+        this.deliveryZonePriceRepository = deliveryZonePriceRepository;
     }
 
     public ProcessRequest(String sysTransactionId, Order order, ProviderRatePlanRepository providerRatePlanRepository,
@@ -148,7 +169,7 @@ public class ProcessRequest {
                         String fieldValue = providerConfigList.get(j).getConfigValue();
                         config.put(fieldName, fieldValue);
                     }
-                    ProviderThread dthread = new ProviderThread(this, sysTransactionId, deliverySpTypes.get(i).getProvider(), config, order, "GetPrice", sequenceNumberRepository, fulfillment);
+                    ProviderThread dthread = new ProviderThread(this, sysTransactionId, deliverySpTypes.get(i).getProvider(), config, order, "GetPrice", sequenceNumberRepository,  fulfillment, deliveryZonePriceRepository);
                     dthread.start();
                 }
             }
@@ -172,7 +193,7 @@ public class ProcessRequest {
                         String fieldValue = providerConfiguration.getConfigValue();
                         config.put(fieldName, fieldValue);
                     }
-                    ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetPrice", sequenceNumberRepository, fulfillment);
+                    ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetPrice", sequenceNumberRepository, fulfillment, deliveryZonePriceRepository);
                     dthread.start();
 
                 }
@@ -194,7 +215,7 @@ public class ProcessRequest {
                         String fieldValue = providerConfiguration.getConfigValue();
                         config.put(fieldName, fieldValue);
                     }
-                    ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetPrice", sequenceNumberRepository, fulfillment);
+                    ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetPrice", sequenceNumberRepository, fulfillment, deliveryZonePriceRepository);
                     dthread.start();
 
                 }

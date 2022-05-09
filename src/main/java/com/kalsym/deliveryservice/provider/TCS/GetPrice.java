@@ -2,6 +2,7 @@ package com.kalsym.deliveryservice.provider.TCS;
 
 import com.kalsym.deliveryservice.models.Fulfillment;
 import com.kalsym.deliveryservice.models.Order;
+import com.kalsym.deliveryservice.models.daos.DeliveryZonePrice;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
@@ -36,7 +37,7 @@ public class GetPrice extends SyncDispatcher {
     private Fulfillment fulfillment;
 
 
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment) {
+    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
         super(latch);
         this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;
@@ -49,6 +50,7 @@ public class GetPrice extends SyncDispatcher {
         this.order = order;
         this.sslVersion = (String) config.get("ssl_version");
         this.fulfillment = fulfillment;
+        this.deliveryZonePriceRepository = deliveryZonePriceRepository;
     }
 
     @Override
@@ -75,32 +77,66 @@ public class GetPrice extends SyncDispatcher {
 
         Double weight = order.getTotalWeightKg();
         if (!zonePickup.equals("null") && !zoneDelivery.equals("null") && !pickupCity.equals("null") && !deliveryCity.equals("null")) {
+            DeliveryZonePrice deliveryZonePrice;
             if (pickupCity.equals(deliveryCity)) {
+//                if (weight <= 0.5) {
+//                    lastMileLogistics = 120.00;
+//                } else if (weight > 0.5 && weight == 1) {
+//                    lastMileLogistics = 130.00;
+//                } else {
+//                    lastMileLogistics = 130 * weight;
+//                }
                 if (weight <= 0.5) {
-                    lastMileLogistics = 120.00;
-                } else if (weight > 0.5 && weight == 1) {
-                    lastMileLogistics = 130.00;
+                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(order.getDeliveryProviderId()), 0.5);
+                    lastMileLogistics = deliveryZonePrice.getWithInCity().doubleValue();
+                } else if (weight > 0.5 && weight <= 1) {
+                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(order.getDeliveryProviderId()), 1);
+                    lastMileLogistics = deliveryZonePrice.getWithInCity().doubleValue();
                 } else {
-                    lastMileLogistics = 130 * weight;
+                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(order.getDeliveryProviderId()), 1.1);
+                    lastMileLogistics = BigDecimal.valueOf(deliveryZonePrice.getWithInCity().doubleValue() * weight).doubleValue();
                 }
 
-            } else if (zonePickup.equals(zoneDelivery)) {
 
+            } else if (zonePickup.equals(zoneDelivery)) {
+/*
                 if (weight <= 0.5) {
                     lastMileLogistics = 170.00;
                 } else if (weight > 0.5 && weight == 1) {
                     lastMileLogistics = 180.00;
                 } else {
                     lastMileLogistics = 180 * weight;
+                }*/
+
+                if (weight <= 0.5) {
+                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(order.getDeliveryProviderId()), 0.5);
+                    lastMileLogistics = deliveryZonePrice.getSameZone().doubleValue();
+                } else if (weight > 0.5 && weight <= 1) {
+                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(order.getDeliveryProviderId()), 1);
+                    lastMileLogistics = deliveryZonePrice.getSameZone().doubleValue();
+                } else {
+                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(order.getDeliveryProviderId()), 1.1);
+                    lastMileLogistics = BigDecimal.valueOf(deliveryZonePrice.getSameZone().doubleValue() * weight).doubleValue();
                 }
             } else {
 
-                if (weight <= 0.5) {
+             /*   if (weight <= 0.5) {
                     lastMileLogistics = 210.00;
                 } else if (weight > 0.5 && weight == 1) {
                     lastMileLogistics = 270.00;
                 } else {
                     lastMileLogistics = 270 * weight;
+                }*/
+
+                if (weight <= 0.5) {
+                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(order.getDeliveryProviderId()), 0.5);
+                    lastMileLogistics = deliveryZonePrice.getDifferentZone().doubleValue();
+                } else if (weight > 0.5 && weight <= 1) {
+                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(order.getDeliveryProviderId()), 1);
+                    lastMileLogistics = deliveryZonePrice.getDifferentZone().doubleValue();
+                } else {
+                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(order.getDeliveryProviderId()), 1.1);
+                    lastMileLogistics = BigDecimal.valueOf(deliveryZonePrice.getDifferentZone().doubleValue() * weight).doubleValue();
                 }
             }
             fuelCharges = (lastMileLogistics * 20) / 100;

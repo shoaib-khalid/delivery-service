@@ -9,6 +9,8 @@ import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.daos.Provider;
 import com.kalsym.deliveryservice.models.daos.Store;
+import com.kalsym.deliveryservice.repositories.DeliveryZoneCityRepository;
+import com.kalsym.deliveryservice.repositories.DeliveryZonePriceRepository;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.LogUtil;
 
@@ -37,6 +39,7 @@ public class ProviderThread extends Thread implements Runnable {
     private Fulfillment fulfillment;
     private Object requestBody;
     private SequenceNumberRepository sequenceNumberRepository;
+    private DeliveryZonePriceRepository deliveryZonePriceRepository;
 
 
     public ProviderThread(ProcessRequest caller, String sysTransactionId,
@@ -53,6 +56,23 @@ public class ProviderThread extends Thread implements Runnable {
         this.deliveryOrder = null;
         this.store = null;
         this.fulfillment = fulfillment;
+    }
+
+    public ProviderThread(ProcessRequest caller, String sysTransactionId,
+                          Provider provider, HashMap providerConfig, Order order, String functionName,
+                          SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
+        this.sysTransactionId = sysTransactionId;
+        this.provider = provider;
+        this.order = order;
+        this.providerConfig = providerConfig;
+        this.caller = caller;
+        this.functionName = functionName;
+        this.spOrderId = null;
+        this.sequenceNumberRepository = sequenceNumberRepository;
+        this.deliveryOrder = null;
+        this.store = null;
+        this.fulfillment = fulfillment;
+        this.deliveryZonePriceRepository = deliveryZonePriceRepository;
     }
 
     public ProviderThread(ProcessRequest caller, String sysTransactionId,
@@ -340,7 +360,7 @@ public class ProviderThread extends Thread implements Runnable {
 
                         LogUtil.info(logprefix, location, "Response From The Class ", value.toString());
                     } else {
-                        reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository, this.fulfillment);
+                        reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository, this.fulfillment, this.deliveryZonePriceRepository);
                     }
                 } else {
                     if (provider.isExternalRequest()) {

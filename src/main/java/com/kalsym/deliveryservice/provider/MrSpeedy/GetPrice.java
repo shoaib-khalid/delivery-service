@@ -12,6 +12,7 @@ import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
+import com.kalsym.deliveryservice.repositories.DeliveryZonePriceRepository;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
@@ -36,8 +37,9 @@ public class GetPrice extends SyncDispatcher {
     private String logprefix;
     private String location = "MrSpeedyGetPrice";
     private Fulfillment fulfillment;
+    private DeliveryZonePriceRepository deliveryZonePriceRepository;
 
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment) {
+    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
 
         super(latch);
         this.systemTransactionId = systemTransactionId;
@@ -51,6 +53,7 @@ public class GetPrice extends SyncDispatcher {
         this.order = order;
         this.sslVersion = (String) config.get("ssl_version");
         this.fulfillment = fulfillment;
+        this.deliveryZonePriceRepository = deliveryZonePriceRepository;
     }
 
     @Override

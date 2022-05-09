@@ -23,7 +23,7 @@ public class DeliveryZonePrice implements Serializable {
     @Id
     private Long id;
     private String spId;
-    private double weight;
+    private Double weight;
     private BigDecimal withInCity;
     private BigDecimal sameZone;
     private BigDecimal differentZone;
