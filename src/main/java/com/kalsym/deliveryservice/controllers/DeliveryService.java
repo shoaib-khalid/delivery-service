@@ -119,7 +119,7 @@ public class DeliveryService {
         c1.set(Calendar.MINUTE, 0);
 
         Date dateOne = c1.getTime();
-        System.err.println(" TIME NEED TO PRINT : " + dateOne.getTime()/1000);
+        System.err.println(" TIME NEED TO PRINT : " + dateOne.getTime() / 1000);
 
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
         CartDetails cartDetails = symplifiedService.getTotalWeight(orderDetails.getCartId());
@@ -576,8 +576,10 @@ public class DeliveryService {
         pickup.setPickupDate(submitDelivery.getStartPickScheduleDate());
         pickup.setPickupTime(submitDelivery.getStartPickScheduleTime());
         pickup.setPickupCity(quotation.getPickupCity());
-        pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLongitude())));
-        pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLatitude())));
+        if (quotation.getPickupLongitude() != null) {
+            pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLongitude())));
+            pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLatitude())));
+        }
         Store store = storeRepository.getOne(quotation.getStoreId());
 
         if (store.getRegionCountryId().equals("PAK")) {
