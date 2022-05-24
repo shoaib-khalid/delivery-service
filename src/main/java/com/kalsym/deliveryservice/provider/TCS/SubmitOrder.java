@@ -67,7 +67,7 @@ public class SubmitOrder extends SyncDispatcher {
             } else {
                 LogUtil.info(logprefix, location, "Request failed", "");
                 SubmitOrderResult submitOrderResult = new SubmitOrderResult();
-                submitOrderResult.resultCode =-1;
+                submitOrderResult.resultCode = -1;
                 response.returnObject = submitOrderResult;
 
                 response.resultCode = -1;
@@ -135,24 +135,30 @@ public class SubmitOrder extends SyncDispatcher {
                 orderCreated.setStatus("ASSIGNING_DRIVER");
                 submitOrderResult.orderCreated = orderCreated;
                 submitOrderResult.isSuccess = true;
+                submitOrderResult.resultCode = 0;
 
                 LogUtil.info(logprefix, location, "Consignment note for TCS: " + extractedCN, "");
             } else if (code.equals("0400")) {
 
                 submitOrderResult.deliveryProviderId = order.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
+                submitOrderResult.resultCode = -1;
                 submitOrderResult.message = message;
 
                 LogUtil.info(logprefix, location, "TCS: Bad Request / Custom validation message. Message: " + message, "");
             } else if (code.equals("0404")) {
                 submitOrderResult.deliveryProviderId = order.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
+                submitOrderResult.resultCode = -1;
+
                 submitOrderResult.message = message;
 
                 LogUtil.info(logprefix, location, "TCS: Data Not Found.", "");
             } else if (code.equals("0408")) {
                 submitOrderResult.deliveryProviderId = order.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
+                submitOrderResult.resultCode = -1;
+
                 submitOrderResult.message = message;
 
                 LogUtil.info(logprefix, location, "TCS: The server is taking too long to respond, please try later.", "");
@@ -160,11 +166,17 @@ public class SubmitOrder extends SyncDispatcher {
                 LogUtil.info(logprefix, location, "TCS: An internal error has occurred.", "");
                 submitOrderResult.deliveryProviderId = order.getDeliveryProviderId();
                 submitOrderResult.isSuccess = false;
+                submitOrderResult.resultCode = -1;
+
                 submitOrderResult.message = message;
 
             }
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
+            submitOrderResult.isSuccess = false;
+            submitOrderResult.resultCode = -1;
+
+            submitOrderResult.message = ex.getMessage();
         }
         return submitOrderResult;
     }
