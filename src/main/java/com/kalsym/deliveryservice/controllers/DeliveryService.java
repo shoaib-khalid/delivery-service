@@ -576,9 +576,14 @@ public class DeliveryService {
         pickup.setPickupDate(submitDelivery.getStartPickScheduleDate());
         pickup.setPickupTime(submitDelivery.getStartPickScheduleTime());
         pickup.setPickupCity(quotation.getPickupCity());
-        if (quotation.getPickupLongitude() != null) {
-            pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLongitude())));
-            pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLatitude())));
+        try {
+            if (quotation.getPickupLongitude() != null) {
+                pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLongitude())));
+                pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getPickupLatitude())));
+            }
+        } catch (Exception ex) {
+            LogUtil.error(systemTransactionId, location, "Exception", "", ex);
+
         }
         Store store = storeRepository.getOne(quotation.getStoreId());
 
