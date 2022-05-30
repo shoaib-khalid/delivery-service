@@ -106,6 +106,9 @@ public class DeliveryService {
     @Autowired
     StoreOrderRepository storeOrderRepository;
 
+    @Autowired
+    DeliveryStoreCentersRepository deliveryStoreCenterRepository;
+
     public HttpReponse getPrice(Order orderDetails, String url) {
         String logprefix = "DeliveryService GetPrice";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -307,7 +310,7 @@ public class DeliveryService {
             }
             ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository,
                     providerConfigurationRepository, providerRepository, sequenceNumberRepository,
-                    deliverySpTypeRepository, storeDeliverySpRepository, fulfillments, deliveryZonePriceRepository);
+                    deliverySpTypeRepository, storeDeliverySpRepository, fulfillments, deliveryZonePriceRepository, deliveryStoreCenterRepository);
             processResult = process.GetPrice();
             LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode,
                     "");
@@ -534,6 +537,7 @@ public class DeliveryService {
         HttpReponse response = new HttpReponse(url);
 
         DeliveryOrder deliveryOrderOption = deliveryOrdersRepository.findByOrderId(orderId);
+
         String systemTransactionId;
 
         if (deliveryOrderOption == null) {
@@ -545,10 +549,12 @@ public class DeliveryService {
 
         LogUtil.info(logprefix, location, "", "");
         DeliveryQuotation quotation = deliveryQuotationRepository.getOne(refId);
+
         LogUtil.info(systemTransactionId, location, "Quotation : ", quotation.toString());
         LogUtil.info(systemTransactionId, location, "schedule : ", submitDelivery.toString());
         Order orderDetails = new Order();
         orderDetails.setPaymentType(optProduct.get().getPaymentType());
+        orderDetails.setPieces(quotation.getTotalPieces());
         orderDetails.setOrderAmount(optProduct.get().getTotal());
         orderDetails.setCustomerId(quotation.getCustomerId());
         orderDetails.setCustomerId(quotation.getCustomerId());
@@ -588,8 +594,9 @@ public class DeliveryService {
         Store store = storeRepository.getOne(quotation.getStoreId());
 
         if (store.getRegionCountryId().equals("PAK")) {
-            if (store.getCostCenterCode() != null) {
-                pickup.setCostCenterCode(store.getCostCenterCode());
+            DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCenterRepository.findByDeliveryProviderIdAndStoreId(quotation.getDeliveryProviderId().toString(), quotation.getStoreId());
+            if (deliveryStoreCenters != null) {
+                pickup.setCostCenterCode(deliveryStoreCenters.getCenterId());
             }
             orderDetails.setCodAmount(BigDecimal.valueOf(optProduct.get().getTotal()));
         }
@@ -601,6 +608,7 @@ public class DeliveryService {
         delivery.setDeliveryContactPhone(quotation.getDeliveryContactPhone());
         delivery.setDeliveryPostcode(quotation.getDeliveryPostcode());
         delivery.setDeliveryCity(quotation.getDeliveryCity());
+        delivery.setDeliveryContactEmail(quotation.getDeliveryContactEmail());
         try {
             delivery.setLatitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLatitude())));
             delivery.setLongitude(BigDecimal.valueOf(Double.parseDouble(quotation.getDeliveryLongitude())));
@@ -631,7 +639,7 @@ public class DeliveryService {
                 + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
         ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository,
                 providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository,
-                storeDeliverySpRepository);
+                storeDeliverySpRepository, deliveryStoreCenterRepository);
         ProcessResult processResult = process.SubmitOrder();
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode,
                 "");
@@ -924,7 +932,7 @@ public class DeliveryService {
                 + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
         ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository,
                 providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository,
-                storeDeliverySpRepository);
+                storeDeliverySpRepository,deliveryStoreCenterRepository);
         ProcessResult processResult = process.SubmitOrder();
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode,
                 "");

@@ -63,13 +63,14 @@ public class HttpsGetConn {
 
             LogUtil.info(refId, loglocation, "Sending Request to :" + targetUrl, "");
             URL url = new URL(targetUrl);
-            HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-            con.setSSLSocketFactory(sc.getSocketFactory());
-            con.setHostnameVerifier(hv);
+
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+//            con.setSSLSocketFactory(sc.getSocketFactory());
+//            con.setHostnameVerifier(hv);
             con.setConnectTimeout(connectTimeout);
             con.setReadTimeout(waitTimeout);
             con.setRequestMethod(httpMethod);
-            
+
             //Set HTTP Headers
             LogUtil.info(refId, loglocation, "Set HTTP Header","");
             Iterator it = httpHeader.entrySet().iterator();
@@ -79,13 +80,13 @@ public class HttpsGetConn {
                 con.setRequestProperty((String)pair.getKey(), (String)pair.getValue());
                 it.remove(); // avoids a ConcurrentModificationException
             }
-            
+
             con.connect();
-            
+
             int responseCode = con.getResponseCode();
             LogUtil.info(refId, loglocation, "HTTP Response code:" + responseCode, "");
             response.httpResponseCode=responseCode;
-            
+
             BufferedReader in;
             if (responseCode < HttpsURLConnection.HTTP_BAD_REQUEST) {
                 in = new BufferedReader(new InputStreamReader(con.getInputStream()));

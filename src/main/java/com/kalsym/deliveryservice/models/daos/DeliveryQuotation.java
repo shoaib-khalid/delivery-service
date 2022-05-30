@@ -65,4 +65,6 @@ public class DeliveryQuotation {
     private String pickupLongitude;
     private String deliveryLatitude;
     private String deliveryLongitude;
+    private String deliveryContactEmail;
+    private Integer totalPieces;
 }

@@ -54,7 +54,6 @@ public class GetPrice extends SyncDispatcher {
     }
 
     @Override
-
     public ProcessResult process() {
         ProcessResult response = new ProcessResult();
         String pickupCity = order.getPickup().getPickupCity();

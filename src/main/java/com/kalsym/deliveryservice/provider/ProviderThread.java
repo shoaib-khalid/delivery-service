@@ -319,6 +319,8 @@ public class ProviderThread extends Thread implements Runnable {
 
                             // Load the target class
                             beanClass = urlClassLoader.loadClass(provider.getAdditionalQueryClassName());
+                            LogUtil.info(logprefix, location, "Load the file Class: ", provider.getAdditionalQueryClassName());
+
 
                             // Create a new instance from the loaded class
                             Constructor<?> constructor = beanClass.getConstructor();
