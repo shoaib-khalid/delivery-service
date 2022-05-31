@@ -92,7 +92,7 @@ public class ProcessRequest {
 
     public ProcessRequest(String sysTransactionId, Order order, ProviderRatePlanRepository providerRatePlanRepository,
                           ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository,
-                          SequenceNumberRepository sequenceNumberRepository, DeliverySpTypeRepository deliverySpTypeRepository, StoreDeliverySpRepository storeDeliveryDetailSp,DeliveryStoreCentersRepository deliveryStoreCentersRepository) {
+                          SequenceNumberRepository sequenceNumberRepository, DeliverySpTypeRepository deliverySpTypeRepository, StoreDeliverySpRepository storeDeliveryDetailSp, DeliveryStoreCentersRepository deliveryStoreCentersRepository) {
         this.sysTransactionId = sysTransactionId;
         this.order = order;
         this.logPrefix = sysTransactionId;
@@ -158,8 +158,10 @@ public class ProcessRequest {
                     LogUtil.info(logPrefix, location, "Get Price The Provider ID IS NULL  : " + sysTransactionId + " FulfillmentType : " + deliverySpTypes.get(i).getFulfilment(), "");
 
                     DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCentersRepository.findByDeliveryProviderIdAndStoreId(deliverySpTypes.get(i).getProvider().getId().toString(), order.getStoreId());
-                    order.getPickup().setCostCenterCode(deliveryStoreCenters.getCenterId());
-                    LogUtil.info(logPrefix, location, "Store Center Code Based On the Provider : " + order.getPickup().getCostCenterCode(), "Provider Id : " + deliverySpTypes.get(i).getProvider().getId().toString());
+                    if (deliveryStoreCenters != null) {
+                        order.getPickup().setCostCenterCode(deliveryStoreCenters.getCenterId());
+                        LogUtil.info(logPrefix, location, "Store Center Code Based On the Provider : " + order.getPickup().getCostCenterCode(), "Provider Id : " + deliverySpTypes.get(i).getProvider().getId().toString());
+                    }
 
                     Fulfillment fulfillment = new Fulfillment();
                     fulfillment.setFulfillment(deliverySpTypes.get(i).getFulfilment());
@@ -187,7 +189,9 @@ public class ProcessRequest {
                     LogUtil.info(logPrefix, location, "Get Price The Store DeliverySP is Empty : " + sysTransactionId + " FulfillmentType : " + deliverySpType.getFulfilment(), "");
 
                     DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCentersRepository.findByDeliveryProviderIdAndStoreId(provider.getId().toString(), order.getStoreId());
-                    order.getPickup().setCostCenterCode(deliveryStoreCenters.getCenterId());
+                    if (deliveryStoreCenters != null) {
+                        order.getPickup().setCostCenterCode(deliveryStoreCenters.getCenterId());
+                    }
                     Fulfillment fulfillment = new Fulfillment();
 
                     fulfillment.setFulfillment(deliverySpType.getFulfilment());
@@ -210,8 +214,9 @@ public class ProcessRequest {
                     LogUtil.info(logPrefix, location, "Get Price The Store DeliverySP : " + storeDeliverySp.getStoreId() + " FulfillmentType : " + storeDeliverySp.getFulfilment(), "");
                     LogUtil.info(logPrefix, location, "Store Id : " + order.getStoreId() + " Provider Id : " + provider.getId(), "");
                     DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCentersRepository.findByDeliveryProviderIdAndStoreId(String.valueOf(provider.getId()), order.getStoreId());
-                    order.getPickup().setCostCenterCode(deliveryStoreCenters.getCenterId());
-
+                    if (deliveryStoreCenters != null) {
+                        order.getPickup().setCostCenterCode(deliveryStoreCenters.getCenterId());
+                    }
                     Fulfillment fulfillment = new Fulfillment();
                     fulfillment.setFulfillment(storeDeliverySp.getFulfilment());
                     if (fulfillment.getFulfillment().equals("FOURHOURS") || fulfillment.getFulfillment().equals("NEXTDAY") || fulfillment.getFulfillment().equals("FOURDAYS")) {
