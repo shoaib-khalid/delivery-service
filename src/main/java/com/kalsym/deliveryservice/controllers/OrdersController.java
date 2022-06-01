@@ -2,6 +2,7 @@ package com.kalsym.deliveryservice.controllers;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.*;
 import com.kalsym.deliveryservice.models.daos.*;
 import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
@@ -21,7 +22,6 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -907,6 +907,23 @@ public class OrdersController {
 
         response.setData(sortedList);
         return ResponseEntity.status(HttpStatus.OK).body(response);
+
+    }
+
+    @PostMapping(path = {"/getCity"}, name = "get-delivery-type")
+    public JsonObject getCity(HttpServletRequest request, @RequestBody Object requestBody) {
+
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = new HttpReponse(request.getRequestURI());
+        System.err.println(requestBody);
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(requestBody, LinkedHashMap.class);
+
+        JsonObject jsonResp = new Gson().fromJson(jsonString, JsonObject.class);
+        JsonObject resp = jsonResp.get("data").getAsJsonArray().get(0).getAsJsonObject().get("predictions").getAsJsonArray().get(0).getAsJsonObject();
+
+        return resp;
 
     }
 

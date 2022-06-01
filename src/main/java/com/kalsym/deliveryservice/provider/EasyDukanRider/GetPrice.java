@@ -22,6 +22,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
+import java.math.BigDecimal;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
@@ -71,7 +72,7 @@ public class GetPrice extends SyncDispatcher {
         String METHOD = "POST";
         Mac mac = null;
 
-        String getPriceUrl = getprice_url + "33.69198799999999" + "/" + "73.0570145";
+        String getPriceUrl = getprice_url + "33.69198799999999" + "/" + "73.0570145" + "/" + order.getDelivery().getDeliveryCity();
         LogUtil.info(logprefix, location, "GET PRICE URL : " + getPriceUrl, "");
         String pickupTime = "";
         if (fulfillment.getFulfillment().equals("FOURHOURS") || fulfillment.getFulfillment().equals("NEXTDAY") || fulfillment.getFulfillment().equals("FOURDAYS")) {
@@ -90,7 +91,7 @@ public class GetPrice extends SyncDispatcher {
         if (httpResult.httpResponseCode == 200) {
             LogUtil.info(logprefix, location, "Request successful", "");
             response.resultCode = 0;
-//            response.returnObject = extractResponseBody(httpResult.responseString, pickupTime);
+            response.returnObject = extractResponseBody(httpResult.responseString, pickupTime);
         } else {
             JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
             PriceResult result = new PriceResult();
@@ -103,6 +104,30 @@ public class GetPrice extends SyncDispatcher {
         }
         LogUtil.info(logprefix, location, String.valueOf(httpResult.httpResponseCode), "");
         return response;
+    }
+
+    private PriceResult extractResponseBody(String respString, String pickuptime) {
+        JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
+        String status = jsonResp.get("status").getAsString();
+        PriceResult priceResult = new PriceResult();
+        if (status.equals("SUCCESS")) {
+            String shippingFee = String.valueOf(jsonResp.get("price").getAsDouble());
+            LogUtil.info(logprefix, location, "Payment Amount for JnT:" + shippingFee, "");
+            BigDecimal bd = new BigDecimal(Double.parseDouble(shippingFee));
+            bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+            priceResult.price = bd;
+            priceResult.resultCode = 0;
+            priceResult.interval = null;
+            priceResult.fulfillment = fulfillment.getFulfillment();
+
+
+        } else {
+
+            priceResult.resultCode = -1;
+            priceResult.message = jsonResp.get("msg").getAsString();
+
+        }
+        return priceResult;
     }
 
 }

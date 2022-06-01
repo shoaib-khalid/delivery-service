@@ -4,10 +4,13 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.RequestBodies.lalamoveGetPrice.PlaceOrder;
+import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
+import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SubmitOrderResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
+import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
@@ -18,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
+import java.math.BigDecimal;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -71,10 +75,10 @@ public class SubmitOrder extends SyncDispatcher {
             if (statusCode == 200) {
                 response.resultCode = 0;
                 JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
-                spOrderId = jsonResp.get("orderRef").getAsString();
+                spOrderId = jsonResp.get("transactionId").getAsString();
                 LogUtil.info(logprefix, location, "OrderNumber in process function:" + spOrderId, "");
 //                getDetails(spOrderId);
-//                response.returnObject = extractResponseBody(httpResult.responseString);
+                response.returnObject = extractResponseBody(httpResult.responseString, spOrderId);
             } else {
                 JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
                 System.err.println("RESPONSE CODE : " + jsonResp.get("message").getAsString());
@@ -102,6 +106,33 @@ public class SubmitOrder extends SyncDispatcher {
         }
 
         return response;
+    }
+
+    private SubmitOrderResult extractResponseBody(String respString, String transactionId) {
+        JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
+        String status = jsonResp.get("status").getAsString();
+        String message = jsonResp.get("message").getAsString();
+
+        SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+        try {
+            LogUtil.info(logprefix, location, "the json resp for submitOrder " + jsonResp, "");
+            LogUtil.info(logprefix, location, "OrderNumber:" + spOrderId, "");
+
+            //extract order create
+            DeliveryOrder orderCreated = new DeliveryOrder();
+            orderCreated.setSpOrderId(transactionId);
+            orderCreated.setSpOrderName(transactionId);
+            orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
+            orderCreated.setCustomerTrackingUrl("");
+            orderCreated.setStatus(status);
+            orderCreated.setStatusDescription(message);
+            orderCreated.setStatus("ASSIGNING_DRIVER");
+
+            submitOrderResult.orderCreated = orderCreated;
+        } catch (Exception ex) {
+            LogUtil.error(logprefix, location, "Error extracting result", "", ex);
+        }
+        return submitOrderResult;
     }
 }
 
