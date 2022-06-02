@@ -62,7 +62,7 @@ public class SubmitOrder extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Process start", "");
 
 
-        String confirmOrder = this.submitOrderUrl + order.getDelivery().getLatitude() + "/" + order.getDelivery().getLongitude();
+        String confirmOrder = this.submitOrderUrl + order.getDelivery().getLatitude() + "/" + order.getDelivery().getLongitude() + "/" + order.getDelivery().getDeliveryCity();
         LogUtil.info(logprefix, location, "Confirm Delivery :" + confirmOrder, "");
 
         HashMap httpHeader = new HashMap();

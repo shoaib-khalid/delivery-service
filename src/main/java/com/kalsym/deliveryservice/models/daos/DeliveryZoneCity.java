@@ -24,5 +24,7 @@ public class DeliveryZoneCity implements Serializable{
     private String city;
     private String zone;
     private String costCenterCode;
+    private String country;
+    private String state;
 
 }

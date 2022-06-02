@@ -2,6 +2,7 @@ package com.kalsym.deliveryservice.controllers;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.*;
 import com.kalsym.deliveryservice.models.daos.*;
@@ -107,6 +108,9 @@ public class OrdersController {
 
     @Autowired
     DeliveryStoreCentersRepository deliveryStoreCenterRepository;
+
+    @Autowired
+    DeliveryZoneCityRepository deliveryZoneCityRepository;
 
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
@@ -910,22 +914,22 @@ public class OrdersController {
 
     }
 
-    @PostMapping(path = {"/getCity"}, name = "get-delivery-type")
-    public JsonObject getCity(HttpServletRequest request, @RequestBody Object requestBody) {
-
-        String logprefix = request.getRequestURI() + " ";
-        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
-        HttpReponse response = new HttpReponse(request.getRequestURI());
-        System.err.println(requestBody);
-        Gson gson = new Gson();
-        String jsonString = gson.toJson(requestBody, LinkedHashMap.class);
-
-        JsonObject jsonResp = new Gson().fromJson(jsonString, JsonObject.class);
-        JsonObject resp = jsonResp.get("data").getAsJsonArray().get(0).getAsJsonObject().get("predictions").getAsJsonArray().get(0).getAsJsonObject();
-
-        return resp;
-
-    }
+//    @PostMapping(path = {"/getTest"}, name = "get-delivery-type")
+//    public JsonObject getCity(HttpServletRequest request, @RequestBody Object requestBody) {
+//
+//        String logprefix = request.getRequestURI() + " ";
+//        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+//        HttpReponse response = new HttpReponse(request.getRequestURI());
+//        System.err.println(requestBody);
+//        Gson gson = new Gson();
+//        String jsonString = gson.toJson(requestBody, LinkedHashMap.class);
+//
+//        JsonObject jsonResp = new Gson().fromJson(jsonString, JsonObject.class);
+//        JsonObject resp = jsonResp.get("data").getAsJsonArray().get(0).getAsJsonObject().get("predictions").getAsJsonArray().get(0).getAsJsonObject();
+//
+//        return resp;
+//
+//    }
 
     @GetMapping(path = {"/getDeliveryVehicleType"}, name = "get-delivery-vehicle-type")
     public ResponseEntity<HttpReponse> getDeliveryVehicleType(HttpServletRequest request) {
@@ -945,6 +949,46 @@ public class OrdersController {
 
     }
 
+    @PostMapping(path = {"/getCity"}, name = "get-delivery-vehicle-type")
+    public ResponseEntity<Set<String>> getCity(HttpServletRequest request, @RequestBody Object json) {
+
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = new HttpReponse(request.getRequestURI());
+        Set<String> cities = new HashSet<>();
+
+        try {
+            Gson gson = new Gson();
+            String jsonString = gson.toJson(json, LinkedHashMap.class);
+
+            JsonObject res = new Gson().fromJson(jsonString, JsonObject.class);
+
+            JsonArray predictions = res.getAsJsonArray("data").get(0).getAsJsonObject().get("predictions").getAsJsonArray();
+            for (int i = 0; i < predictions.size(); i++) {
+                JsonObject p = predictions.get(i).getAsJsonObject();
+                String city = p.get("terms").getAsJsonArray().get(0).getAsJsonObject().get("value").getAsString();
+                assert cities != null;
+                cities.add(city);
+                System.err.println("City :" + p.get("terms").getAsJsonArray().get(0).getAsJsonObject().get("value"));
+                DeliveryZoneCity cit = new DeliveryZoneCity();
+                cit.setCity(city);
+                cit.setState("KualaLumpur");
+                cit.setCountry("MYS");
+                deliveryZoneCityRepository.save(cit);
+            }
+
+//            System.out.println(predictions);
+        } catch (Exception ex) {
+            System.err.println("Exception " + ex.getMessage());
+        }
+//        String id = "EXPRESS";
+//
+//        DeliveryPeriod deliveryPeriod = deliveryPeriodRepository.getOne(id);
+//        System.err.println("test - " + deliveryPeriod.toString());
+        return ResponseEntity.status(HttpStatus.OK).body(cities);
+
+    }
+//
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -130,6 +130,7 @@ public class DeliveryService {
         HttpReponse response = new HttpReponse(url);
 
         LogUtil.info(logprefix, location, "Store Details : ", stores.toString());
+        LogUtil.info(logprefix, location, "Cart Details : ", cartDetails.toString());
 
         StoreResponseData store = symplifiedService.getStore(orderDetails.getStoreId());
         orderDetails.setRegionCountry(store.getRegionCountryId());
@@ -253,6 +254,12 @@ public class DeliveryService {
                 deliveryOrder.setPickupPostcode(orderDetails.getPickup().getPickupPostcode());
                 deliveryOrder.setType(stores.getType()); // remove itemType not for self delivery
                 deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
+                deliveryOrder.setTotalPieces(orderDetails.getPieces());
+                deliveryOrder.setDeliveryContactEmail(orderDetails.getDelivery().getDeliveryContactEmail());
+                deliveryOrder.setPickupLatitude(String.valueOf(orderDetails.getPickup().getLatitude()));
+                deliveryOrder.setPickupLongitude(String.valueOf(orderDetails.getPickup().getLongitude()));
+                deliveryOrder.setDeliveryLongitude(String.valueOf(orderDetails.getDelivery().getLongitude()));
+                deliveryOrder.setDeliveryLatitude(String.valueOf(orderDetails.getDelivery().getLatitude()));
                 deliveryOrder.setVehicleType(pickup.getVehicleType().name());
                 deliveryOrder.setStatus("PENDING");
                 deliveryOrder.setCartId(orderDetails.getCartId());
