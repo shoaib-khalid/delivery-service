@@ -460,17 +460,12 @@ public class DeliveryService {
                             bd = new BigDecimal(dPrice);
                             bd = bd.setScale(2, RoundingMode.HALF_UP);
                         }
-                        if (store.getLatitude() != null) {
-                            try {
-                                deliveryOrder.setDeliveryLatitude(list.lat.toString());
-                                deliveryOrder.setDeliveryLongitude(list.log.toString());
-                                deliveryOrder.setPickupLatitude(orderDetails.getPickup().getLatitude().toString());
-                                deliveryOrder.setPickupLongitude(orderDetails.getPickup().getLongitude().toString());
-                            } catch (Exception ex) {
-                                LogUtil.info(systemTransactionId, location, "Cannot Store Lat And Long  ", "");
-
-                            }
-                        }
+                        deliveryOrder.setDeliveryContactEmail(orderDetails.getDelivery().getDeliveryContactEmail());
+                        deliveryOrder.setPickupLatitude(String.valueOf(orderDetails.getPickup().getLatitude()));
+                        deliveryOrder.setPickupLongitude(String.valueOf(orderDetails.getPickup().getLongitude()));
+                        deliveryOrder.setDeliveryLongitude(String.valueOf(orderDetails.getDelivery().getLongitude()));
+                        deliveryOrder.setDeliveryLatitude(String.valueOf(orderDetails.getDelivery().getLatitude()));
+                        deliveryOrder.setTotalPieces(orderDetails.getPieces());
 
                     } else {
                         deliveryOrder.setAmount(Double.parseDouble("0.00"));
