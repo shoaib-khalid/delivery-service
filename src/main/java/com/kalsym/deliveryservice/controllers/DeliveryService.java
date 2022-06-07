@@ -123,14 +123,28 @@ public class DeliveryService {
 
         Date dateOne = c1.getTime();
         System.err.println(" TIME NEED TO PRINT : " + dateOne.getTime() / 1000);
+        DeliveryVehicleTypes deliveryVehicleTypes = null;
 
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
         CartDetails cartDetails = symplifiedService.getTotalWeight(orderDetails.getCartId());
 
+        if (cartDetails != null) {
+            LogUtil.info(logprefix, location, "Cart Details : ", cartDetails.toString());
+
+            orderDetails.setVehicleType(cartDetails.getVehicleType());
+
+            if (cartDetails.getTotalWeight() == null) {
+                orderDetails.setTotalWeightKg(null);
+            } else {
+                orderDetails.setTotalWeightKg(cartDetails.getTotalWeight());
+            }
+            orderDetails.setPieces(cartDetails.getTotalPcs());
+
+        }
+
         HttpReponse response = new HttpReponse(url);
 
         LogUtil.info(logprefix, location, "Store Details : ", stores.toString());
-        LogUtil.info(logprefix, location, "Cart Details : ", cartDetails.toString());
 
         StoreResponseData store = symplifiedService.getStore(orderDetails.getStoreId());
         orderDetails.setRegionCountry(store.getRegionCountryId());
@@ -149,8 +163,7 @@ public class DeliveryService {
                 orderDetails.getDelivery().setDeliveryZone("null");
             }
         }
-        DeliveryVehicleTypes deliveryVehicleTypes = null;
-        orderDetails.setVehicleType(cartDetails.getVehicleType());
+
 
         if (orderDetails.getVehicleType() == null) {
             if (stores.getMaxOrderQuantityForBike() <= 10) {
@@ -200,16 +213,12 @@ public class DeliveryService {
         // More Details For Delivery
 
         orderDetails.setInsurance(false);
-        if (cartDetails.getTotalWeight() == null) {
-            orderDetails.setTotalWeightKg(null);
-        } else {
-            orderDetails.setTotalWeightKg(cartDetails.getTotalWeight());
-        }
+
         if (deliveryVehicleTypes != null) {
             orderDetails.setHeight(deliveryVehicleTypes.getHeight());
             orderDetails.setWidth(deliveryVehicleTypes.getWidth());
             orderDetails.setLength(deliveryVehicleTypes.getLength());
-            if (orderDetails.getTotalWeightKg() != null) {
+            if (orderDetails.getTotalWeightKg() == null) {
                 orderDetails.setTotalWeightKg(deliveryVehicleTypes.getWeight().doubleValue());
             }
         }
@@ -305,7 +314,6 @@ public class DeliveryService {
 
             orderDetails.setItemType(stores.getItemType());
             orderDetails.setProductCode(stores.getItemType().name());
-            orderDetails.setPieces(cartDetails.getTotalPcs());
 
             List<StoreDeliverySp> storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
             if (!storeDeliverySp.isEmpty()) {
@@ -662,10 +670,10 @@ public class DeliveryService {
                 deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
                 deliveryOrder.setItemType(orderDetails.getItemType().name());
                 deliveryOrder.setDeliveryProviderId(orderDetails.getDeliveryProviderId());
-                deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
                 deliveryOrder.setProductCode(orderDetails.getProductCode());
                 deliveryOrder.setDeliveryProviderId(orderDetails.getDeliveryProviderId());
-                deliveryOrder.setStoreId(orderDetails.getStoreId());
+                deliveryOrderOption.setStoreId(quotation.getStoreId());
+                deliveryOrderOption.setTotalWeightKg(quotation.getTotalWeightKg());
                 deliveryOrder.setSystemTransactionId(systemTransactionId);
                 deliveryOrder.setOrderId(orderId);
                 deliveryOrder.setDeliveryQuotationId(quotation.getId());
@@ -712,6 +720,8 @@ public class DeliveryService {
                 deliveryOrderOption.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
                 deliveryOrderOption.setTotalRequest(deliveryOrderOption.getTotalRequest() + 1);
                 deliveryOrderOption.setDeliveryFee(BigDecimal.valueOf(quotation.getAmount()));
+                deliveryOrderOption.setStoreId(quotation.getStoreId());
+                deliveryOrderOption.setTotalWeightKg(quotation.getTotalWeightKg());
                 deliveryOrdersRepository.save(deliveryOrderOption);
 
                 quotation.setSpOrderId(orderCreated.getSpOrderId());
@@ -934,7 +944,7 @@ public class DeliveryService {
                 + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
         ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository,
                 providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository,
-                storeDeliverySpRepository,deliveryStoreCenterRepository);
+                storeDeliverySpRepository, deliveryStoreCenterRepository);
         ProcessResult processResult = process.SubmitOrder();
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode,
                 "");
@@ -1161,9 +1171,11 @@ public class DeliveryService {
         delivery.setDeliveryContactPhone(quotation.get().getDeliveryContactPhone());
         delivery.setDeliveryPostcode(quotation.get().getDeliveryPostcode());
         order.setDelivery(delivery);
-        order.setVehicleType(VehicleType.CAR);
         order.setDeliveryProviderId(quotation.get().getDeliveryProviderId());
         order.setDeliveryPeriod(quotation.get().getFulfillmentType());
+        order.setVehicleType(VehicleType.valueOf(quotation.get().getVehicleType()));
+        order.setTotalWeightKg(quotation.get().getTotalWeightKg());
+        order.setPieces(quotation.get().getTotalPieces());
         LogUtil.info("QueryPendingDeliveryTXN", location, "Request Get Price : ", order.toString());
 
         HttpReponse getPrice = deliveryService.getPrice(order, location);
