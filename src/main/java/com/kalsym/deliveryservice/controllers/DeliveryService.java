@@ -672,8 +672,8 @@ public class DeliveryService {
                 deliveryOrder.setDeliveryProviderId(orderDetails.getDeliveryProviderId());
                 deliveryOrder.setProductCode(orderDetails.getProductCode());
                 deliveryOrder.setDeliveryProviderId(orderDetails.getDeliveryProviderId());
-                deliveryOrderOption.setStoreId(quotation.getStoreId());
-                deliveryOrderOption.setTotalWeightKg(quotation.getTotalWeightKg());
+                deliveryOrder.setStoreId(quotation.getStoreId());
+                deliveryOrder.setTotalWeightKg(quotation.getTotalWeightKg());
                 deliveryOrder.setSystemTransactionId(systemTransactionId);
                 deliveryOrder.setOrderId(orderId);
                 deliveryOrder.setDeliveryQuotationId(quotation.getId());
