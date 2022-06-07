@@ -166,6 +166,7 @@ public class ProcessRequest {
                     Fulfillment fulfillment = new Fulfillment();
                     fulfillment.setFulfillment(deliverySpTypes.get(i).getFulfilment());
                     fulfillment.setInterval(deliverySpTypes.get(i).getInterval());
+                    order.setDeliveryProviderId(deliverySpTypes.get(i).getProvider().getId());
 
                     LogUtil.info(logPrefix, location, "Find Fulfillment Type :" + f.getFulfillment(), "");
                     List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(deliverySpTypes.get(i).getProvider().getId());

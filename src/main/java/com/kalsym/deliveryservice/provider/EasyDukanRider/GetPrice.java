@@ -47,7 +47,7 @@ public class GetPrice extends SyncDispatcher {
     private DeliveryZonePriceRepository deliveryZonePriceRepository;
 
 
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
+    public GetPrice(CountDownLatch latch, Integer providerId, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
 
 
         super(latch);
@@ -72,7 +72,7 @@ public class GetPrice extends SyncDispatcher {
         String METHOD = "POST";
         Mac mac = null;
 
-        String getPriceUrl = getprice_url + "33.69198799999999" + "/" + "73.0570145" + "/" + order.getDelivery().getDeliveryCity();
+        String getPriceUrl = getprice_url + order.getDelivery().getLatitude() + "/" +order.getDelivery().getLongitude() + "/" + order.getDelivery().getDeliveryCity();
         LogUtil.info(logprefix, location, "GET PRICE URL : " + getPriceUrl, "");
         String pickupTime = "";
         if (fulfillment.getFulfillment().equals("FOURHOURS") || fulfillment.getFulfillment().equals("NEXTDAY") || fulfillment.getFulfillment().equals("FOURDAYS")) {
@@ -112,7 +112,7 @@ public class GetPrice extends SyncDispatcher {
         PriceResult priceResult = new PriceResult();
         if (status.equals("SUCCESS")) {
             String shippingFee = String.valueOf(jsonResp.get("price").getAsDouble());
-            LogUtil.info(logprefix, location, "Payment Amount for JnT:" + shippingFee, "");
+            LogUtil.info(logprefix, location, "Payment Amount for EASY DUKAN:" + shippingFee, "");
             BigDecimal bd = new BigDecimal(Double.parseDouble(shippingFee));
             bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
             priceResult.price = bd;

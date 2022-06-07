@@ -36,8 +36,10 @@ public class GetPrice extends SyncDispatcher {
     private DeliveryZonePriceRepository deliveryZonePriceRepository;
     private Fulfillment fulfillment;
 
+    private Integer providerId;
 
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
+
+    public GetPrice(CountDownLatch latch, Integer providerId, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
         super(latch);
         this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;
@@ -51,6 +53,7 @@ public class GetPrice extends SyncDispatcher {
         this.sslVersion = (String) config.get("ssl_version");
         this.fulfillment = fulfillment;
         this.deliveryZonePriceRepository = deliveryZonePriceRepository;
+        this.providerId = providerId;
     }
 
     @Override
@@ -86,13 +89,13 @@ public class GetPrice extends SyncDispatcher {
 //                    lastMileLogistics = 130 * weight;
 //                }
                 if (weight <= 0.5) {
-                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(order.getDeliveryProviderId()), 0.5);
+                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(providerId), 0.5);
                     lastMileLogistics = deliveryZonePrice.getWithInCity().doubleValue();
-                } else if (weight > 0.5 && weight <= 1) {
-                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(order.getDeliveryProviderId()), 1);
+                } else if (weight > 0.5 && weight <= 1.0) {
+                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(providerId), 1.0);
                     lastMileLogistics = deliveryZonePrice.getWithInCity().doubleValue();
                 } else {
-                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(order.getDeliveryProviderId()), 1.1);
+                    deliveryZonePrice = deliveryZonePriceRepository.findBySpIdAndWeight(String.valueOf(providerId), 1.1);
                     lastMileLogistics = BigDecimal.valueOf(deliveryZonePrice.getWithInCity().doubleValue() * weight).doubleValue();
                 }
 

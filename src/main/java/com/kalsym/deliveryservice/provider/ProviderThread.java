@@ -362,7 +362,7 @@ public class ProviderThread extends Thread implements Runnable {
 
                         LogUtil.info(logprefix, location, "Response From The Class ", value.toString());
                     } else {
-                        reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository, this.fulfillment, this.deliveryZonePriceRepository);
+                        reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, provider.getId() ,  providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository, this.fulfillment, this.deliveryZonePriceRepository);
                     }
                 } else {
                     if (provider.isExternalRequest()) {

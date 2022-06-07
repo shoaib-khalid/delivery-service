@@ -35,7 +35,7 @@ public class GetPrice extends SyncDispatcher {
     private DeliveryZonePriceRepository deliveryZonePriceRepository;
 
 
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment , DeliveryZonePriceRepository deliveryZonePriceRepository) {
+    public GetPrice(CountDownLatch latch, Integer providerId, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment , DeliveryZonePriceRepository deliveryZonePriceRepository) {
         super(latch);
         this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;
