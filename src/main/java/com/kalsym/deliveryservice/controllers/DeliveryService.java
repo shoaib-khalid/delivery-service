@@ -118,7 +118,20 @@ public class DeliveryService {
 
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
         CartDetails cartDetails = symplifiedService.getTotalWeight(orderDetails.getCartId());
+        DeliveryVehicleTypes deliveryVehicleTypes = null;
 
+        if (cartDetails != null) {
+            orderDetails.setVehicleType(cartDetails.getVehicleType());
+
+            if (cartDetails.getTotalWeight() == null) {
+                orderDetails.setTotalWeightKg(null);
+            } else {
+                orderDetails.setTotalWeightKg(cartDetails.getTotalWeight());
+            }
+            orderDetails.setPieces(cartDetails.getTotalPcs());
+        }
+
+        System.err.println("WEIGHT : " + orderDetails.getTotalWeightKg() + " VEHICLETYPE : " + orderDetails.getVehicleType());
         HttpReponse response = new HttpReponse(url);
 
         LogUtil.info(logprefix, location, "Store Details : ", stores.toString());
@@ -139,8 +152,7 @@ public class DeliveryService {
                 orderDetails.getDelivery().setDeliveryZone("null");
             }
         }
-        DeliveryVehicleTypes deliveryVehicleTypes = null;
-        orderDetails.setVehicleType(cartDetails.getVehicleType());
+
 
         if (orderDetails.getVehicleType() == null) {
             if (stores.getMaxOrderQuantityForBike() <= 10) {
@@ -180,16 +192,12 @@ public class DeliveryService {
         //More Details For Delivery
 
         orderDetails.setInsurance(false);
-        if (cartDetails.getTotalWeight() == null) {
-            orderDetails.setTotalWeightKg(null);
-        } else {
-            orderDetails.setTotalWeightKg(cartDetails.getTotalWeight());
-        }
+
         if (deliveryVehicleTypes != null) {
             orderDetails.setHeight(deliveryVehicleTypes.getHeight());
             orderDetails.setWidth(deliveryVehicleTypes.getWidth());
             orderDetails.setLength(deliveryVehicleTypes.getLength());
-            if (orderDetails.getTotalWeightKg() != null) {
+            if (orderDetails.getTotalWeightKg() == null) {
                 orderDetails.setTotalWeightKg(deliveryVehicleTypes.getWeight().doubleValue());
             }
         }
@@ -278,7 +286,6 @@ public class DeliveryService {
 
             orderDetails.setItemType(stores.getItemType());
             orderDetails.setProductCode(stores.getItemType().name());
-            orderDetails.setPieces(cartDetails.getTotalPcs());
 
             List<StoreDeliverySp> storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
             if (!storeDeliverySp.isEmpty()) {
@@ -454,7 +461,7 @@ public class DeliveryService {
                         result.deliveryPeriod = deliveryPeriod.get();
                     }
 //                    result.deliveryPeriod = deliveryPeriod;
-                    result.vehicleType = cartDetails.getVehicleType().name();
+                    result.vehicleType = deliveryOrder.getVehicleType();
                     result.price = bd;
                     result.refId = res.getId();
                     result.providerName = providerName;
@@ -885,10 +892,10 @@ public class DeliveryService {
                 deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
                 deliveryOrder.setItemType(orderDetails.getItemType().name());
                 deliveryOrder.setDeliveryProviderId(orderDetails.getDeliveryProviderId());
-                deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
-                deliveryOrder.setProductCode(orderDetails.getProductCode());
+                deliveryOrder.setTotalWeightKg(quotation.getTotalWeightKg());
+                deliveryOrder.setProductCode(quotation.getProductCode());
                 deliveryOrder.setDeliveryProviderId(orderDetails.getDeliveryProviderId());
-                deliveryOrder.setStoreId(orderDetails.getStoreId());
+                deliveryOrder.setStoreId(quotation.getStoreId());
                 deliveryOrder.setSystemTransactionId(systemTransactionId);
                 deliveryOrder.setOrderId(orderId);
                 deliveryOrder.setDeliveryQuotationId(quotation.getId());
@@ -1081,9 +1088,10 @@ public class DeliveryService {
         delivery.setDeliveryContactPhone(quotation.get().getDeliveryContactPhone());
         delivery.setDeliveryPostcode(quotation.get().getDeliveryPostcode());
         order.setDelivery(delivery);
-        order.setVehicleType(VehicleType.CAR);
         order.setDeliveryProviderId(quotation.get().getDeliveryProviderId());
         order.setDeliveryPeriod(quotation.get().getFulfillmentType());
+        order.setVehicleType(VehicleType.valueOf(quotation.get().getVehicleType()));
+        order.setTotalWeightKg(quotation.get().getTotalWeightKg());
         LogUtil.info("QueryPendingDeliveryTXN", location, "Request Get Price : ", order.toString());
 
         HttpReponse getPrice = deliveryService.getPrice(order, location);
