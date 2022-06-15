@@ -376,7 +376,7 @@ public class DeliveryService {
 
                     BigDecimal bd = new BigDecimal("0.00");
                     if (!list.isError) {
-
+//TODO: Bug Need To Be Fixed
                         if (deliveryType.equalsIgnoreCase("adhoc")) {
                             DeliveryServiceCharge deliveryServiceCharge = deliveryMarkupPriceRepository
                                     .findByDeliverySpIdAndStartTimeNotNull(
