@@ -383,6 +383,9 @@ public class ProcessRequest {
         LogUtil.info(logPrefix, location, "ProviderId:" + deliveryOrder.getDeliveryProviderId() + " SpOrderId:" + deliveryOrder.getSpOrderId(), "");
         Optional<Provider> provider = providerRepository.findById(deliveryOrder.getDeliveryProviderId());
         List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(deliveryOrder.getDeliveryProviderId());
+        if (provider.get().getQueryOrderClassname().equals(null)) {
+            System.err.println("PRINT HERE IF NULL");
+        }
         HashMap config = new HashMap();
         for (int j = 0; j < providerConfigList.size(); j++) {
             String fieldName = providerConfigList.get(j).getId().getConfigField();
@@ -417,48 +420,77 @@ public class ProcessRequest {
         return response;
     }
 
-    public ProcessResult ProcessCallback(String spIP, ProviderIpRepository providerIpRepository, int providerId) {
+    public ProcessResult ProcessCallback(String spIP, ProviderIpRepository providerIpRepository, int id) {
         //get provider rate plan  
         LogUtil.info(logPrefix, location, "Caller IP:" + spIP, "");
         //get provider based on IP
         Optional<ProviderIp> spId = providerIpRepository.findById(spIP);
 
         ProcessResult response = new ProcessResult();
-        //if (spId.isPresent()) {
-        //int providerId = spId.get().getSpId();
-//        int providerId = 1;
-        LogUtil.info(logPrefix, location, "Provider found. SpId:" + providerId, "");
-        Optional<Provider> provider = providerRepository.findById(providerId);
-        List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(providerId);
-        HashMap config = new HashMap();
-        for (int j = 0; j < providerConfigList.size(); j++) {
-            String fieldName = providerConfigList.get(j).getId().getConfigField();
-            String fieldValue = providerConfigList.get(j).getConfigValue();
-            config.put(fieldName, fieldValue);
-        }
-        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider.get(), config, requestBody, "ProviderCallback");
-        dthread.start();
+        if (spId.isPresent()) {
+            int providerId = spId.get().getSpId();
+            LogUtil.info(logPrefix, location, "Provider found. SpId:" + providerId, "");
+            Optional<Provider> provider = providerRepository.findById(providerId);
+            List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(providerId);
+            HashMap config = new HashMap();
+            for (int j = 0; j < providerConfigList.size(); j++) {
+                String fieldName = providerConfigList.get(j).getId().getConfigField();
+                String fieldValue = providerConfigList.get(j).getConfigValue();
+                config.put(fieldName, fieldValue);
+            }
+            ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider.get(), config, requestBody, "ProviderCallback");
+            dthread.start();
 
-        try {
-            Thread.sleep(100);
-        } catch (Exception ex) {
-        }
-
-        while (providerThreadRunning > 0) {
             try {
-                Thread.sleep(500);
+                Thread.sleep(100);
             } catch (Exception ex) {
             }
-            //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
-        }
 
-        response.resultCode = 0;
-        response.returnObject = spCallbackResult;
-        /*} else {
-            LogUtil.info(logprefix, location, "IP not recognize", "");
-            response.resultCode=-1;
-            response.returnObject=null;
-        }*/
+            while (providerThreadRunning > 0) {
+                try {
+                    Thread.sleep(500);
+                } catch (Exception ex) {
+                }
+                //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
+            }
+
+            response.resultCode = 0;
+            response.returnObject = spCallbackResult;
+        } else if (id != 0) {
+
+            LogUtil.info(logPrefix, location, "Provider found. SpId:" + id, "");
+            Optional<Provider> provider = providerRepository.findById(id);
+            List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(id);
+            HashMap config = new HashMap();
+            for (int j = 0; j < providerConfigList.size(); j++) {
+                String fieldName = providerConfigList.get(j).getId().getConfigField();
+                String fieldValue = providerConfigList.get(j).getConfigValue();
+                config.put(fieldName, fieldValue);
+            }
+            ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider.get(), config, requestBody, "ProviderCallback");
+            dthread.start();
+
+            try {
+                Thread.sleep(100);
+            } catch (Exception ex) {
+            }
+
+            while (providerThreadRunning > 0) {
+                try {
+                    Thread.sleep(500);
+                } catch (Exception ex) {
+                }
+                //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
+            }
+
+            response.resultCode = 0;
+            response.returnObject = spCallbackResult;
+
+        } else {
+            LogUtil.info(logPrefix, location, "IP not recognize", "");
+            response.resultCode = -1;
+            response.returnObject = null;
+        }
 
         LogUtil.info(logPrefix, location, "ProcessCallback finish. resultCode:" + response.resultCode, " spCallbackResult:" + spCallbackResult);
         return response;
