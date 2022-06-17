@@ -40,6 +40,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus.ASSIGNING_RIDER;
+
 /**
  * @author Sarosh
  * @updateBy Irasakumar
@@ -500,6 +502,7 @@ public class OrdersController {
             SpCallbackResult spCallbackResult = (SpCallbackResult) processResult.returnObject;
             String spOrderId = spCallbackResult.spOrderId;
             String status = spCallbackResult.status;
+            String systemStatus = spCallbackResult.systemStatus;
 
             int spId = spCallbackResult.providerId;
             DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
@@ -510,38 +513,44 @@ public class OrdersController {
                 String res;
                 String deliveryId = spCallbackResult.driverId;
                 // change from order status codes to delivery status codes.
-                switch (status) {
-                    case "new":
-                    case "available":
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                switch (systemStatus) {
+                    case "ASSIGNING_RIDER":
                         break;
-                    case "courier_assigned":
-                    case "courier_departed":
+                    case "AWAITING_PICKUP":
                         deliveryOrder.setDriverId(deliveryId);
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
                         break;
-                    case "parcel_picked_up":
-                    case "courier_arrived":
+                    case "BEING_DELIVERED":
                         deliveryOrder.setDriverId(deliveryId);
                         orderStatus = "BEING_DELIVERED";
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
                         res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                         break;
-                    case "finished":
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+                    case "COMPLETED":
                         orderStatus = "DELIVERED_TO_CUSTOMER";
                         res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                         break;
-                    case "canceled":
+                    case "REJECTED":
                         orderStatus = "FAILED_FIND_DRIVER";
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.REJECTED.name());
                         res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                         break;
                     default:
                         deliveryOrder.setStatus(status);
                         break;
                 }
+                deliveryOrder.setSystemStatus(systemStatus);
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
+
+                if (!deliveryOrder.getRiderCarPlateNo().isEmpty()) {
+                    deliveryOrder.setRiderPhoneNo(spCallbackResult.driveNoPlate);
+                }
+                if (!deliveryOrder.getRiderName().isEmpty()) {
+                    deliveryOrder.setRiderName(spCallbackResult.riderName);
+                }
+                if (!deliveryOrder.getRiderPhoneNo().isEmpty()) {
+                    deliveryOrder.setRiderPhoneNo(spCallbackResult.riderPhone);
+                }
+                if (!deliveryOrder.getCustomerTrackingUrl().isEmpty()) {
+                    deliveryOrder.setCustomerTrackingUrl(spCallbackResult.trackingUrl);
+                }
                 DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
 
                 DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
@@ -629,7 +638,7 @@ public class OrdersController {
                     String res;
                     // change from order status codes to delivery status codes.
                     if (status.equals("ASSIGNING_DRIVER")) {
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                        deliveryOrder.setSystemStatus(ASSIGNING_RIDER.name());
                     } else if (status.equals("ON_GOING")) {
                         if (deliveryOrder.getDriverId() == null) {
                             deliveryOrder.setDriverId(deliveryId);
@@ -668,7 +677,6 @@ public class OrdersController {
 
                         orderStatusRepository.save(notExistStatus); //SAVE ORDER STATUS LIST
                     }
-
 
                     getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
                 } else {
@@ -932,11 +940,6 @@ public class OrdersController {
                 mainCategory.add(c);
             }
         }
-//        String id = "EXPRESS";
-//
-//        DeliveryPeriod deliveryPeriod = deliveryPeriodRepository.getOne(id);
-//        System.err.println("test - " + deliveryPeriod.toString());
-
         List<DeliveryMainType> sortedList = mainCategory.stream()
                 .sorted(Comparator.comparingLong(DeliveryMainType::getId))
                 .collect(Collectors.toList());
@@ -947,22 +950,6 @@ public class OrdersController {
 
     }
 
-//    @PostMapping(path = {"/getTest"}, name = "get-delivery-type")
-//    public JsonObject getCity(HttpServletRequest request, @RequestBody Object requestBody) {
-//
-//        String logprefix = request.getRequestURI() + " ";
-//        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
-//        HttpReponse response = new HttpReponse(request.getRequestURI());
-//        System.err.println(requestBody);
-//        Gson gson = new Gson();
-//        String jsonString = gson.toJson(requestBody, LinkedHashMap.class);
-//
-//        JsonObject jsonResp = new Gson().fromJson(jsonString, JsonObject.class);
-//        JsonObject resp = jsonResp.get("data").getAsJsonArray().get(0).getAsJsonObject().get("predictions").getAsJsonArray().get(0).getAsJsonObject();
-//
-//        return resp;
-//
-//    }
 
     @GetMapping(path = {"/getDeliveryVehicleType"}, name = "get-delivery-vehicle-type")
     public ResponseEntity<HttpReponse> getDeliveryVehicleType(HttpServletRequest request) {
@@ -973,10 +960,6 @@ public class OrdersController {
 
         List<DeliveryVehicleTypes> deliveryVehicleTypes = deliveryVehicleTypesRepository.findAllByView(true);
 
-//        String id = "EXPRESS";
-//
-//        DeliveryPeriod deliveryPeriod = deliveryPeriodRepository.getOne(id);
-//        System.err.println("test - " + deliveryPeriod.toString());
         response.setData(deliveryVehicleTypes);
         return ResponseEntity.status(HttpStatus.OK).body(response);
 
@@ -1009,19 +992,14 @@ public class OrdersController {
                 cit.setCountry("MYS");
                 deliveryZoneCityRepository.save(cit);
             }
-
-//            System.out.println(predictions);
         } catch (Exception ex) {
             System.err.println("Exception " + ex.getMessage());
         }
-//        String id = "EXPRESS";
-//
-//        DeliveryPeriod deliveryPeriod = deliveryPeriodRepository.getOne(id);
-//        System.err.println("test - " + deliveryPeriod.toString());
+
         return ResponseEntity.status(HttpStatus.OK).body(cities);
 
     }
-//
+
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)

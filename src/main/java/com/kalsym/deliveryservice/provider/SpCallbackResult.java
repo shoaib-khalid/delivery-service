@@ -5,6 +5,7 @@
 package com.kalsym.deliveryservice.provider;
 
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
+import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
 
 /**
  *
@@ -18,4 +19,7 @@ public class SpCallbackResult {
     public String riderName;
     public String riderPhone;
     public String systemStatus;
+    public String trackingUrl;
+    public String driveNoPlate;
+
 }
