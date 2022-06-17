@@ -10,6 +10,7 @@ import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.QueryOrderResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.utils.HttpResult;
+import com.kalsym.deliveryservice.utils.HttpsGetConn;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import org.springframework.http.HttpEntity;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
@@ -69,16 +71,19 @@ public class QueryOrder extends SyncDispatcher {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
         headers.add("x-bb-user-token", authToken);
-        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(postParameters, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> responses = restTemplate.exchange(queryOrder_url + spOrderId, HttpMethod.GET, request, String.class);
+//        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(postParameters, headers);
+//        RestTemplate restTemplate = new RestTemplate();
+//        ResponseEntity<String> responses = restTemplate.exchange(queryOrder_url + spOrderId, HttpMethod.GET, request, String.class);
 
-        int statusCode = responses.getStatusCode().value();
-        LogUtil.info(logprefix, location, "Responses", responses.getBody());
+        HttpResult httpResult = HttpsGetConn.SendHttpsRequest("GET", this.systemTransactionId, queryOrder_url + spOrderId, httpHeader, this.connectTimeout, this.waitTimeout);
+
+
+        int statusCode = httpResult.httpResponseCode;
+        LogUtil.info(logprefix, location, "Responses", httpResult.responseString);
         if (statusCode == 200) {
             response.resultCode = 0;
-            LogUtil.info(logprefix, location, "Bykea Response for Submit Order: " + responses.getBody(), "");
-            response.returnObject = extractResponseBody(responses.getBody());
+            LogUtil.info(logprefix, location, "Bykea Response for Submit Order: " + httpResult.responseString, "");
+            response.returnObject = extractResponseBody(httpResult.responseString);
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
             QueryOrderResult queryOrderResult = new QueryOrderResult();
@@ -131,9 +136,12 @@ public class QueryOrder extends SyncDispatcher {
         httpHeader.put("Content-Type", "application/json");
 
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.authUrl, httpHeader, object.toString(), this.connectTimeout, this.waitTimeout);
-
         if (httpResult.httpResponseCode == 200) {
-            LogUtil.info(logprefix, location, "Request successful", "");
+            JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
+            String token = jsonResp.get("data").getAsJsonObject().get("token").getAsString();
+
+            LogUtil.info(logprefix, location, "Request successful token : ", token);
+            return token;
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
         }

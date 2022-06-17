@@ -133,8 +133,12 @@ public class SubmitOrder extends SyncDispatcher {
         dropoff.addProperty("lng", order.getDelivery().getLongitude());
         dropoff.addProperty("address", order.getDelivery().getDeliveryAddress());
         dropoff.addProperty("gps_address", order.getDelivery().getDeliveryAddress());
+        if (order.getRemarks() != null) {
+            details.addProperty("voice_note", order.getRemarks());
 
-        details.addProperty("voice_note", order.getRemarks());
+        } else {
+            details.addProperty("voice_note", order.getOrderId());
+        }
         details.addProperty("parcel_value", order.getCodAmount());
         details.addProperty("reference", reference);
         details.addProperty("insurance", true);
@@ -157,15 +161,15 @@ public class SubmitOrder extends SyncDispatcher {
 
         SubmitOrderResult submitOrderResult = new SubmitOrderResult();
         try {
-            String transactionId = jsonResp.get("data").getAsJsonObject().get("bookings").getAsJsonArray().get(0).getAsJsonObject().get("booking_no").getAsString();
-
+            String transactionId = jsonResp.get("data").getAsJsonObject().get("bookings").getAsJsonArray().get(0).getAsJsonObject().get("booking_id").getAsString();
+            String spOrderName =  jsonResp.get("data").getAsJsonObject().get("bookings").getAsJsonArray().get(0).getAsJsonObject().get("booking_no").getAsString();
             LogUtil.info(logprefix, location, "the json resp for submitOrder " + jsonResp, "");
             LogUtil.info(logprefix, location, "OrderNumber:" + spOrderId, "");
 
             //extract order create
             DeliveryOrder orderCreated = new DeliveryOrder();
             orderCreated.setSpOrderId(transactionId);
-            orderCreated.setSpOrderName(transactionId);
+            orderCreated.setSpOrderName(spOrderName);
             orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
             orderCreated.setCustomerTrackingUrl("");
             orderCreated.setStatus(DeliveryCompletionStatus.ASSIGNING_DRIVER.name());
@@ -189,9 +193,12 @@ public class SubmitOrder extends SyncDispatcher {
         httpHeader.put("Content-Type", "application/json");
 
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.auth_url, httpHeader, object.toString(), this.connectTimeout, this.waitTimeout);
-
         if (httpResult.httpResponseCode == 200) {
-            LogUtil.info(logprefix, location, "Request successful", "");
+            JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
+            String token = jsonResp.get("data").getAsJsonObject().get("token").getAsString();
+
+            LogUtil.info(logprefix, location, "Request successful token : ", token);
+            return token;
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
         }
