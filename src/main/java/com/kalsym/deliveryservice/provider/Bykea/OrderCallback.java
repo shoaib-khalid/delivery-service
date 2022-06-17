@@ -63,9 +63,9 @@ public class OrderCallback extends SyncDispatcher {
                 case "booking.accepted":
                 case "booking.arrived":
                 case "booking.tracking_available":
-                    driverId = jsonBody.get("trip_id").getAsString();
+//                    driverId = jsonBody.get("data").getAsJsonObject().get("trip_id").getAsString();
                     try {
-                        trackingLink = jsonBody.get("data").getAsJsonObject().get("tracking_link").getAsString();
+                        trackingLink = jsonBody.get("data").getAsJsonObject().get("tracking_url").getAsString();
                     } catch (Exception ex) {
                         LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Tracking Url: " + ex.getMessage());
                     }
@@ -91,16 +91,14 @@ public class OrderCallback extends SyncDispatcher {
                     systemStatus = DeliveryCompletionStatus.BEING_DELIVERED.name();
                     break;
                 case "booking.finished":
+                case "booking.feedback.partner":
                     systemStatus = DeliveryCompletionStatus.COMPLETED.name();
                     break;
                 case "booking.expired":
                 case "booking.cancelled.partner":
                     systemStatus = DeliveryCompletionStatus.CANCELED.name();
                     break;
-                case "booking.feedback.partner":
-                    break;
             }
-
 
             callbackResult.spOrderId = spOrderId;
             callbackResult.status = status;
