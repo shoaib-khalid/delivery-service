@@ -69,6 +69,8 @@ public class SubmitOrder extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Confirm Delivery ", submitOrderUrl);
 
         String authToken = getToken();
+        LogUtil.info(logprefix, location, "Get Token : {", authToken + "}");
+
 
         String requestBody = generateRequestBody();
 
@@ -162,7 +164,7 @@ public class SubmitOrder extends SyncDispatcher {
         SubmitOrderResult submitOrderResult = new SubmitOrderResult();
         try {
             String transactionId = jsonResp.get("data").getAsJsonObject().get("bookings").getAsJsonArray().get(0).getAsJsonObject().get("booking_id").getAsString();
-            String spOrderName =  jsonResp.get("data").getAsJsonObject().get("bookings").getAsJsonArray().get(0).getAsJsonObject().get("booking_no").getAsString();
+            String spOrderName = jsonResp.get("data").getAsJsonObject().get("bookings").getAsJsonArray().get(0).getAsJsonObject().get("booking_no").getAsString();
             LogUtil.info(logprefix, location, "the json resp for submitOrder " + jsonResp, "");
             LogUtil.info(logprefix, location, "OrderNumber:" + spOrderId, "");
 
@@ -193,6 +195,8 @@ public class SubmitOrder extends SyncDispatcher {
         httpHeader.put("Content-Type", "application/json");
 
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.auth_url, httpHeader, object.toString(), this.connectTimeout, this.waitTimeout);
+        LogUtil.info(logprefix, location, "Response : ", httpResult.responseString);
+
         if (httpResult.httpResponseCode == 200) {
             JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
             String token = jsonResp.get("data").getAsJsonObject().get("token").getAsString();
