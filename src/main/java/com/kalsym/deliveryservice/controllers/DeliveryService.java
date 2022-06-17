@@ -733,6 +733,20 @@ public class DeliveryService {
                     existStatus.setSpOrderId(o.getSpOrderId());
                     orderStatusRepository.save(existStatus); //SAVE ORDER STATUS LIST
                 }
+                else{
+                    DeliveryOrderStatus orderStatus = new DeliveryOrderStatus();
+
+                    orderStatus.setOrder(o);
+                    orderStatus.setSpOrderId(orderCreated.getSpOrderId());
+                    orderStatus.setStatus(o.getStatus());
+                    orderStatus.setDeliveryCompletionStatus(o.getSystemStatus());
+                    orderStatus.setDescription(o.getStatusDescription());
+                    orderStatus.setUpdated(new Date());
+                    orderStatus.setSystemTransactionId(o.getSystemTransactionId());
+                    orderStatus.setOrderId(o.getOrderId());
+
+                    orderStatusRepository.save(orderStatus);
+                }
 
                 quotation.setSpOrderId(orderCreated.getSpOrderId());
                 quotation.setOrderId(orderId);

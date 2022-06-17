@@ -21,6 +21,7 @@ import java.util.Date;
 @ToString
 public class DeliveryOrderStatus {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String orderId;
     String spOrderId;
