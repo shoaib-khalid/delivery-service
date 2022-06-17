@@ -495,7 +495,7 @@ public class OrdersController {
         String IP = request.getRemoteAddr();
         LogUtil.info(logprefix, location, "Get Provider List : ", IP);
         ProcessRequest process = new ProcessRequest(systemTransactionId, requestBody, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 0);
+        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 10);
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
         if (processResult.resultCode == 0) {
@@ -540,35 +540,37 @@ public class OrdersController {
                 deliveryOrder.setSystemStatus(systemStatus);
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
 
-                if (!deliveryOrder.getRiderCarPlateNo().isEmpty()) {
+                if (deliveryOrder.getRiderCarPlateNo() != null) {
                     deliveryOrder.setRiderPhoneNo(spCallbackResult.driveNoPlate);
                 }
-                if (!deliveryOrder.getRiderName().isEmpty()) {
+                if (deliveryOrder.getRiderName() != null) {
                     deliveryOrder.setRiderName(spCallbackResult.riderName);
                 }
-                if (!deliveryOrder.getRiderPhoneNo().isEmpty()) {
+                if (deliveryOrder.getRiderPhoneNo() != null) {
                     deliveryOrder.setRiderPhoneNo(spCallbackResult.riderPhone);
                 }
-                if (!deliveryOrder.getCustomerTrackingUrl().isEmpty()) {
+                if (deliveryOrder.getCustomerTrackingUrl() != null) {
                     deliveryOrder.setCustomerTrackingUrl(spCallbackResult.trackingUrl);
                 }
                 DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
-
+                System.err.println(o.getId());
                 DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
                 if (notExistStatus == null) {
-                    notExistStatus.setOrder(o);
-                    notExistStatus.setSpOrderId(o.getSpOrderId());
-                    notExistStatus.setStatus(o.getStatus());
-                    notExistStatus.setDeliveryCompletionStatus(o.getSystemStatus());
-                    notExistStatus.setDescription(o.getStatusDescription());
-                    notExistStatus.setUpdated(new Date());
-                    notExistStatus.setSystemTransactionId(o.getSystemTransactionId());
-                    notExistStatus.setOrderId(o.getOrderId());
+//                    assert false;
+                    DeliveryOrderStatus order = new DeliveryOrderStatus();
+                    order.setOrder(o);
+                    order.setSpOrderId(o.getSpOrderId());
+                    order.setStatus(o.getStatus());
+                    order.setDeliveryCompletionStatus(o.getSystemStatus());
+                    order.setDescription(o.getStatusDescription());
+                    order.setUpdated(new Date());
+                    order.setSystemTransactionId(o.getSystemTransactionId());
+                    order.setOrderId(o.getOrderId());
 
-                    orderStatusRepository.save(notExistStatus); //SAVE ORDER STATUS LIST
+                    orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
                 }
 
-                if (!deliveryId.isEmpty()) {
+                if (deliveryId != null) {
                     getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
                 }
             } else {
@@ -667,16 +669,17 @@ public class OrdersController {
 
                     DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
                     if (notExistStatus == null) {
-                        notExistStatus.setOrder(o);
-                        notExistStatus.setSpOrderId(o.getSpOrderId());
-                        notExistStatus.setStatus(o.getStatus());
-                        notExistStatus.setDeliveryCompletionStatus(o.getSystemStatus());
-                        notExistStatus.setDescription(o.getStatusDescription());
-                        notExistStatus.setUpdated(new Date());
-                        notExistStatus.setSystemTransactionId(o.getSystemTransactionId());
-                        notExistStatus.setOrderId(o.getOrderId());
+                        DeliveryOrderStatus order = new DeliveryOrderStatus();
+                        order.setOrder(o);
+                        order.setSpOrderId(o.getSpOrderId());
+                        order.setStatus(o.getStatus());
+                        order.setDeliveryCompletionStatus(o.getSystemStatus());
+                        order.setDescription(o.getStatusDescription());
+                        order.setUpdated(new Date());
+                        order.setSystemTransactionId(o.getSystemTransactionId());
+                        order.setOrderId(o.getOrderId());
 
-                        orderStatusRepository.save(notExistStatus); //SAVE ORDER STATUS LIST
+                        orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
                     }
 
                     getDeliveryRiderDetails(request, deliveryOrder.getOrderId());

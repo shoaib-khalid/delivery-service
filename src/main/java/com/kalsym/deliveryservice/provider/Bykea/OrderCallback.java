@@ -48,7 +48,7 @@ public class OrderCallback extends SyncDispatcher {
         SpCallbackResult callbackResult = new SpCallbackResult();
         try {
             String status = jsonBody.get("event").getAsString();
-            String spOrderId = jsonBody.get("trip_id").getAsString();
+            String spOrderId = jsonBody.get("data").getAsJsonObject().get("trip_id").getAsString();
             String driverId = "";
             String riderName = "";
             String riderPhone = "";
