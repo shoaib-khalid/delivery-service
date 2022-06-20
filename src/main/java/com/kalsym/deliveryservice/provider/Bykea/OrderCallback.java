@@ -62,7 +62,7 @@ public class OrderCallback extends SyncDispatcher {
                     break;
                 case "booking.accepted":
                 case "booking.arrived":
-                case "booking.tracking_available":
+                case "booking.updated.trackinglink":
 //                    driverId = jsonBody.get("data").getAsJsonObject().get("trip_id").getAsString();
                     try {
                         trackingLink = jsonBody.get("data").getAsJsonObject().get("tracking_url").getAsString();

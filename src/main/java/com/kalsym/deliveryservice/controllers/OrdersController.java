@@ -114,8 +114,8 @@ public class OrdersController {
     @Autowired
     DeliveryZoneCityRepository deliveryZoneCityRepository;
 
-    @Autowired
-    DeliveryOrderStatusRepository orderStatusRepository;
+//    @Autowired
+//    DeliveryOrderStatusRepository orderStatusRepository;
 
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
@@ -554,21 +554,21 @@ public class OrdersController {
                 }
                 DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
                 System.err.println(o.getId());
-                DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
-                if (notExistStatus == null) {
-//                    assert false;
-                    DeliveryOrderStatus order = new DeliveryOrderStatus();
-                    order.setOrder(o);
-                    order.setSpOrderId(o.getSpOrderId());
-                    order.setStatus(o.getStatus());
-                    order.setDeliveryCompletionStatus(o.getSystemStatus());
-                    order.setDescription(o.getStatusDescription());
-                    order.setUpdated(new Date());
-                    order.setSystemTransactionId(o.getSystemTransactionId());
-                    order.setOrderId(o.getOrderId());
-
-                    orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
-                }
+//                DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
+//                if (notExistStatus == null) {
+////                    assert false;
+//                    DeliveryOrderStatus order = new DeliveryOrderStatus();
+//                    order.setOrder(o);
+//                    order.setSpOrderId(o.getSpOrderId());
+//                    order.setStatus(o.getStatus());
+//                    order.setDeliveryCompletionStatus(o.getSystemStatus());
+//                    order.setDescription(o.getStatusDescription());
+//                    order.setUpdated(new Date());
+//                    order.setSystemTransactionId(o.getSystemTransactionId());
+//                    order.setOrderId(o.getOrderId());
+//
+//                    orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
+//                }
 
                 if (deliveryId != null) {
                     getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
@@ -667,20 +667,20 @@ public class OrdersController {
                     deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                     DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
 
-                    DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
-                    if (notExistStatus == null) {
-                        DeliveryOrderStatus order = new DeliveryOrderStatus();
-                        order.setOrder(o);
-                        order.setSpOrderId(o.getSpOrderId());
-                        order.setStatus(o.getStatus());
-                        order.setDeliveryCompletionStatus(o.getSystemStatus());
-                        order.setDescription(o.getStatusDescription());
-                        order.setUpdated(new Date());
-                        order.setSystemTransactionId(o.getSystemTransactionId());
-                        order.setOrderId(o.getOrderId());
-
-                        orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
-                    }
+//                    DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
+//                    if (notExistStatus == null) {
+//                        DeliveryOrderStatus order = new DeliveryOrderStatus();
+//                        order.setOrder(o);
+//                        order.setSpOrderId(o.getSpOrderId());
+//                        order.setStatus(o.getStatus());
+//                        order.setDeliveryCompletionStatus(o.getSystemStatus());
+//                        order.setDescription(o.getStatusDescription());
+//                        order.setUpdated(new Date());
+//                        order.setSystemTransactionId(o.getSystemTransactionId());
+//                        order.setOrderId(o.getOrderId());
+//
+//                        orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
+//                    }
 
                     getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
                 } else {
