@@ -1,4 +1,37 @@
 ##############################################################################################
+# **Version v.2.10.7| 21 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Bug Fix For Staging
+
+
+DROP FUNCTION IF EXISTS symplified.getMarkupPrice;
+DELIMITER $$
+$$
+CREATE DEFINER=`root`@`%` FUNCTION `symplified`.`getMarkupPrice`(deliveryId VARCHAR(50), deliveryPrice decimal(10,2)) RETURNS decimal(10,2)
+DETERMINISTIC
+BEGIN
+
+	DECLARE newPrice DECIMAL(10,2);
+	DECLARE currentPrice DECIMAL(10,2);
+	DECLARE serviceFees DECIMAL(10,2);
+
+	
+	SELECT dsc.serviceFee INTO serviceFees FROM symplified.delivery_service_charge dsc WHERE dsc.deliverySpId = deliveryId AND basedOnPrice = TRUE AND dsc.priceBelowRange >= deliveryPrice  LIMIT 1 ;
+	IF (serviceFees != NULL) THEN
+		SET newPrice = 	serviceFees + deliveryPrice;
+		RETURN newPrice;
+	ELSE
+		SELECT dsc.serviceFee INTO serviceFees FROM symplified.delivery_service_charge dsc WHERE dsc.deliverySpId = deliveryId AND basedOnPrice = TRUE AND  deliveryPrice >=  dsc.priceBelowRange ORDER BY dsc.serviceFee DESC LIMIT 1;
+		SET newPrice = 	serviceFees + deliveryPrice;
+		RETURN newPrice;
+	END IF;
+END$$
+DELIMITER ;
+
+
+
+##############################################################################################
 # **Version v.2.10.6| 20 -June-2022**
 ###############################################################################################
 ### Code Changes:

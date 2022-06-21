@@ -368,62 +368,69 @@ public class DeliveryService {
                     if (!list.isError) {
 //TODO: Bug Need To Be Fixed
                         if (deliveryType.equalsIgnoreCase("adhoc")) {
-                            DeliveryServiceCharge deliveryServiceCharge = deliveryMarkupPriceRepository
+
+                            String pattern = "HH:mm:ss";
+                            DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+
+                            Date string1 = new Date();
+                            Date currentTime = null;
+                            try {
+                                currentTime = new SimpleDateFormat("HH:mm:ss").parse(dateFormat.format(string1));
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
+                            List<DeliveryServiceCharge> deliveryServiceCharge = deliveryMarkupPriceRepository
                                     .findByDeliverySpIdAndStartTimeNotNull(
                                             deliveryOrder.getDeliveryProviderId().toString());
 
                             if (deliveryServiceCharge != null) {
-                                String pattern = "HH:mm:ss";
-                                DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 
-                                Date string1 = new Date();
-                                Date currentTime = null;
-                                try {
-                                    currentTime = new SimpleDateFormat("HH:mm:ss").parse(dateFormat.format(string1));
-                                } catch (ParseException e) {
-                                    e.printStackTrace();
-                                }
-                                Calendar calendar1 = Calendar.getInstance();
-                                calendar1.setTime(currentTime);
-                                calendar1.add(Calendar.DATE, 1);
+//                                Calendar calendar1 = Calendar.getInstance();
+//                                calendar1.setTime(currentTime);
+//                                calendar1.add(Calendar.DATE, 1);
+//
+//                                Date start = null;
+//                                try {
+//                                    start = new SimpleDateFormat("HH:mm:ss")
+//                                            .parse(deliveryServiceCharge.getStartTime());
+//                                } catch (ParseException e) {
+//                                    e.printStackTrace();
+//                                }
+//                                Calendar calendar2 = Calendar.getInstance();
+//                                calendar2.setTime(start);
+//                                calendar2.add(Calendar.DATE, 1);
+//
+//                                Date end = null;
+//                                try {
+//                                    end = new SimpleDateFormat("HH:mm:ss").parse(deliveryServiceCharge.getEndTime());
+//                                } catch (ParseException e) {
+//                                    e.printStackTrace();
+//                                }
+//                                Calendar calendar3 = Calendar.getInstance();
+//                                calendar3.setTime(end);
+//                                calendar3.add(Calendar.DATE, 1);
+//                                LogUtil.info(systemTransactionId, location,
+//                                        "CHECK TIME :  " + String.valueOf(calendar1.getTime().after(calendar2.getTime())
+//                                                && calendar1.getTime().before(calendar3.getTime())),
+//                                        "");
+//                                LogUtil.info(systemTransactionId, location,
+//                                        "Start TIME :  " + String.valueOf(calendar2.getTime()),
+//                                        "System Time : " + calendar1.getTime());
+//                                LogUtil.info(systemTransactionId, location,
+//                                        "End Time :  " + String.valueOf(calendar3.getTime()),
+//                                        "System Time : " + calendar1.getTime());
 
-                                Date start = null;
-                                try {
-                                    start = new SimpleDateFormat("HH:mm:ss")
-                                            .parse(deliveryServiceCharge.getStartTime());
-                                } catch (ParseException e) {
-                                    e.printStackTrace();
-                                }
-                                Calendar calendar2 = Calendar.getInstance();
-                                calendar2.setTime(start);
-                                calendar2.add(Calendar.DATE, 1);
-
-                                Date end = null;
-                                try {
-                                    end = new SimpleDateFormat("HH:mm:ss").parse(deliveryServiceCharge.getEndTime());
-                                } catch (ParseException e) {
-                                    e.printStackTrace();
-                                }
-                                Calendar calendar3 = Calendar.getInstance();
-                                calendar3.setTime(end);
-                                calendar3.add(Calendar.DATE, 1);
-                                LogUtil.info(systemTransactionId, location,
-                                        "CHECK TIME :  " + String.valueOf(calendar1.getTime().after(calendar2.getTime())
-                                                && calendar1.getTime().before(calendar3.getTime())),
-                                        "");
-                                LogUtil.info(systemTransactionId, location,
-                                        "Start TIME :  " + String.valueOf(calendar2.getTime()),
-                                        "System Time : " + calendar1.getTime());
-                                LogUtil.info(systemTransactionId, location,
-                                        "End Time :  " + String.valueOf(calendar3.getTime()),
-                                        "System Time : " + calendar1.getTime());
-                                if (calendar1.getTime().after(calendar2.getTime())
-                                        && calendar1.getTime().before(calendar3.getTime())) {
+                                DeliveryServiceCharge d = deliveryMarkupPriceRepository
+                                        .findByDeliverySpIdAndStartTimeGreaterThanEqualAndEndTimeLessThanEqual(
+                                                deliveryOrder.getDeliveryProviderId().toString(), currentTime.toString(), currentTime.toString());
+//                                System.err.println("Current Time :  " + currentTime + " id : " + d.getId());
+// Pending On the distance calculation
+                                if (d != null) {
                                     Double totalPrice = Double.parseDouble(list.price.toString())
-                                            + deliveryServiceCharge.getServiceFee().doubleValue();
+                                            + d.getServiceFee().doubleValue();
                                     deliveryOrder.setAmount(totalPrice);
                                     deliveryOrder.setStatus("PENDING");
-                                    deliveryOrder.setServiceFee(deliveryServiceCharge.getServiceFee().doubleValue());
+                                    deliveryOrder.setServiceFee(d.getServiceFee().doubleValue());
                                     DecimalFormat decimalFormat = new DecimalFormat("##.00");
                                     double dPrice = totalPrice;
                                     bd = new BigDecimal(dPrice);

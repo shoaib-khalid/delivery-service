@@ -57,7 +57,7 @@ public class HttpsPostConn {
             HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
 //            HttpURLConnection con = (HttpURLConnection) url.openConnection();
 //            con.setSSLSocketFactory(sc.getSocketFactory());
-            con.setHostnameVerifier(hv);
+//            con.setHostnameVerifier(hv);
             con.setConnectTimeout(connectTimeout);
             con.setReadTimeout(waitTimeout);
             con.setRequestMethod(httpMethod);

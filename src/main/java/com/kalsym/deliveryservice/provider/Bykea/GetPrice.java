@@ -69,6 +69,9 @@ public class GetPrice extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
 
+        String authToken = getToken();
+
+
         String pickupTime = "";
         if (fulfillment.getFulfillment().equals("FOURHOURS") || fulfillment.getFulfillment().equals("NEXTDAY") || fulfillment.getFulfillment().equals("FOURDAYS")) {
             Calendar cal = Calendar.getInstance(); // creates calendar
@@ -79,18 +82,10 @@ public class GetPrice extends SyncDispatcher {
         }
 
         JsonObject requ = generateRequestBody(pickupTime);
-        LogUtil.info(logprefix, location, "REQUST BODY FOR GET PRICE : ", requ.toString());
+        LogUtil.info(logprefix, location, "REQUEST BODY FOR GET PRICE : ", requ.toString());
 
-        //JSONObject bodyJson = new JSONObject("{\"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"}]}");
         JSONObject bodyJson = new JSONObject(new Gson().toJson(requ));
 
-        String authToken = getToken();
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Content-Type", "application/json");
-        headers.set("Authorization", "hmac " + authToken);
-        headers.set("X-LLM-Country", "MY_KUL");
 
         HashMap httpHeader = new HashMap();
         httpHeader.put("Content-Type", "application/json");
@@ -112,6 +107,7 @@ public class GetPrice extends SyncDispatcher {
             result.isError = true;
             response.returnObject = result;
             response.resultCode = -1;
+
         }
         LogUtil.info(logprefix, location, String.valueOf(httpResult.httpResponseCode), "");
         return response;
@@ -146,9 +142,14 @@ public class GetPrice extends SyncDispatcher {
         httpHeader.put("Content-Type", "application/json");
 
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.auth_url, httpHeader, object.toString(), this.connectTimeout, this.waitTimeout);
+        LogUtil.info(logprefix, location, "Response : ", httpResult.responseString);
 
         if (httpResult.httpResponseCode == 200) {
-            LogUtil.info(logprefix, location, "Request successful", "");
+            JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
+            String token = jsonResp.get("data").getAsJsonObject().get("token").getAsString();
+
+            LogUtil.info(logprefix, location, "Request successful token : ", token);
+            return token;
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
         }
