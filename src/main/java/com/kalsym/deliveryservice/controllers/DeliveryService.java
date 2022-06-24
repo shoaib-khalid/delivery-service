@@ -267,6 +267,7 @@ public class DeliveryService {
                 deliveryOrder.setDeliveryProviderId(0);
                 deliveryOrder.setAmount(Double.parseDouble(price));
                 deliveryOrder.setValidationPeriod(currentDate);
+                deliveryOrder.setServiceFee(0.00);
                 DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
 
                 double dPrice = Double.parseDouble(price);
@@ -444,15 +445,26 @@ public class DeliveryService {
                                     Double totalPrice = deliveryMarkupPriceRepository.getMarkupPrice(
                                             deliveryOrder.getDeliveryProviderId().toString(),
                                             Double.parseDouble(list.price.toString()));
-                                    LogUtil.info(systemTransactionId, location, "IF IN TIME, REDUCE PRICE BASED ON PRICE", String.valueOf(totalPrice - Double.parseDouble(list.price.toString())));
+                                    if (totalPrice != null) {
+                                        LogUtil.info(systemTransactionId, location, "IF IN TIME, REDUCE PRICE BASED ON PRICE", String.valueOf(totalPrice - Double.parseDouble(list.price.toString())));
 
-                                    deliveryOrder.setAmount(totalPrice);
+                                        deliveryOrder.setAmount(totalPrice);
+                                        deliveryOrder.setServiceFee(totalPrice - Double.parseDouble(list.price.toString()));
+                                        DecimalFormat decimalFormat = new DecimalFormat("##.00");
+                                        double dPrice = totalPrice;
+                                        bd = new BigDecimal(dPrice);
+                                        bd = bd.setScale(2, RoundingMode.HALF_UP);
+                                    } else {
+                                        LogUtil.info(systemTransactionId, location, "IF IN TIME, REDUCE PRICE BASED ON PRICE",list.price.toString());
+                                        deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
+                                        deliveryOrder.setServiceFee(0.00);
+                                        double dPrice = Double.parseDouble(list.price.toString());
+                                        bd = new BigDecimal(dPrice);
+                                        bd = bd.setScale(2, RoundingMode.HALF_UP);
+                                    }
+
                                     deliveryOrder.setStatus("PENDING");
-                                    deliveryOrder.setServiceFee(totalPrice - Double.parseDouble(list.price.toString()));
-                                    DecimalFormat decimalFormat = new DecimalFormat("##.00");
-                                    double dPrice = totalPrice;
-                                    bd = new BigDecimal(dPrice);
-                                    bd = bd.setScale(2, RoundingMode.HALF_UP);
+
                                 }
 
                             } else {
@@ -478,6 +490,7 @@ public class DeliveryService {
                             double dPrice = Double.parseDouble(decimalFormat.format(list.price));
                             bd = new BigDecimal(dPrice);
                             bd = bd.setScale(2, RoundingMode.HALF_UP);
+                            deliveryOrder.setServiceFee(0.00);
                         }
                         deliveryOrder.setDeliveryContactEmail(orderDetails.getDelivery().getDeliveryContactEmail());
                         deliveryOrder.setPickupLatitude(String.valueOf(orderDetails.getPickup().getLatitude()));
@@ -485,10 +498,10 @@ public class DeliveryService {
                         deliveryOrder.setDeliveryLongitude(String.valueOf(orderDetails.getDelivery().getLongitude()));
                         deliveryOrder.setDeliveryLatitude(String.valueOf(orderDetails.getDelivery().getLatitude()));
                         deliveryOrder.setTotalPieces(orderDetails.getPieces());
-                        deliveryOrder.setServiceFee(0.00);
 
                     } else {
                         deliveryOrder.setAmount(Double.parseDouble("0.00"));
+                        deliveryOrder.setServiceFee(0.00);
                         deliveryOrder.setStatus("FAILED");
                     }
                     deliveryOrder.setPickupTime(list.pickupDateTime);
