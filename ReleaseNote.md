@@ -1,4 +1,12 @@
 ##############################################################################################
+# **Version v.2.10.10| 24 -June-2022**
+###############################################################################################
+### Code Changes:
+
+Production Hot Fix Get Price (service fee ) default Value is 0.00
+
+
+##############################################################################################
 # **Version v.2.10.9| 24 -June-2022**
 ###############################################################################################
 ### Code Changes:
@@ -18,6 +26,12 @@ Uncomment Line For Delivery Order Status;
 ###############################################################################################
 ### Code Changes:
 1. Bug Fix For Staging
+
+ALTER TABLE symplified.delivery_service_charge MODIFY COLUMN startTime time NULL;
+ALTER TABLE symplified.delivery_service_charge MODIFY COLUMN endTime time NULL;
+ALTER TABLE symplified.delivery_service_charge ADD basedOnPrice tinyint DEFAULT 0 NOT NULL;
+ALTER TABLE symplified.delivery_service_charge ADD basenOnTime tinyint DEFAULT 0 NOT NULL;
+
 
 
 DROP FUNCTION IF EXISTS symplified.getMarkupPrice;

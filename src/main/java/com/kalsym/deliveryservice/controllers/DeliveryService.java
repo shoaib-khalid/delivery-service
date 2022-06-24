@@ -485,6 +485,7 @@ public class DeliveryService {
                         deliveryOrder.setDeliveryLongitude(String.valueOf(orderDetails.getDelivery().getLongitude()));
                         deliveryOrder.setDeliveryLatitude(String.valueOf(orderDetails.getDelivery().getLatitude()));
                         deliveryOrder.setTotalPieces(orderDetails.getPieces());
+                        deliveryOrder.setServiceFee(0.00);
 
                     } else {
                         deliveryOrder.setAmount(Double.parseDouble("0.00"));
