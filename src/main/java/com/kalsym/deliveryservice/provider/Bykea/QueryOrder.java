@@ -1,9 +1,7 @@
 package com.kalsym.deliveryservice.provider.Bykea;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
 import com.kalsym.deliveryservice.provider.ProcessResult;
@@ -13,13 +11,6 @@ import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsGetConn;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
@@ -37,6 +28,8 @@ public class QueryOrder extends SyncDispatcher {
 
     private String password;
     private String spOrderId;
+    private String userAgent;
+
 
 
     public QueryOrder(CountDownLatch latch, HashMap config, String spOrderId, String systemTransactionId) {
@@ -52,6 +45,8 @@ public class QueryOrder extends SyncDispatcher {
         this.connectTimeout = Integer.parseInt((String) config.get("queryorder_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("queryorder_wait_timeout"));
         this.spOrderId = spOrderId;
+        this.userAgent = (String) config.get("userAgent");
+
     }
 
     @Override
@@ -65,15 +60,8 @@ public class QueryOrder extends SyncDispatcher {
         HashMap httpHeader = new HashMap();
         httpHeader.put("Content-Type", "application/json");
         httpHeader.put("x-bb-user-token", authToken);
+        httpHeader.put("User-Agent", userAgent);
 
-
-        MultiValueMap<String, Object> postParameters = new LinkedMultiValueMap<>();
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", "application/json");
-        headers.add("x-bb-user-token", authToken);
-//        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(postParameters, headers);
-//        RestTemplate restTemplate = new RestTemplate();
-//        ResponseEntity<String> responses = restTemplate.exchange(queryOrder_url + spOrderId, HttpMethod.GET, request, String.class);
 
         HttpResult httpResult = HttpsGetConn.SendHttpsRequest("GET", this.systemTransactionId, queryOrder_url + spOrderId, httpHeader, this.connectTimeout, this.waitTimeout);
 
@@ -134,6 +122,8 @@ public class QueryOrder extends SyncDispatcher {
 
         HashMap httpHeader = new HashMap();
         httpHeader.put("Content-Type", "application/json");
+        httpHeader.put("User-Agent", userAgent);
+
 
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.authUrl, httpHeader, object.toString(), this.connectTimeout, this.waitTimeout);
         if (httpResult.httpResponseCode == 200) {

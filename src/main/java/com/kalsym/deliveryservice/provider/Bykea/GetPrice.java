@@ -11,24 +11,15 @@ import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.repositories.DeliveryZonePriceRepository;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.HttpResult;
-import com.kalsym.deliveryservice.utils.HttpsGetConn;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import org.json.JSONObject;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.web.client.RestTemplate;
-import springfox.documentation.spring.web.json.Json;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import java.math.BigDecimal;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 public class GetPrice extends SyncDispatcher {
@@ -44,6 +35,7 @@ public class GetPrice extends SyncDispatcher {
     private final String logprefix;
     private final String location = "BykeaGetPrice";
     private Fulfillment fulfillment;
+    private String userAgent;
     private DeliveryZonePriceRepository deliveryZonePriceRepository;
 
 
@@ -56,6 +48,7 @@ public class GetPrice extends SyncDispatcher {
         this.auth_url = (String) config.get("authUrl");
         this.username = (String) config.get("username");
         this.password = (String) config.get("password");
+        this.userAgent = (String) config.get("userAgent");
 
         this.connectTimeout = Integer.parseInt((String) config.get("getprice_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("getprice_wait_timeout"));
@@ -89,6 +82,7 @@ public class GetPrice extends SyncDispatcher {
 
         HashMap httpHeader = new HashMap();
         httpHeader.put("Content-Type", "application/json");
+        httpHeader.put("User-Agent", userAgent);
         httpHeader.put("x-api-customer-token", authToken);
 
 
@@ -123,7 +117,7 @@ public class GetPrice extends SyncDispatcher {
         phone.addProperty("phone", order.getDelivery().getDeliveryContactPhone());
         requestBody.add("customer", phone);
         pickup.addProperty("lat", order.getPickup().getLatitude());
-        pickup.addProperty("lng",  order.getPickup().getLongitude());
+        pickup.addProperty("lng", order.getPickup().getLongitude());
         dropoff.addProperty("lat", order.getDelivery().getLatitude());
         dropoff.addProperty("lng", order.getDelivery().getLongitude());
         requestBody.add("pickup", pickup);
@@ -138,8 +132,14 @@ public class GetPrice extends SyncDispatcher {
         object.addProperty("username", this.username);
         object.addProperty("password", this.password);
 
+        Map<String, String> map = new HashMap<>();
+        map.put("username", this.username);
+        map.put("password", this.password);
+
+
         HashMap httpHeader = new HashMap();
         httpHeader.put("Content-Type", "application/json");
+        httpHeader.put("User-Agent", userAgent);
 
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.auth_url, httpHeader, object.toString(), this.connectTimeout, this.waitTimeout);
         LogUtil.info(logprefix, location, "Response : ", httpResult.responseString);
@@ -153,8 +153,8 @@ public class GetPrice extends SyncDispatcher {
         } else {
             LogUtil.info(logprefix, location, "Request failed", "");
         }
-        LogUtil.info(logprefix, location, String.valueOf(httpResult.httpResponseCode), "");
         return "";
+
     }
 
 

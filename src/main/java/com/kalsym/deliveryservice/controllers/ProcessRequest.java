@@ -381,43 +381,52 @@ public class ProcessRequest {
     public ProcessResult QueryOrder() {
         //get provider rate plan  
         LogUtil.info(logPrefix, location, "ProviderId:" + deliveryOrder.getDeliveryProviderId() + " SpOrderId:" + deliveryOrder.getSpOrderId(), "");
-        Optional<Provider> provider = providerRepository.findById(deliveryOrder.getDeliveryProviderId());
-        List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(deliveryOrder.getDeliveryProviderId());
-        if (provider.get().getQueryOrderClassname().equals(null)) {
-            System.err.println("PRINT HERE IF NULL");
-        }
-        HashMap config = new HashMap();
-        for (int j = 0; j < providerConfigList.size(); j++) {
-            String fieldName = providerConfigList.get(j).getId().getConfigField();
-            String fieldValue = providerConfigList.get(j).getConfigValue();
-            config.put(fieldName, fieldValue);
-        }
-        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider.get(), config, this.deliveryOrder.getSpOrderId(), "QueryOrder");
-        dthread.start();
+//        Optional<Provider> provider = providerRepository.findById(deliveryOrder.getDeliveryProviderId());
+        Optional<Provider> provider = providerRepository.findByIdAndQueryOrderClassnameIsNotNull(deliveryOrder.getDeliveryProviderId());
+        if (provider.isPresent()) {
+            List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(deliveryOrder.getDeliveryProviderId());
+            if (provider.get().getQueryOrderClassname().equals(null)) {
+                System.err.println("PRINT HERE IF NULL");
+            }
+            HashMap config = new HashMap();
+            for (int j = 0; j < providerConfigList.size(); j++) {
+                String fieldName = providerConfigList.get(j).getId().getConfigField();
+                String fieldValue = providerConfigList.get(j).getConfigValue();
+                config.put(fieldName, fieldValue);
+            }
+            ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider.get(), config, this.deliveryOrder.getSpOrderId(), "QueryOrder");
+            dthread.start();
 
-        try {
-            Thread.sleep(100);
-        } catch (Exception ex) {
-        }
-
-        while (providerThreadRunning > 0) {
             try {
-                Thread.sleep(500);
+                Thread.sleep(100);
             } catch (Exception ex) {
             }
-            //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
-        }
 
-        ProcessResult response = new ProcessResult();
-        if (queryOrderResult.isSuccess) {
-            response.resultCode = 0;
-            response.returnObject = queryOrderResult;
+            while (providerThreadRunning > 0) {
+                try {
+                    Thread.sleep(500);
+                } catch (Exception ex) {
+                }
+                //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
+            }
+
+            ProcessResult response = new ProcessResult();
+            if (queryOrderResult.isSuccess) {
+                response.resultCode = 0;
+                response.returnObject = queryOrderResult;
+            } else {
+                response.resultCode = -1;
+
+            }
+            LogUtil.info(logPrefix, location, "Query Order finish. resultCode:" + response.resultCode, " queryOrderResult:" + queryOrderResult);
+            return response;
         } else {
-            response.resultCode = -1;
+            ProcessResult response = new ProcessResult();
 
+            response.resultCode = -1;
+            LogUtil.info(logPrefix, location, "Query Order Cannot Find Class:" + response.resultCode, " queryOrderResult:" + queryOrderResult);
+            return response;
         }
-        LogUtil.info(logPrefix, location, "SubmitOrder finish. resultCode:" + response.resultCode, " queryOrderResult:" + queryOrderResult);
-        return response;
     }
 
     public ProcessResult ProcessCallback(String spIP, ProviderIpRepository providerIpRepository, int id) {

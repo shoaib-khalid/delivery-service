@@ -24,7 +24,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -369,21 +368,27 @@ public class DeliveryService {
 //TODO: Bug Need To Be Fixed
                         if (deliveryType.equalsIgnoreCase("adhoc")) {
 
-                            String pattern = "HH:mm:ss";
-                            DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+//                            String pattern = "HH:mm:ss";
+//                            DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+//
+//                            Date string1 = new Date();
+//                            Date currentTime = null;
+//                            try {
+//                                currentTime = new SimpleDateFormat("HH:mm:ss").parse(dateFormat.format(string1));
+//                            } catch (ParseException e) {
+//                                e.printStackTrace();
+//                            }
+                            DateFormat dateFormatOne = new SimpleDateFormat("HH:mm:ss");
+                            dateFormatOne.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-                            Date string1 = new Date();
-                            Date currentTime = null;
-                            try {
-                                currentTime = new SimpleDateFormat("HH:mm:ss").parse(dateFormat.format(string1));
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                            }
                             List<DeliveryServiceCharge> deliveryServiceCharge = deliveryMarkupPriceRepository
-                                    .findByDeliverySpIdAndStartTimeNotNull(
-                                            deliveryOrder.getDeliveryProviderId().toString());
+                                    .findByDeliverySpId(deliveryOrder.getDeliveryProviderId().toString());
 
                             if (deliveryServiceCharge != null) {
+
+                                DeliveryServiceCharge d = deliveryMarkupPriceRepository
+                                        .findByDeliverySpIdAndStartTimeGreaterThanEqualAndEndTimeLessThanEqual(
+                                                deliveryOrder.getDeliveryProviderId().toString(), dateFormatOne.format(new Date()).toString(), dateFormatOne.format(new Date()));
 
 //                                Calendar calendar1 = Calendar.getInstance();
 //                                calendar1.setTime(currentTime);
@@ -419,13 +424,13 @@ public class DeliveryService {
 //                                LogUtil.info(systemTransactionId, location,
 //                                        "End Time :  " + String.valueOf(calendar3.getTime()),
 //                                        "System Time : " + calendar1.getTime());
-
-                                DeliveryServiceCharge d = deliveryMarkupPriceRepository
-                                        .findByDeliverySpIdAndStartTimeGreaterThanEqualAndEndTimeLessThanEqual(
-                                                deliveryOrder.getDeliveryProviderId().toString(), currentTime.toString(), currentTime.toString());
-//                                System.err.println("Current Time :  " + currentTime + " id : " + d.getId());
+//
+//
+//                                System.err.println("Current Time :  " + dateFormatOne.format(new Date()) );
 // Pending On the distance calculation
                                 if (d != null) {
+                                    LogUtil.info(systemTransactionId, location, " PRINT HERE TO ADD PRICE BASED ON TIME", "");
+
                                     Double totalPrice = Double.parseDouble(list.price.toString())
                                             + d.getServiceFee().doubleValue();
                                     deliveryOrder.setAmount(totalPrice);
@@ -439,6 +444,8 @@ public class DeliveryService {
                                     Double totalPrice = deliveryMarkupPriceRepository.getMarkupPrice(
                                             deliveryOrder.getDeliveryProviderId().toString(),
                                             Double.parseDouble(list.price.toString()));
+                                    LogUtil.info(systemTransactionId, location, "IF IN TIME, REDUCE PRICE BASED ON PRICE", String.valueOf(totalPrice - Double.parseDouble(list.price.toString())));
+
                                     deliveryOrder.setAmount(totalPrice);
                                     deliveryOrder.setStatus("PENDING");
                                     deliveryOrder.setServiceFee(totalPrice - Double.parseDouble(list.price.toString()));
@@ -449,7 +456,14 @@ public class DeliveryService {
                                 }
 
                             } else {
-                                deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
+
+                                Double totalPrice = deliveryMarkupPriceRepository.getMarkupPrice(
+                                        deliveryOrder.getDeliveryProviderId().toString(),
+                                        Double.parseDouble(list.price.toString()));
+                                LogUtil.info(systemTransactionId, location, "REDUCE PRICE BASED ON PRICE", String.valueOf(totalPrice - Double.parseDouble(list.price.toString())));
+
+                                deliveryOrder.setAmount(totalPrice);
+                                deliveryOrder.setServiceFee(totalPrice - Double.parseDouble(list.price.toString()));
                                 deliveryOrder.setStatus("PENDING");
                                 DecimalFormat decimalFormat = new DecimalFormat("##.00");
                                 double dPrice = Double
@@ -572,7 +586,13 @@ public class DeliveryService {
         LogUtil.info(systemTransactionId, location, "PROVIDER ID :", quotation.getDeliveryProviderId().toString());
         orderDetails.setProductCode(quotation.getProductCode());
         orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
-        orderDetails.setShipmentValue(quotation.getAmount());
+
+        if (quotation.getServiceFee() < 0) {
+            LogUtil.info(systemTransactionId, location, "Negative Value :", String.valueOf(quotation.getAmount() - quotation.getServiceFee()));
+            orderDetails.setShipmentValue(quotation.getAmount() - quotation.getServiceFee());
+        } else {
+            orderDetails.setShipmentValue(quotation.getAmount());
+        }
         orderDetails.setOrderId(orderId);
 
         Pickup pickup = new Pickup();
@@ -739,8 +759,7 @@ public class DeliveryService {
 //                if (existStatus != null) {
 //                    existStatus.setSpOrderId(o.getSpOrderId());
 //                    orderStatusRepository.save(existStatus); //SAVE ORDER STATUS LIST
-//                }
-//                else{
+//                } else {
 //                    DeliveryOrderStatus orderStatus = new DeliveryOrderStatus();
 //
 //                    orderStatus.setOrder(o);
@@ -881,7 +900,7 @@ public class DeliveryService {
 
     public HttpReponse placeOrder(String orderId, DeliveryQuotation quotation, SubmitDelivery submitDelivery) {
 
-        String logprefix = "Delivery Service Submit Order";
+        String logprefix = "Delivery Service Place Order";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse();
 
@@ -912,7 +931,14 @@ public class DeliveryService {
         LogUtil.info(systemTransactionId, location, "PROVIDER ID :", quotation.getDeliveryProviderId().toString());
         orderDetails.setProductCode(quotation.getProductCode());
         orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
-        orderDetails.setShipmentValue(quotation.getAmount());
+
+        if (quotation.getServiceFee() < 0) {
+            LogUtil.info(systemTransactionId, location, "Negative Value :", String.valueOf(quotation.getAmount() - quotation.getServiceFee()));
+            orderDetails.setShipmentValue(quotation.getAmount() - quotation.getServiceFee());
+        } else {
+            orderDetails.setShipmentValue(quotation.getAmount());
+        }
+//        orderDetails.setShipmentValue(quotation.getAmount());
         orderDetails.setOrderId(orderId);
 
         Pickup pickup = new Pickup();
@@ -1196,16 +1222,17 @@ public class DeliveryService {
 
 //                DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
 //                if (notExistStatus == null) {
-//                    notExistStatus.setOrder(o);
-//                    notExistStatus.setSpOrderId(o.getSpOrderId());
-//                    notExistStatus.setStatus(o.getStatus());
-//                    notExistStatus.setDeliveryCompletionStatus(o.getSystemStatus());
-//                    notExistStatus.setDescription(o.getStatusDescription());
-//                    notExistStatus.setUpdated(new Date());
-//                    notExistStatus.setSystemTransactionId(o.getSystemTransactionId());
-//                    notExistStatus.setOrderId(o.getOrderId());
+//                    DeliveryOrderStatus s = new DeliveryOrderStatus();
+//                    s.setOrder(o);
+//                    s.setSpOrderId(o.getSpOrderId());
+//                    s.setStatus(o.getStatus());
+//                    s.setDeliveryCompletionStatus(o.getSystemStatus());
+//                    s.setDescription(o.getStatusDescription());
+//                    s.setUpdated(new Date());
+//                    s.setSystemTransactionId(o.getSystemTransactionId());
+//                    s.setOrderId(o.getOrderId());
 //
-//                    orderStatusRepository.save(notExistStatus); //SAVE ORDER STATUS LIST
+//                    orderStatusRepository.save(s); //SAVE ORDER STATUS LIST
 //                }
 
                 getDeliveryRiderDetails(orderDetails.get().getOrderId());
@@ -1355,5 +1382,25 @@ public class DeliveryService {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }
     }
+
+    // TODO: Update Google Map API Here
+//    public Boolean getRange(String deliveryAddress, String pickuppAddress) {
+//
+//        try {
+//            okhttp3.OkHttpClient client = new okhttp3.OkHttpClient().newBuilder()
+//                    .build();
+//            okhttp3.MediaType mediaType = okhttp3.MediaType.parse("text/plain");
+//            okhttp3.RequestBody body = okhttp3.RequestBody.create(mediaType, "");
+//            okhttp3.Request request = new okhttp3.Request.Builder()
+//                    .url("https://maps.googleapis.com/maps/api/distancematrix/json?origins=40.6655101%2C-73.89188969999998&destinations=40.659569%2C-73.933783%7C40.729029%2C-73.851524%7C40.6860072%2C-73.6334271%7C40.598566%2C-73.7527626&key=YOUR_API_KEY")
+//                    .method("GET", body)
+//                    .build();
+//            okhttp3.Response response = client.newCall(request).execute();
+//            return true;
+//        } catch (Exception exception) {
+//            return false;
+//
+//        }
+//    }
 
 }

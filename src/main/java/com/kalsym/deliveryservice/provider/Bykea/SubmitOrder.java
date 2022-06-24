@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
-import com.kalsym.deliveryservice.provider.MrSpeedy.VehicleType;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SubmitOrderResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
@@ -38,6 +37,8 @@ public class SubmitOrder extends SyncDispatcher {
     private final String paymentCode;
     private final String serviceCode;
     private final String reference;
+    private String userAgent;
+
 
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
@@ -55,6 +56,8 @@ public class SubmitOrder extends SyncDispatcher {
         this.paymentCode = (String) config.get("paymentCode");
         this.serviceCode = (String) config.get("serviceCode");
         this.reference = (String) config.get("reference");
+        this.userAgent = (String) config.get("userAgent");
+
 
         this.order = order;
     }
@@ -74,11 +77,10 @@ public class SubmitOrder extends SyncDispatcher {
 
         String requestBody = generateRequestBody();
 
-
         HashMap httpHeader = new HashMap();
         httpHeader.put("Content-Type", "application/json");
         httpHeader.put("x-api-customer-token", authToken);
-
+        httpHeader.put("User-Agent", userAgent);
 
         try {
             HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, submitOrderUrl, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
@@ -193,6 +195,8 @@ public class SubmitOrder extends SyncDispatcher {
 
         HashMap httpHeader = new HashMap();
         httpHeader.put("Content-Type", "application/json");
+        httpHeader.put("User-Agent", userAgent);
+
 
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.auth_url, httpHeader, object.toString(), this.connectTimeout, this.waitTimeout);
         LogUtil.info(logprefix, location, "Response : ", httpResult.responseString);

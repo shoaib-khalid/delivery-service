@@ -10,7 +10,9 @@ import java.util.List;
 
 public interface DeliveryServiceChargeRepository extends JpaRepository<DeliveryServiceCharge,Long > {
     List<DeliveryServiceCharge> findByDeliverySpIdAndStartTimeNotNull (String id);
-    DeliveryServiceCharge findByDeliverySpIdAndStartTimeGreaterThanEqualAndEndTimeLessThanEqual (String id, String startTime, String endtime);
+    List<DeliveryServiceCharge> findByDeliverySpId (String id);
+    @Query(value ="SELECT  * FROm symplified.delivery_service_charge ds WHERE ds.deliverySpId = :id AND ds.startTime <= :startTime AND :endTime <= ds.endTime;", nativeQuery = true)
+    DeliveryServiceCharge findByDeliverySpIdAndStartTimeGreaterThanEqualAndEndTimeLessThanEqual ( @Param("id") String id, @Param("startTime") String startTime, @Param("endTime") String endtime);
 
     @Query(value ="SELECT getMarkupPrice(?1,?2)", nativeQuery = true)
     public Double getMarkupPrice(

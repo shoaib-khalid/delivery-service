@@ -1004,6 +1004,14 @@ public class OrdersController {
 
     }
 
+    //TODO : Get Order Status List
+    @GetMapping(path = {"/getDeliveryOrderStatusList"}, name = "get-delivery-order-status-list")
+    public ResponseEntity<HttpReponse> getDeliveryOrderStatusList(HttpServletRequest request, @RequestParam(name = "orderId") String orderId) {
+        HttpReponse response = new HttpReponse();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
