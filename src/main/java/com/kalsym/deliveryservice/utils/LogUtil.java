@@ -9,7 +9,8 @@ import org.slf4j.LoggerFactory;
  */
 public class LogUtil {
 
-    private static final Logger application = LoggerFactory.getLogger("application");
+    private static final org.slf4j.Logger application = LoggerFactory.getLogger("application");
+    public static final org.slf4j.Logger cdr = LoggerFactory.getLogger("cdr");
 
     public static void info(String prefix, String location, String message, String postfix) {
         application.info(prefix + " " + location + " " + message + " " + postfix + " ");

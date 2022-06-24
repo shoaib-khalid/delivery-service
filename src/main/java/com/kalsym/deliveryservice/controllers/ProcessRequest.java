@@ -24,7 +24,7 @@ public class ProcessRequest {
     Order order;
     DeliveryOrder deliveryOrder;
     String sysTransactionId;
-    String logprefix;
+    String logPrefix;
     String location;
     ProviderRatePlanRepository providerRatePlanRepository;
     ProviderConfigurationRepository providerConfigurationRepository;
@@ -32,9 +32,7 @@ public class ProcessRequest {
     int providerThreadRunning;
     List<PriceResult> priceResultLists;
     PriceResult priceResultList;
-    List<DeliveryQuotation> deliveryQuotations;
     List<Fulfillment> fulfillments;
-
     SubmitOrderResult submitOrderResult;
     CancelOrderResult cancelOrderResult;
     QueryOrderResult queryOrderResult;
@@ -50,15 +48,16 @@ public class ProcessRequest {
     SequenceNumberRepository sequenceNumberRepository;
     DeliverySpTypeRepository deliverySpTypeRepository;
     StoreDeliverySpRepository storeDeliveryDetailSp;
-    @Autowired
-    DeliveryQuotationRepository deliveryQuotationRepository;
+
+    DeliveryStoreCentersRepository deliveryStoreCentersRepository;
+    DeliveryZonePriceRepository deliveryZonePriceRepository;
 
     public ProcessRequest(String sysTransactionId, Order order, ProviderRatePlanRepository providerRatePlanRepository,
                           ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository,
                           SequenceNumberRepository sequenceNumberRepository, DeliverySpTypeRepository deliverySpTypeRepository, StoreDeliverySpRepository storeDeliveryDetailSp, List<Fulfillment> fulfillments) {
         this.sysTransactionId = sysTransactionId;
         this.order = order;
-        this.logprefix = sysTransactionId;
+        this.logPrefix = sysTransactionId;
         this.location = "ProcessRequest";
         this.providerRatePlanRepository = providerRatePlanRepository;
         this.providerConfigurationRepository = providerConfigurationRepository;
@@ -73,10 +72,10 @@ public class ProcessRequest {
 
     public ProcessRequest(String sysTransactionId, Order order, ProviderRatePlanRepository providerRatePlanRepository,
                           ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository,
-                          SequenceNumberRepository sequenceNumberRepository, DeliverySpTypeRepository deliverySpTypeRepository, StoreDeliverySpRepository storeDeliveryDetailSp) {
+                          SequenceNumberRepository sequenceNumberRepository, DeliverySpTypeRepository deliverySpTypeRepository, StoreDeliverySpRepository storeDeliveryDetailSp, List<Fulfillment> fulfillments, DeliveryZonePriceRepository deliveryZonePriceRepository, DeliveryStoreCentersRepository deliveryStoreCenterRepository) {
         this.sysTransactionId = sysTransactionId;
         this.order = order;
-        this.logprefix = sysTransactionId;
+        this.logPrefix = sysTransactionId;
         this.location = "ProcessRequest";
         this.providerRatePlanRepository = providerRatePlanRepository;
         this.providerConfigurationRepository = providerConfigurationRepository;
@@ -86,13 +85,35 @@ public class ProcessRequest {
         this.sequenceNumberRepository = sequenceNumberRepository;
         this.deliverySpTypeRepository = deliverySpTypeRepository;
         this.storeDeliveryDetailSp = storeDeliveryDetailSp;
+        this.fulfillments = fulfillments;
+        this.deliveryZonePriceRepository = deliveryZonePriceRepository;
+        this.deliveryStoreCentersRepository = deliveryStoreCenterRepository;
+    }
+
+    public ProcessRequest(String sysTransactionId, Order order, ProviderRatePlanRepository providerRatePlanRepository,
+                          ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository,
+                          SequenceNumberRepository sequenceNumberRepository, DeliverySpTypeRepository deliverySpTypeRepository, StoreDeliverySpRepository storeDeliveryDetailSp, DeliveryStoreCentersRepository deliveryStoreCentersRepository) {
+        this.sysTransactionId = sysTransactionId;
+        this.order = order;
+        this.logPrefix = sysTransactionId;
+        this.location = "ProcessRequest";
+        this.providerRatePlanRepository = providerRatePlanRepository;
+        this.providerConfigurationRepository = providerConfigurationRepository;
+        this.providerRepository = providerRepository;
+        this.providerThreadRunning = 0;
+        this.priceResultLists = new ArrayList<>();
+        this.sequenceNumberRepository = sequenceNumberRepository;
+        this.deliverySpTypeRepository = deliverySpTypeRepository;
+        this.storeDeliveryDetailSp = storeDeliveryDetailSp;
+        this.deliveryStoreCentersRepository = deliveryStoreCentersRepository;
+
     }
 
     public ProcessRequest(String sysTransactionId, DeliveryOrder deliveryOrder, ProviderRatePlanRepository providerRatePlanRepository,
                           ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository) {
         this.sysTransactionId = sysTransactionId;
         this.deliveryOrder = deliveryOrder;
-        this.logprefix = sysTransactionId;
+        this.logPrefix = sysTransactionId;
         this.location = "ProcessRequest";
         this.providerRatePlanRepository = providerRatePlanRepository;
         this.providerConfigurationRepository = providerConfigurationRepository;
@@ -105,7 +126,7 @@ public class ProcessRequest {
                           ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository) {
         this.sysTransactionId = sysTransactionId;
         this.requestBody = requestBody;
-        this.logprefix = sysTransactionId;
+        this.logPrefix = sysTransactionId;
         this.location = "ProcessRequest";
         this.providerRatePlanRepository = providerRatePlanRepository;
         this.providerConfigurationRepository = providerConfigurationRepository;
@@ -118,7 +139,7 @@ public class ProcessRequest {
                           ProviderConfigurationRepository providerConfigurationRepository, ProviderRepository providerRepository) {
         this.sysTransactionId = sysTransactionId;
         this.store = requestBody;
-        this.logprefix = sysTransactionId;
+        this.logPrefix = sysTransactionId;
         this.location = "ProcessRequest";
         this.providerRatePlanRepository = providerRatePlanRepository;
         this.providerConfigurationRepository = providerConfigurationRepository;
@@ -129,18 +150,25 @@ public class ProcessRequest {
 
     public ProcessResult GetPrice() {
         //get provider rate plan  
-        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
+        LogUtil.info(logPrefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
         if (order.getDeliveryProviderId() == null) {
             for (Fulfillment f : fulfillments) {
                 List<DeliverySpType> deliverySpTypes = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountryAndFulfilment(order.getDeliveryType(), order.getRegionCountry(), f.getFulfillment());
                 for (int i = 0; i < deliverySpTypes.size(); i++) {
-                    LogUtil.info(logprefix, location, "Get Price The Provider ID IS NULL  : " + sysTransactionId + " FulfillmentType : " + deliverySpTypes.get(i).getFulfilment(), "");
+                    LogUtil.info(logPrefix, location, "Get Price The Provider ID IS NULL  : " + sysTransactionId + " FulfillmentType : " + deliverySpTypes.get(i).getFulfilment(), "");
+
+                    DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCentersRepository.findByDeliveryProviderIdAndStoreId(deliverySpTypes.get(i).getProvider().getId().toString(), order.getStoreId());
+                    if (deliveryStoreCenters != null) {
+                        order.getPickup().setCostCenterCode(deliveryStoreCenters.getCenterId());
+                        LogUtil.info(logPrefix, location, "Store Center Code Based On the Provider : " + order.getPickup().getCostCenterCode(), "Provider Id : " + deliverySpTypes.get(i).getProvider().getId().toString());
+                    }
 
                     Fulfillment fulfillment = new Fulfillment();
                     fulfillment.setFulfillment(deliverySpTypes.get(i).getFulfilment());
                     fulfillment.setInterval(deliverySpTypes.get(i).getInterval());
+                    order.setDeliveryProviderId(deliverySpTypes.get(i).getProvider().getId());
 
-                    LogUtil.info(logprefix, location, "Find Fulfillment Type :" + f.getFulfillment(), "");
+                    LogUtil.info(logPrefix, location, "Find Fulfillment Type :" + f.getFulfillment(), "");
                     List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(deliverySpTypes.get(i).getProvider().getId());
                     HashMap config = new HashMap();
                     for (int j = 0; j < providerConfigList.size(); j++) {
@@ -148,7 +176,7 @@ public class ProcessRequest {
                         String fieldValue = providerConfigList.get(j).getConfigValue();
                         config.put(fieldName, fieldValue);
                     }
-                    ProviderThread dthread = new ProviderThread(this, sysTransactionId, deliverySpTypes.get(i).getProvider(), config, order, "GetPrice", sequenceNumberRepository, fulfillment);
+                    ProviderThread dthread = new ProviderThread(this, sysTransactionId, deliverySpTypes.get(i).getProvider(), config, order, "GetPrice", sequenceNumberRepository, fulfillment, deliveryZonePriceRepository);
                     dthread.start();
                 }
             }
@@ -159,8 +187,12 @@ public class ProcessRequest {
             if (storeDeliverySps.isEmpty()) {
                 List<DeliverySpType> deliverySpTypes = deliverySpTypeRepository.findAllByProviderAndDeliveryTypeAndRegionCountryAndFulfilment(provider, order.getDeliveryType(), order.getRegionCountry(), order.getDeliveryPeriod());
                 for (DeliverySpType deliverySpType : deliverySpTypes) {
-                    LogUtil.info(logprefix, location, "Get Price The Store DeliverySP is Empty : " + sysTransactionId + " FulfillmentType : " + deliverySpType.getFulfilment(), "");
+                    LogUtil.info(logPrefix, location, "Get Price The Store DeliverySP is Empty : " + sysTransactionId + " FulfillmentType : " + deliverySpType.getFulfilment(), "");
 
+                    DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCentersRepository.findByDeliveryProviderIdAndStoreId(provider.getId().toString(), order.getStoreId());
+                    if (deliveryStoreCenters != null) {
+                        order.getPickup().setCostCenterCode(deliveryStoreCenters.getCenterId());
+                    }
                     Fulfillment fulfillment = new Fulfillment();
 
                     fulfillment.setFulfillment(deliverySpType.getFulfilment());
@@ -172,15 +204,20 @@ public class ProcessRequest {
                         String fieldValue = providerConfiguration.getConfigValue();
                         config.put(fieldName, fieldValue);
                     }
-                    ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetPrice", sequenceNumberRepository, fulfillment);
+                    ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetPrice", sequenceNumberRepository, fulfillment, deliveryZonePriceRepository);
                     dthread.start();
 
                 }
             } else {
-                LogUtil.info(logprefix, location, "If Store Store Delivery SP Is Not Empty ", "");
+                LogUtil.info(logPrefix, location, "If Store Store Delivery SP Is Not Empty ", "");
 
                 for (StoreDeliverySp storeDeliverySp : storeDeliverySps) {
-                    LogUtil.info(logprefix, location, "Get Price The Store DeliverySP : " + storeDeliverySp.getStoreId() + " FulfillmentType : " + storeDeliverySp.getFulfilment(), "");
+                    LogUtil.info(logPrefix, location, "Get Price The Store DeliverySP : " + storeDeliverySp.getStoreId() + " FulfillmentType : " + storeDeliverySp.getFulfilment(), "");
+                    LogUtil.info(logPrefix, location, "Store Id : " + order.getStoreId() + " Provider Id : " + provider.getId(), "");
+                    DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCentersRepository.findByDeliveryProviderIdAndStoreId(String.valueOf(provider.getId()), order.getStoreId());
+                    if (deliveryStoreCenters != null) {
+                        order.getPickup().setCostCenterCode(deliveryStoreCenters.getCenterId());
+                    }
                     Fulfillment fulfillment = new Fulfillment();
                     fulfillment.setFulfillment(storeDeliverySp.getFulfilment());
                     if (fulfillment.getFulfillment().equals("FOURHOURS") || fulfillment.getFulfillment().equals("NEXTDAY") || fulfillment.getFulfillment().equals("FOURDAYS")) {
@@ -194,7 +231,7 @@ public class ProcessRequest {
                         String fieldValue = providerConfiguration.getConfigValue();
                         config.put(fieldName, fieldValue);
                     }
-                    ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetPrice", sequenceNumberRepository, fulfillment);
+                    ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider, config, order, "GetPrice", sequenceNumberRepository, fulfillment, deliveryZonePriceRepository);
                     dthread.start();
 
                 }
@@ -205,7 +242,7 @@ public class ProcessRequest {
         try {
             Thread.sleep(100);
         } catch (Exception ex) {
-            LogUtil.info(logprefix, location, "Get Price a) : " + ex.getMessage(), "");
+            LogUtil.info(logPrefix, location, "Get Price a) : " + ex.getMessage(), "");
 
 
         }
@@ -214,7 +251,7 @@ public class ProcessRequest {
             try {
                 Thread.sleep(500);
             } catch (Exception ex) {
-                LogUtil.info(logprefix, location, "Get Price b) : " + ex.getMessage(), "");
+                LogUtil.info(logPrefix, location, "Get Price b) : " + ex.getMessage(), "");
             }
         }
 
@@ -226,14 +263,14 @@ public class ProcessRequest {
             response.resultCode = -1;
             response.returnObject = priceResultLists;
         }
-        LogUtil.info(logprefix, location, "GetPrices finish. resultCode:" + response.resultCode, " priceResult count:" + priceResultLists.size());
+        LogUtil.info(logPrefix, location, "GetPrices finish. resultCode:" + response.resultCode, " priceResult count:" + priceResultLists.size());
         return response;
     }
 
 
     public ProcessResult SubmitOrder() {
         //get provider rate plan  
-        LogUtil.info(logprefix, location, "ProviderId:" + order.getDeliveryProviderId() + " productCode:" + order.getProductCode(), "");
+        LogUtil.info(logPrefix, location, "ProviderId:" + order.getDeliveryProviderId() + " productCode:" + order.getProductCode(), "");
         Optional<Provider> provider = providerRepository.findById(order.getDeliveryProviderId());
         List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(order.getDeliveryProviderId());
         HashMap config = new HashMap();
@@ -272,7 +309,7 @@ public class ProcessRequest {
 
         ProcessResult response = new ProcessResult();
         if (submitOrderResult.resultCode == 0) {
-            LogUtil.info(logprefix, location, "Order succesfully created", "");
+            LogUtil.info(logPrefix, location, "Order succesfully created", "");
             DeliveryOrder orderCreated = submitOrderResult.orderCreated;
             deliveryOrder.setCreatedDate(orderCreated.getCreatedDate());
             deliveryOrder.setSpOrderId(orderCreated.getSpOrderId());
@@ -292,18 +329,18 @@ public class ProcessRequest {
         } else {
             response.resultCode = submitOrderResult.resultCode;
             response.resultString = submitOrderResult.message;
-            LogUtil.info(logprefix, location, "Fail to create order", "");
+            LogUtil.info(logPrefix, location, "Fail to create order", "");
         }
 
         response.returnObject = submitOrderResult;
-        LogUtil.info(logprefix, location, "SubmitOrder finish. resultCode:" + response.resultCode, " SubmitOrderResult:" + submitOrderResult);
+        LogUtil.info(logPrefix, location, "SubmitOrder finish. resultCode:" + response.resultCode, " SubmitOrderResult:" + submitOrderResult);
         return response;
     }
 
 
     public ProcessResult CancelOrder() {
         //get provider rate plan  
-        LogUtil.info(logprefix, location, "ProviderId:" + deliveryOrder.getDeliveryProviderId() + " productCode:" + deliveryOrder.getProductCode(), "");
+        LogUtil.info(logPrefix, location, "ProviderId:" + deliveryOrder.getDeliveryProviderId() + " productCode:" + deliveryOrder.getProductCode(), "");
         Optional<Provider> provider = providerRepository.findById(deliveryOrder.getDeliveryProviderId());
         List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(deliveryOrder.getDeliveryProviderId());
         HashMap config = new HashMap();
@@ -336,89 +373,135 @@ public class ProcessRequest {
             response.resultCode = -1;
             response.returnObject = cancelOrderResult;
         }
-        LogUtil.info(logprefix, location, "CancelOrder finish. resultCode:" + response.resultCode, " cancelOrderResult:" + cancelOrderResult);
+        LogUtil.info(logPrefix, location, "CancelOrder finish. resultCode:" + response.resultCode, " cancelOrderResult:" + cancelOrderResult);
         return response;
     }
 
 
     public ProcessResult QueryOrder() {
         //get provider rate plan  
-        LogUtil.info(logprefix, location, "ProviderId:" + deliveryOrder.getDeliveryProviderId() + " SpOrderId:" + deliveryOrder.getSpOrderId(), "");
-        Optional<Provider> provider = providerRepository.findById(deliveryOrder.getDeliveryProviderId());
-        List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(deliveryOrder.getDeliveryProviderId());
-        HashMap config = new HashMap();
-        for (int j = 0; j < providerConfigList.size(); j++) {
-            String fieldName = providerConfigList.get(j).getId().getConfigField();
-            String fieldValue = providerConfigList.get(j).getConfigValue();
-            config.put(fieldName, fieldValue);
-        }
-        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider.get(), config, this.deliveryOrder.getSpOrderId(), "QueryOrder");
-        dthread.start();
+        LogUtil.info(logPrefix, location, "ProviderId:" + deliveryOrder.getDeliveryProviderId() + " SpOrderId:" + deliveryOrder.getSpOrderId(), "");
+//        Optional<Provider> provider = providerRepository.findById(deliveryOrder.getDeliveryProviderId());
+        Optional<Provider> provider = providerRepository.findByIdAndQueryOrderClassnameIsNotNull(deliveryOrder.getDeliveryProviderId());
+        if (provider.isPresent()) {
+            List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(deliveryOrder.getDeliveryProviderId());
+            if (provider.get().getQueryOrderClassname().equals(null)) {
+                System.err.println("PRINT HERE IF NULL");
+            }
+            HashMap config = new HashMap();
+            for (int j = 0; j < providerConfigList.size(); j++) {
+                String fieldName = providerConfigList.get(j).getId().getConfigField();
+                String fieldValue = providerConfigList.get(j).getConfigValue();
+                config.put(fieldName, fieldValue);
+            }
+            ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider.get(), config, this.deliveryOrder.getSpOrderId(), "QueryOrder");
+            dthread.start();
 
-        try {
-            Thread.sleep(100);
-        } catch (Exception ex) {
-        }
-
-        while (providerThreadRunning > 0) {
             try {
-                Thread.sleep(500);
+                Thread.sleep(100);
             } catch (Exception ex) {
             }
-            //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
-        }
 
-        ProcessResult response = new ProcessResult();
-        response.resultCode = 0;
-        response.returnObject = queryOrderResult;
-        LogUtil.info(logprefix, location, "SubmitOrder finish. resultCode:" + response.resultCode, " queryOrderResult:" + queryOrderResult);
-        return response;
+            while (providerThreadRunning > 0) {
+                try {
+                    Thread.sleep(500);
+                } catch (Exception ex) {
+                }
+                //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
+            }
+
+            ProcessResult response = new ProcessResult();
+            if (queryOrderResult.isSuccess) {
+                response.resultCode = 0;
+                response.returnObject = queryOrderResult;
+            } else {
+                response.resultCode = -1;
+
+            }
+            LogUtil.info(logPrefix, location, "Query Order finish. resultCode:" + response.resultCode, " queryOrderResult:" + queryOrderResult);
+            return response;
+        } else {
+            ProcessResult response = new ProcessResult();
+
+            response.resultCode = -1;
+            LogUtil.info(logPrefix, location, "Query Order Cannot Find Class:" + response.resultCode, " queryOrderResult:" + queryOrderResult);
+            return response;
+        }
     }
 
-    public ProcessResult ProcessCallback(String spIP, ProviderIpRepository providerIpRepository, int providerId) {
+    public ProcessResult ProcessCallback(String spIP, ProviderIpRepository providerIpRepository, int id) {
         //get provider rate plan  
-        LogUtil.info(logprefix, location, "Caller IP:" + spIP, "");
+        LogUtil.info(logPrefix, location, "Caller IP:" + spIP, "");
         //get provider based on IP
         Optional<ProviderIp> spId = providerIpRepository.findById(spIP);
 
         ProcessResult response = new ProcessResult();
-        //if (spId.isPresent()) {
-        //int providerId = spId.get().getSpId();
-//        int providerId = 1;
-        LogUtil.info(logprefix, location, "Provider found. SpId:" + providerId, "");
-        Optional<Provider> provider = providerRepository.findById(providerId);
-        List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(providerId);
-        HashMap config = new HashMap();
-        for (int j = 0; j < providerConfigList.size(); j++) {
-            String fieldName = providerConfigList.get(j).getId().getConfigField();
-            String fieldValue = providerConfigList.get(j).getConfigValue();
-            config.put(fieldName, fieldValue);
-        }
-        ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider.get(), config, requestBody, "ProviderCallback");
-        dthread.start();
+        if (spId.isPresent()) {
+            int providerId = spId.get().getSpId();
+            LogUtil.info(logPrefix, location, "Provider found. SpId:" + providerId, "");
+            Optional<Provider> provider = providerRepository.findById(providerId);
+            List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(providerId);
+            HashMap config = new HashMap();
+            for (int j = 0; j < providerConfigList.size(); j++) {
+                String fieldName = providerConfigList.get(j).getId().getConfigField();
+                String fieldValue = providerConfigList.get(j).getConfigValue();
+                config.put(fieldName, fieldValue);
+            }
+            ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider.get(), config, requestBody, "ProviderCallback");
+            dthread.start();
 
-        try {
-            Thread.sleep(100);
-        } catch (Exception ex) {
-        }
-
-        while (providerThreadRunning > 0) {
             try {
-                Thread.sleep(500);
+                Thread.sleep(100);
             } catch (Exception ex) {
             }
-            //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
+
+            while (providerThreadRunning > 0) {
+                try {
+                    Thread.sleep(500);
+                } catch (Exception ex) {
+                }
+                //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
+            }
+
+            response.resultCode = 0;
+            response.returnObject = spCallbackResult;
+        } else if (id != 0) {
+
+            LogUtil.info(logPrefix, location, "Provider found. SpId:" + id, "");
+            Optional<Provider> provider = providerRepository.findById(id);
+            List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(id);
+            HashMap config = new HashMap();
+            for (int j = 0; j < providerConfigList.size(); j++) {
+                String fieldName = providerConfigList.get(j).getId().getConfigField();
+                String fieldValue = providerConfigList.get(j).getConfigValue();
+                config.put(fieldName, fieldValue);
+            }
+            ProviderThread dthread = new ProviderThread(this, sysTransactionId, provider.get(), config, requestBody, "ProviderCallback");
+            dthread.start();
+
+            try {
+                Thread.sleep(100);
+            } catch (Exception ex) {
+            }
+
+            while (providerThreadRunning > 0) {
+                try {
+                    Thread.sleep(500);
+                } catch (Exception ex) {
+                }
+                //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
+            }
+
+            response.resultCode = 0;
+            response.returnObject = spCallbackResult;
+
+        } else {
+            LogUtil.info(logPrefix, location, "IP not recognize", "");
+            response.resultCode = -1;
+            response.returnObject = null;
         }
 
-        response.resultCode = 0;
-        response.returnObject = spCallbackResult;
-        /*} else {
-            LogUtil.info(logprefix, location, "IP not recognize", "");
-            response.resultCode=-1;
-            response.returnObject=null;
-        }*/
-
-        LogUtil.info(logprefix, location, "ProcessCallback finish. resultCode:" + response.resultCode, " spCallbackResult:" + spCallbackResult);
+        LogUtil.info(logPrefix, location, "ProcessCallback finish. resultCode:" + response.resultCode, " spCallbackResult:" + spCallbackResult);
         return response;
     }
 
@@ -451,7 +534,7 @@ public class ProcessRequest {
         ProcessResult response = new ProcessResult();
         response.resultCode = 0;
         response.returnObject = pickupDateResult;
-        LogUtil.info(logprefix, location, "GetPickupDate finish. resultCode:" + response.resultCode, " pickupDateResult:" + pickupDateResult);
+        LogUtil.info(logPrefix, location, "GetPickupDate finish. resultCode:" + response.resultCode, " pickupDateResult:" + pickupDateResult);
         return response;
     }
 
@@ -484,14 +567,14 @@ public class ProcessRequest {
         ProcessResult response = new ProcessResult();
         response.resultCode = 0;
         response.returnObject = pickupTimeResult;
-        LogUtil.info(logprefix, location, "GetPickupTime finish. resultCode:" + response.resultCode, " pickupTimeResult:" + pickupTimeResult);
+        LogUtil.info(logPrefix, location, "GetPickupTime finish. resultCode:" + response.resultCode, " pickupTimeResult:" + pickupTimeResult);
         return response;
     }
 
 
     public ProcessResult GetLocationId() {
         //get provider rate plan  
-        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
+        LogUtil.info(logPrefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
         List<ProviderRatePlan> providerRatePlanList = providerRatePlanRepository.findByIdProductCode(order.getProductCode());
 
         for (int i = 0; i < providerRatePlanList.size(); i++) {
@@ -522,13 +605,13 @@ public class ProcessRequest {
         ProcessResult response = new ProcessResult();
         response.resultCode = 0;
         response.returnObject = locationIdResult;
-        LogUtil.info(logprefix, location, "GetLocationId finish. resultCode:" + response.resultCode, " locationIdResult count:" + locationIdResult);
+        LogUtil.info(logPrefix, location, "GetLocationId finish. resultCode:" + response.resultCode, " locationIdResult count:" + locationIdResult);
         return response;
     }
 
     public ProcessResult GetDriverDetails() {
         //get provider rate plan
-        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + deliveryOrder.getDeliveryProviderId(), "");
+        LogUtil.info(logPrefix, location, "Find provider rate plan for productCode:" + deliveryOrder.getDeliveryProviderId(), "");
         Provider provider = providerRepository.findOneById(deliveryOrder.getDeliveryProviderId());
         List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(provider.getId());
         HashMap config = new HashMap();
@@ -558,7 +641,7 @@ public class ProcessRequest {
         ProcessResult response = new ProcessResult();
         response.resultCode = driverDetailsResult.resultCode;
         response.returnObject = driverDetailsResult;
-        LogUtil.info(logprefix, location, "GetDriverDetails finish. resultCode:" + response.resultCode, " driverDetailsResult count:" + driverDetailsResult);
+        LogUtil.info(logPrefix, location, "GetDriverDetails finish. resultCode:" + response.resultCode, " driverDetailsResult count:" + driverDetailsResult);
         return response;
     }
 
@@ -595,7 +678,7 @@ public class ProcessRequest {
         ProcessResult response = new ProcessResult();
         response.resultCode = 0;
         response.returnObject = airwayBillResult;
-        LogUtil.info(logprefix, location, "GetAirwayBill finish. resultCode:" + response.resultCode, " airwayBillResult count:" + airwayBillResult);
+        LogUtil.info(logPrefix, location, "GetAirwayBill finish. resultCode:" + response.resultCode, " airwayBillResult count:" + airwayBillResult);
         return response;
     }
 
@@ -636,7 +719,7 @@ public class ProcessRequest {
             response.resultCode = -1;
             response.returnObject = additionalInfoResult;
         }
-        LogUtil.info(logprefix, location, "GetAirwayBill finish. resultCode:" + response.resultCode, " airwayBillResult count:" + airwayBillResult);
+        LogUtil.info(logPrefix, location, "GetAirwayBill finish. resultCode:" + response.resultCode, " airwayBillResult count:" + airwayBillResult);
         return response;
     }
 
@@ -676,7 +759,7 @@ public class ProcessRequest {
             response.resultCode = -1;
             response.returnObject = priceResultList;
         }
-        LogUtil.info(logprefix, location, "AddPriorityFee finish. resultCode:" + response.resultCode, " AddPriorityFee count:" + priceResultList);
+        LogUtil.info(logPrefix, location, "AddPriorityFee finish. resultCode:" + response.resultCode, " AddPriorityFee count:" + priceResultList);
         return response;
     }
 

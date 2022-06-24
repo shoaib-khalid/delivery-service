@@ -44,7 +44,6 @@ public class Order {
     VehicleType vehicleType;
     String deliveryPeriod;
     Integer interval;
-    //   String deliveryService;
     String remarks;
     String deliveryType;
     Double totalWeightKg;
@@ -52,6 +51,7 @@ public class Order {
     BigDecimal width;
     BigDecimal length;
     String pickupTime;
-//    String signature;
+    String signature;
+    BigDecimal codAmount;
 
 }

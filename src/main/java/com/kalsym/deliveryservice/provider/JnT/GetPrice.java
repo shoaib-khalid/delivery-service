@@ -7,6 +7,7 @@ import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
+import com.kalsym.deliveryservice.repositories.DeliveryZonePriceRepository;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import org.springframework.http.HttpEntity;
@@ -36,9 +37,11 @@ public class GetPrice extends SyncDispatcher {
     private String customerCode;
     private String account;
     private Fulfillment fulfillment;
+    private DeliveryZonePriceRepository deliveryZonePriceRepository;
 
 
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository,Fulfillment fulfillment) {
+
+    public GetPrice(CountDownLatch latch, Integer providerId, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository,Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
 
         super(latch);
         this.systemTransactionId = systemTransactionId;
@@ -55,6 +58,7 @@ public class GetPrice extends SyncDispatcher {
         this.customerCode = (String) config.get("cuscode");
         this.account = (String) config.get("account");
         this.fulfillment = fulfillment;
+        this.deliveryZonePriceRepository = deliveryZonePriceRepository;
 
     }
 

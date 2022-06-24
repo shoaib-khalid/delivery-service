@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DeliveryZonePriceRepository extends JpaRepository<DeliveryZonePrice, Long> {
-    DeliveryZonePrice findBySpIdAndWeight(double providerId, double weight);
+    DeliveryZonePrice findBySpIdAndWeight(String providerId, double weight);
 }

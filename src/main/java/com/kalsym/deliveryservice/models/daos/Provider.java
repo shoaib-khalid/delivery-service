@@ -64,11 +64,13 @@ public class Provider implements Serializable {
     @JsonIgnore
     Boolean retry;
     @JsonIgnore
+    String classLoaderName;
+    @JsonIgnore
     Boolean remark;
     @Transient
     DeliveryRemarks remarks;
     Boolean scheduleDate;
-//    boolean externalRequest;
-//    String classLoaderName;
+    boolean externalRequest;
+    Boolean dialog;
 
 }

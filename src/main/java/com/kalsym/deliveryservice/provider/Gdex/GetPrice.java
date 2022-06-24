@@ -37,7 +37,7 @@ public class GetPrice extends SyncDispatcher {
     private String location = "GdexGetPrice";
     private SequenceNumberRepository sequenceNumberRepository;
 
-    public GetPrice(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
+    public GetPrice(CountDownLatch latch, Integer providerId, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
         this.systemTransactionId = systemTransactionId;
         logprefix = systemTransactionId;

@@ -1,9 +1,265 @@
 ##############################################################################################
-# Version v.2.7.10| 22-April-2022
+# **Version v.2.10.10| 24 -June-2022**
 ###############################################################################################
 ### Code Changes:
 
-1. Production Lalamove Callback Patch- 0.0.4 - Check if status already updated or not. 
+Production Hot Fix Get Price (service fee ) default Value is 0.00
+
+
+##############################################################################################
+# **Version v.2.10.9| 24 -June-2022**
+###############################################################################################
+### Code Changes:
+
+Bug Fixed Bykea Provider And Get Price Markup Price
+
+##############################################################################################
+# **Version v.2.10.8| 22 -June-2022**
+###############################################################################################
+### Code Changes:
+
+Uncomment Line For Delivery Order Status;
+
+
+##############################################################################################
+# **Version v.2.10.7| 21 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Bug Fix For Staging
+
+ALTER TABLE symplified.delivery_service_charge MODIFY COLUMN startTime time NULL;
+ALTER TABLE symplified.delivery_service_charge MODIFY COLUMN endTime time NULL;
+ALTER TABLE symplified.delivery_service_charge ADD basedOnPrice tinyint DEFAULT 0 NOT NULL;
+ALTER TABLE symplified.delivery_service_charge ADD basenOnTime tinyint DEFAULT 0 NOT NULL;
+
+
+
+DROP FUNCTION IF EXISTS symplified.getMarkupPrice;
+DELIMITER $$
+$$
+CREATE DEFINER=`root`@`%` FUNCTION `symplified`.`getMarkupPrice`(deliveryId VARCHAR(50), deliveryPrice decimal(10,2)) RETURNS decimal(10,2)
+DETERMINISTIC
+BEGIN
+
+	DECLARE newPrice DECIMAL(10,2);
+	DECLARE currentPrice DECIMAL(10,2);
+	DECLARE serviceFees DECIMAL(10,2);
+
+	
+	SELECT dsc.serviceFee INTO serviceFees FROM symplified.delivery_service_charge dsc WHERE dsc.deliverySpId = deliveryId AND basedOnPrice = TRUE AND dsc.priceBelowRange >= deliveryPrice  LIMIT 1 ;
+	IF (serviceFees != NULL) THEN
+		SET newPrice = 	serviceFees + deliveryPrice;
+		RETURN newPrice;
+	ELSE
+		SELECT dsc.serviceFee INTO serviceFees FROM symplified.delivery_service_charge dsc WHERE dsc.deliverySpId = deliveryId AND basedOnPrice = TRUE AND  deliveryPrice >=  dsc.priceBelowRange ORDER BY dsc.serviceFee DESC LIMIT 1;
+		SET newPrice = 	serviceFees + deliveryPrice;
+		RETURN newPrice;
+	END IF;
+END$$
+DELIMITER ;
+
+
+
+##############################################################################################
+# **Version v.2.10.6| 20 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Production FIX
+
+
+
+##############################################################################################
+# **Version v.2.10.5| 17 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Bykea Order Callback
+
+##############################################################################################
+# **Version v.2.10.4| 17 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Bykea Callback
+
+
+##############################################################################################
+# **Version v.2.10.3| 17 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Bykea Added Callback 
+
+
+##############################################################################################
+# **Version v.2.10.2| 17 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Bykea
+
+
+
+##############################################################################################
+# **Version v.2.10.1| 17 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Added New Table to store order status
+
+
+##############################################################################################
+# **Version v.2.10.0| 15 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Added New Provider Bykea 
+
+
+##############################################################################################
+# **Version v.2.9.9| 07 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Fixed bug Get Price Class for All the provider
+
+
+##############################################################################################
+# **Version v.2.9.8| 07 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Store Id Bug Fixed During Confirm Delivery
+
+
+##############################################################################################
+# **Version v.2.9.7| 07 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Retry Order
+2. Bug Fixed for lat and long
+
+##############################################################################################
+# **Version v.2.9.6| 07 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Bug Fixed Retry Order
+
+
+##############################################################################################
+# **Version v.2.9.5| 03 -June-2022**
+###############################################################################################
+### Code Changes:
+1. Store lat and long in db
+
+##############################################################################################
+# **Version v.2.9.4| 01-June-2022**
+###############################################################################################
+### Code Changes:
+1.Bug Fixed for missing field to save db
+2. easydukan rider submit order bug fixed - missing param to send 
+
+##############################################################################################
+# **Version v.2.9.3| 01-June-2022**
+###############################################################################################
+### Code Changes:
+Bug Fixed for Easy Dukan Rider
+
+
+
+##############################################################################################
+# **Version v.2.9.2| 31-May-2022**
+###############################################################################################
+### Code Changes:
+Bug Fixed for Malaysia stores
+
+
+##############################################################################################
+# **Version v.2.9.1| 30-May-2022**
+###############################################################################################
+### Code Changes:
+Version cannot see in staging
+##############################################################################################
+# **Version v.2.9.0| 30-May-2022**
+###############################################################################################
+### Code Changes:
+1. Added Swyft delivery provider
+2. Added Easy Dukan Rider - Still pending. Support only Next Day
+
+ALTER TABLE symplified.delivery_quotation ADD deliveryContactEmail varchar(500) NULL;
+
+
+##############################################################################################
+# **Version v.2.8.9| 25-May-2022**
+###############################################################################################
+### Code Changes:
+1. TCS bug fixed during confirm delivery
+2. Pop up date fixed
+
+##############################################################################################
+# **Version v.2.8.8| 24-May-2022**
+###############################################################################################
+### Code Changes:
+1. TCS bug fixed during confirm delivery
+
+
+##############################################################################################
+# Version v.2.8.7| 10-May-2022
+###############################################################################################
+### Code Changes:
+
+1. Bug Fixed - confirm delivery lat and log fixed
+
+##############################################################################################
+# Version v.2.8.6| 09-May-2022
+###############################################################################################
+### Code Changes:
+
+1. Bug Fixed - TCS bug fixed
+
+##############################################################################################
+# Version v.2.8.5| 29-April-2022
+###############################################################################################
+### Code Changes:
+
+1. Bug Fixed - PandaGo Provider
+2. Added new function for PandaGo to query order status
+
+##############################################################################################
+# Version v.2.8.4| 27-April-2022
+###############################################################################################
+### Code Changes:
+
+1. Added Panda go Delivery Within 5KM feature added.
+2. Added Code Amount Added to During Submit
+ALTER TABLE symplified.delivery_orders ADD codAmount decimal(15,2) NULL;
+
+
+##############################################################################################
+# Version v.2.8.3| 26-April-2022
+###############################################################################################
+### Code Changes:
+
+1. Bug fixed remove lat and long throws exception in log -during confirm delivery
+
+
+
+
+##############################################################################################
+# Version v.2.8.2| 25-April-2022
+###############################################################################################
+### Code Changes:
+
+1. Bug fixed remove lat and long throws exception in log
+
+
+
+##############################################################################################
+# Version v.2.8.1| 22-April-2022
+###############################################################################################
+### Code Changes:
+
+1. Bug fixed remove latitude and longitude for delivery class.
+
+
+##############################################################################################
+# Version v.2.8.0| 21-April-2022
+###############################################################################################
+### Code Changes:
+
+1. Added Back Split Service Module Back- Staging
 
 ##############################################################################################
 # Version v.2.7.9| 20-April-2022

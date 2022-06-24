@@ -1,8 +1,4 @@
-/*
- * Here comes the text of your license
- * Each line should be prefixed with  *
- */
-package com.kalsym.deliveryservice.provider.MrSpeedy;
+package com.kalsym.deliveryservice.provider.Bykea;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -20,7 +16,7 @@ public class OrderCallback extends SyncDispatcher {
 
     private final HashMap productMap;
     private final String logprefix;
-    private final String location = "MrSpeedyOrderCallback";
+    private final String location = "BykeaOrderCallback";
     private final String systemTransactionId;
     private final JsonObject jsonBody;
     private String spOrderId;
@@ -29,11 +25,11 @@ public class OrderCallback extends SyncDispatcher {
         super(latch);
         logprefix = systemTransactionId;
         this.systemTransactionId = systemTransactionId;
-        LogUtil.info(logprefix, location, "MrSpeedy OrderCallback class initialized!!", "");
+        LogUtil.info(logprefix, location, "Bykea OrderCallback class initialized!!", "");
         productMap = (HashMap) config.get("productCodeMapping");
         Gson gson = new Gson();
         String jsonString = gson.toJson(jsonBody, LinkedHashMap.class);
-        LogUtil.info(logprefix, location, "Request Body:" + jsonString, "");
+        LogUtil.info(logprefix, location, "Bykea Callback Body:" + jsonString, "");
         this.jsonBody = new Gson().fromJson(jsonString, JsonObject.class);
     }
 
@@ -51,43 +47,63 @@ public class OrderCallback extends SyncDispatcher {
     private SpCallbackResult extractResponseBody() {
         SpCallbackResult callbackResult = new SpCallbackResult();
         try {
-            String status = jsonBody.get("delivery").getAsJsonObject().get("status").getAsString();
-            String spOrderId = jsonBody.get("delivery").getAsJsonObject().get("order_id").getAsString();
+            String status = jsonBody.get("event").getAsString();
+            String spOrderId = jsonBody.get("data").getAsJsonObject().get("trip_id").getAsString();
             String driverId = "";
-            String systemStatus = "";
-
             String riderName = "";
             String riderPhone = "";
             String carNoPlate = "";
             String trackingLink = "";
+            String systemStatus = "";
             switch (status) {
-                case "new":
-                case "available":
+                case "booking.created":
+                case "booking.opened":
                     systemStatus = DeliveryCompletionStatus.ASSIGNING_RIDER.name();
                     break;
-                case "courier_assigned":
-                case "courier_departed":
-                    driverId = jsonBody.get("delivery").getAsJsonObject().get("courier").getAsJsonObject().get("courier_id").getAsString();
+                case "booking.accepted":
+                case "booking.arrived":
+                case "booking.updated.trackinglink":
+//                    driverId = jsonBody.get("data").getAsJsonObject().get("trip_id").getAsString();
+                    try {
+                        trackingLink = jsonBody.get("data").getAsJsonObject().get("tracking_url").getAsString();
+                    } catch (Exception ex) {
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Tracking Url: " + ex.getMessage());
+                    }
+                    try {
+                        riderName = jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("name").getAsString();
+                    } catch (Exception ex) {
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Name: " + ex.getMessage());
+                    }
+                    try {
+                        riderPhone = jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("mobile").getAsString();
+                    } catch (Exception ex) {
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Phone: " + ex.getMessage());
+                    }
+                    try {
+                        carNoPlate = jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("plate_no").getAsString();
+                    } catch (Exception ex) {
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Plate No : " + ex.getMessage());
+                    }
                     systemStatus = DeliveryCompletionStatus.AWAITING_PICKUP.name();
                     break;
-                case "parcel_picked_up":
+                case "booking.started":
                 case "courier_arrived":
                     systemStatus = DeliveryCompletionStatus.BEING_DELIVERED.name();
                     break;
-                case "completed":
+                case "booking.finished":
+                case "booking.feedback.partner":
                     systemStatus = DeliveryCompletionStatus.COMPLETED.name();
                     break;
-                case "canceled":
+                case "booking.expired":
+                case "booking.cancelled.partner":
                     systemStatus = DeliveryCompletionStatus.CANCELED.name();
                     break;
             }
 
-
             callbackResult.spOrderId = spOrderId;
             callbackResult.status = status;
-            callbackResult.driverId = driverId;
-            callbackResult.systemStatus = systemStatus;
             callbackResult.trackingUrl = trackingLink;
+            callbackResult.systemStatus = systemStatus;
             callbackResult.riderName = riderName;
             callbackResult.riderPhone = riderPhone;
             callbackResult.driveNoPlate = carNoPlate;

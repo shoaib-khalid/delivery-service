@@ -9,6 +9,8 @@ import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.daos.Provider;
 import com.kalsym.deliveryservice.models.daos.Store;
+import com.kalsym.deliveryservice.repositories.DeliveryZoneCityRepository;
+import com.kalsym.deliveryservice.repositories.DeliveryZonePriceRepository;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.LogUtil;
 
@@ -37,6 +39,7 @@ public class ProviderThread extends Thread implements Runnable {
     private Fulfillment fulfillment;
     private Object requestBody;
     private SequenceNumberRepository sequenceNumberRepository;
+    private DeliveryZonePriceRepository deliveryZonePriceRepository;
 
 
     public ProviderThread(ProcessRequest caller, String sysTransactionId,
@@ -53,6 +56,23 @@ public class ProviderThread extends Thread implements Runnable {
         this.deliveryOrder = null;
         this.store = null;
         this.fulfillment = fulfillment;
+    }
+
+    public ProviderThread(ProcessRequest caller, String sysTransactionId,
+                          Provider provider, HashMap providerConfig, Order order, String functionName,
+                          SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
+        this.sysTransactionId = sysTransactionId;
+        this.provider = provider;
+        this.order = order;
+        this.providerConfig = providerConfig;
+        this.caller = caller;
+        this.functionName = functionName;
+        this.spOrderId = null;
+        this.sequenceNumberRepository = sequenceNumberRepository;
+        this.deliveryOrder = null;
+        this.store = null;
+        this.fulfillment = fulfillment;
+        this.deliveryZonePriceRepository = deliveryZonePriceRepository;
     }
 
     public ProviderThread(ProcessRequest caller, String sysTransactionId,
@@ -209,12 +229,12 @@ public class ProviderThread extends Thread implements Runnable {
             }
             Class<?> classObject = null;
             Constructor<?>[] cons = new Constructor[0];
-//            if (!provider.isExternalRequest()) {
+            if (!provider.isExternalRequest()) {
                 classObject = Class.forName(className);
                 cons = classObject.getConstructors();
                 LogUtil.info(logprefix, location, "Constructors:" + cons[0].toString(), "");
-//
-//            }
+
+            }
             DispatchRequest reqFactoryObj = null;
             CountDownLatch latch = new CountDownLatch(1);
             //get all constructors
@@ -222,48 +242,55 @@ public class ProviderThread extends Thread implements Runnable {
 
             try {
                 if (functionName.equalsIgnoreCase("QueryOrder") || functionName.equalsIgnoreCase("CancelOrder")) {
-//                    if (provider.isExternalRequest()) {
-//                        URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
-//
-//                        // Create a new URLClassLoader
-//                        URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
-//
-//                        // Load the target class
-//                        Class<?> beanClass = urlClassLoader.loadClass("com.kalsym.lalamoveProvider.controller.OrderController");
-//
-//                        // Create a new instance from the loaded class
-//                        Constructor<?> constructor = beanClass.getConstructor();
-//                        Object beanObj = constructor.newInstance();
-//
-//
-//                        ObjectMapper mapper = new ObjectMapper();
-//
-//                        Gson gson = new Gson();
-//                        Method method = beanClass.getMethod("queryOrder", String.class, String.class, String.class);
-//                        Object value = method.invoke(beanObj, gson.toJson(providerConfig), spOrderId, this.sysTransactionId);
-//                        JsonObject response = new Gson().fromJson(value.toString(), JsonObject.class);
-//                        System.err.println("RESPONSE : " + response.toString());
-//                        QueryOrderResult queryOrderResult = new QueryOrderResult();
-//
-//                        DeliveryOrder orderFound = new DeliveryOrder();
-//                        orderFound.setSpOrderId(response.getAsJsonObject("returnObject").get("queryOrderResult").getAsJsonObject().get("orderFound").getAsJsonObject().get("spOrderId").getAsString());
-//                        orderFound.setStatus(response.getAsJsonObject("returnObject").get("queryOrderResult").getAsJsonObject().get("orderFound").getAsJsonObject().get("status").getAsString());
-//                        orderFound.setCustomerTrackingUrl(response.getAsJsonObject("returnObject").get("queryOrderResult").getAsJsonObject().get("orderFound").getAsJsonObject().get("customerTrackingUrl").getAsString());
-//
-//                        orderFound.setSystemStatus(response.getAsJsonObject("returnObject").get("queryOrderResult").getAsJsonObject().get("orderFound").getAsJsonObject().get("systemStatus").getAsString());
-//
-//                        queryOrderResult.orderFound = orderFound;
-//                        queryOrderResult.isSuccess = response.getAsJsonObject("returnObject").get("queryOrderResult").getAsJsonObject().get("success").getAsBoolean();
-//
-////                    ProcessResult processResult = new ProcessResult();
-////                        processResult.returnObject = priceResult;
-//                        processResult.resultCode = response.get("resultCode").getAsInt();
-//                        processResult.returnObject = queryOrderResult;
-//
-//                        LogUtil.info(logprefix, location, "Response From The Class ", value.toString());
-//                    } else {
+                    if (provider.isExternalRequest()) {
+                        URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
+
+                        // Create a new URLClassLoader
+                        URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
+
+                        // Load the target class
+                        Class<?> beanClass = urlClassLoader.loadClass(provider.getAdditionalQueryClassName());
+
+                        // Create a new instance from the loaded class
+                        Constructor<?> constructor = beanClass.getConstructor();
+                        Object beanObj = constructor.newInstance();
+
+
+                        ObjectMapper mapper = new ObjectMapper();
+
+                        Gson gson = new Gson();
+                        Method method = beanClass.getMethod(functionName, String.class, String.class, String.class);
+                        Object value = method.invoke(beanObj, gson.toJson(providerConfig), spOrderId, this.sysTransactionId);
+                        JsonObject response = new Gson().fromJson(value.toString(), JsonObject.class);
+                        QueryOrderResult queryOrderResult = new QueryOrderResult();
+                        if (response.getAsJsonObject("returnObject").get("isSuccess").getAsBoolean()) {
+                            DeliveryOrder orderFound = new DeliveryOrder();
+                            orderFound.setSpOrderId(response.getAsJsonObject("returnObject").get("orderFound").getAsJsonObject().get("spOrderId").getAsString());
+                            orderFound.setStatus(response.getAsJsonObject("returnObject").get("orderFound").getAsJsonObject().get("status").getAsString());
+                            orderFound.setCustomerTrackingUrl(response.getAsJsonObject("returnObject").get("orderFound").getAsJsonObject().get("customerTrackingUrl").getAsString());
+
+                            orderFound.setSystemStatus(response.getAsJsonObject("returnObject").get("orderFound").getAsJsonObject().get("systemStatus").getAsString());
+
+                            queryOrderResult.orderFound = orderFound;
+                            queryOrderResult.isSuccess = response.getAsJsonObject("returnObject").get("isSuccess").getAsBoolean();
+
+//                    ProcessResult processResult = new ProcessResult();
+//                        processResult.returnObject = priceResult;
+                            processResult.resultCode = response.get("resultCode").getAsInt();
+                            processResult.returnObject = queryOrderResult;
+
+                            LogUtil.info(logprefix, location, "Response From The Class ", value.toString());
+                        } else {
+                            LogUtil.info(logprefix, location, "Response From The Class ", response.toString());
+                            queryOrderResult.providerId = response.getAsJsonObject("returnObject").get("providerId").getAsInt();
+                            processResult.returnObject = queryOrderResult;
+                            processResult.resultCode = response.get("resultCode").getAsInt();
+
+
+                        }
+                    } else {
                         reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, spOrderId, this.sysTransactionId);
-//                    }
+                    }
 
                 } else if (functionName.equalsIgnoreCase("ProviderCallback")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, requestBody, this.sysTransactionId);
@@ -280,80 +307,109 @@ public class ProviderThread extends Thread implements Runnable {
                 } else if (functionName.equalsIgnoreCase("GetPrice")) {
                     // Getting a method from the loaded class and invoke it
 
-//                    if (provider.isExternalRequest()) {
-//                        LogUtil.info(logprefix, location, "Load the file location: ", provider.getClassLoaderName());
-//                        Class<?> beanClass = null;
-//                        Object beanObj = new Object();
-//                        try {
-//                           URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
-//
-//                           // Create a new URLClassLoader
-//                           URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
-//
-//                           // Load the target class
-//                           beanClass = urlClassLoader.loadClass("com.kalsym.pandaGo.controller.OrderController");
-//
-//                           // Create a new instance from the loaded class
-//                           Constructor<?> constructor = beanClass.getConstructor();
-//                            beanObj = constructor.newInstance();
-//
-//                       }catch (Exception ex){
-//                           LogUtil.info(logprefix, location, "Exception ", ex.getMessage());
-//
-//                       }
-//                        ObjectMapper mapper = new ObjectMapper();
-//
-//                        Gson gson = new Gson();
-//                        assert beanClass != null;
-//                        Method method = beanClass.getMethod("getPrice", String.class, String.class, String.class, String.class);
-//                        Object value = method.invoke(beanObj, gson.toJson(providerConfig), gson.toJson(order), this.sysTransactionId, gson.toJson(fulfillment));
-//                        JsonObject response = new Gson().fromJson(value.toString(), JsonObject.class);
-//                        System.err.println("RESPONSE : " + response.toString());
-//                        PriceResult priceResult = new PriceResult();
-//                        priceResult.fulfillment = response.getAsJsonObject("returnObject").get("fulfillment").getAsString();
-//                        priceResult.isError = response.getAsJsonObject("returnObject").get("isError").getAsBoolean();
-//                        priceResult.pickupDateTime = response.getAsJsonObject("returnObject").get("pickupDateTime").getAsString();
-//                        priceResult.price = response.getAsJsonObject("returnObject").get("price").getAsBigDecimal();
-//                        priceResult.resultCode = response.getAsJsonObject("returnObject").get("resultCode").getAsInt();
-//                        priceResult.signature = response.getAsJsonObject("returnObject").get("signature").getAsString();
-//
-////                    ProcessResult processResult = new ProcessResult();
-//                        processResult.returnObject = priceResult;
-//                        processResult.resultCode = response.get("resultCode").getAsInt();
-//
-//                        LogUtil.info(logprefix, location, "Response From The Class ", value.toString());
-//                    } else {
-                        reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository, this.fulfillment);
-//                    }
+                    if (provider.isExternalRequest()) {
+                        LogUtil.info(logprefix, location, "Load the file location: ", provider.getClassLoaderName());
+                        Class<?> beanClass = null;
+                        Object beanObj = new Object();
+                        try {
+                            URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
+
+                            // Create a new URLClassLoader
+                            URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
+
+                            // Load the target class
+                            beanClass = urlClassLoader.loadClass(provider.getAdditionalQueryClassName());
+                            LogUtil.info(logprefix, location, "Load the file Class: ", provider.getAdditionalQueryClassName());
+
+
+                            // Create a new instance from the loaded class
+                            Constructor<?> constructor = beanClass.getConstructor();
+                            beanObj = constructor.newInstance();
+
+                        } catch (Exception ex) {
+                            LogUtil.info(logprefix, location, "Exception ", ex.getMessage());
+
+                        }
+                        ObjectMapper mapper = new ObjectMapper();
+
+                        Gson gson = new Gson();
+                        assert beanClass != null;
+                        Method method = beanClass.getMethod("getPrice", String.class, String.class, String.class, String.class);
+                        Object value = method.invoke(beanObj, gson.toJson(providerConfig), gson.toJson(order), this.sysTransactionId, gson.toJson(fulfillment));
+                        LogUtil.info(logprefix, location, "Response FROM CLASS : ", value.toString());
+
+                        JsonObject response = new Gson().fromJson(value.toString(), JsonObject.class);
+                        PriceResult priceResult = new PriceResult();
+                        if (!response.getAsJsonObject("returnObject").get("isError").getAsBoolean()) {
+                            priceResult.fulfillment = response.getAsJsonObject("returnObject").get("fulfillment").getAsString();
+                            priceResult.isError = response.getAsJsonObject("returnObject").get("isError").getAsBoolean();
+                            priceResult.pickupDateTime = response.getAsJsonObject("returnObject").get("pickupDateTime").getAsString();
+                            priceResult.price = response.getAsJsonObject("returnObject").get("price").getAsBigDecimal();
+                            priceResult.resultCode = response.getAsJsonObject("returnObject").get("resultCode").getAsInt();
+                            priceResult.signature = response.getAsJsonObject("returnObject").get("signature").getAsString();
+                            priceResult.lat = response.getAsJsonObject("returnObject").get("lat").getAsBigDecimal();
+                            priceResult.log = response.getAsJsonObject("returnObject").get("log").getAsBigDecimal();
+
+//                    ProcessResult processResult = new ProcessResult();
+                            processResult.returnObject = priceResult;
+                            processResult.resultCode = response.get("resultCode").getAsInt();
+                        } else {
+                            priceResult.message = response.getAsJsonObject("returnObject").get("message").getAsString();
+                            priceResult.isError = response.getAsJsonObject("returnObject").get("isError").getAsBoolean();
+                            processResult.returnObject = priceResult;
+                            processResult.resultCode = -1;
+                        }
+
+                        LogUtil.info(logprefix, location, "Response From The Class ", value.toString());
+                    } else {
+                        reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, provider.getId() ,  providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository, this.fulfillment, this.deliveryZonePriceRepository);
+                    }
                 } else {
-//                    if (provider.isExternalRequest()) {
-//                        URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
-//
-//                        // Create a new URLClassLoader
-//                        URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
-//
-//                        // Load the target class
-//                        Class<?> beanClass = urlClassLoader.loadClass(provider.getClassLoaderName());
-//
-//                        // Create a new instance from the loaded class
-//                        Constructor<?> constructor = beanClass.getConstructor();
-//                        Object beanObj = constructor.newInstance();
-//
-//
-//                        ObjectMapper mapper = new ObjectMapper();
-//
-//                        Gson gson = new Gson();
-//                        Method method = beanClass.getMethod("placeOrder", String.class, String.class, String.class);
-//                        Object value = method.invoke(beanObj, gson.toJson(providerConfig), gson.toJson(order), this.sysTransactionId);
-//                        JsonObject response = new Gson().fromJson(value.toString(), JsonObject.class);
-//                        System.err.println("Submit Order Response :  " + response.toString());
-//                        SubmitOrderResult submitOrderResult = new SubmitOrderResult();
-//                        DeliveryOrder o = new DeliveryOrder();
-//
-//                    } else {
+                    if (provider.isExternalRequest()) {
+                        URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
+
+                        // Create a new URLClassLoader
+                        URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
+
+                        // Load the target class
+                        Class<?> beanClass = urlClassLoader.loadClass(provider.getAdditionalQueryClassName());
+
+                        // Create a new instance from the loaded class
+                        Constructor<?> constructor = beanClass.getConstructor();
+                        Object beanObj = constructor.newInstance();
+
+
+                        ObjectMapper mapper = new ObjectMapper();
+
+                        Gson gson = new Gson();
+                        Method method = beanClass.getMethod("placeOrder", String.class, String.class, String.class);
+                        Object value = method.invoke(beanObj, gson.toJson(providerConfig), gson.toJson(order), this.sysTransactionId);
+                        JsonObject response = new Gson().fromJson(value.toString(), JsonObject.class);
+                        System.err.println("Submit Order Response :  " + response.toString());
+                        SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+                        DeliveryOrder o = new DeliveryOrder();
+                        LogUtil.info(logprefix, location, "Response : ", response.toString());
+                        if (response.get("resultCode").getAsInt() == 0) {
+                            o.setSpOrderId(response.get("returnObject").getAsJsonObject().getAsJsonObject("orderCreated").get("spOrderId").getAsString());
+                            o.setSpOrderName(response.get("returnObject").getAsJsonObject().getAsJsonObject("orderCreated").get("spOrderName").getAsString());
+                            o.setCreatedDate(response.get("returnObject").getAsJsonObject().getAsJsonObject("orderCreated").get("createdDate").getAsString());
+                            o.setStatus(response.get("returnObject").getAsJsonObject().getAsJsonObject("orderCreated").get("status").getAsString());
+                            o.setStatusDescription(response.get("returnObject").getAsJsonObject().getAsJsonObject("orderCreated").get("statusDescription").getAsString());
+                            o.setSystemStatus(response.get("returnObject").getAsJsonObject().getAsJsonObject("orderCreated").get("systemStatus").getAsString());
+                            submitOrderResult.orderCreated = o;
+                            submitOrderResult.resultCode = response.get("resultCode").getAsInt();
+                        } else {
+                            submitOrderResult.resultCode = -1;
+                            submitOrderResult.message = response.get("resultString").getAsString();
+                            submitOrderResult.deliveryProviderId = response.getAsJsonObject("returnObject").get("deliveryProviderId").getAsInt();
+                        }
+                        processResult.returnObject = submitOrderResult;
+                        processResult.resultCode = response.get("resultCode").getAsInt();
+
+                    } else {
 
                         reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, order, this.sysTransactionId, this.sequenceNumberRepository);
-//                    }
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -362,7 +418,7 @@ public class ProviderThread extends Thread implements Runnable {
             LogUtil.info(logprefix, location, "Forking a new thread", "");
             LogUtil.info(logprefix, location, "ProviderThread finish", "");
             ProcessResult response = new ProcessResult();
-//            if (!provider.isExternalRequest()) {
+            if (!provider.isExternalRequest()) {
                 Thread tReqFactory = new Thread(reqFactoryObj);
                 tReqFactory.start();
 
@@ -372,15 +428,15 @@ public class ProviderThread extends Thread implements Runnable {
                 } catch (Exception exp) {
                     LogUtil.error(logprefix, location, "Error in awaiting", "", exp);
                 }
-//            }
+            }
 
 
-//            if (!provider.isExternalRequest()) {
+            if (!provider.isExternalRequest()) {
                 LogUtil.info(logprefix, location, "ProviderThread finish", "");
                 response = reqFactoryObj.getProcessResult();
-//            } else {
-//                response = processResult;
-//            }
+            } else {
+                response = processResult;
+            }
 
             if (functionName.equalsIgnoreCase("GetPrice")) {
                 PriceResult priceResult = (PriceResult) response.returnObject;

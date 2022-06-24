@@ -11,36 +11,35 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 /**
- *
  * @author user
  */
 @Getter
 @Setter
 public class Pickup {
-   String parcelReadyTime;
-   String pickupDate;
-   String pickupTime;
-   String endPickupDate;
-   String endPickupTime;
-   String pickupOption;
-   VehicleType vehicleType;
+    String parcelReadyTime;
+    String pickupDate;
+    String pickupTime;
+    String endPickupDate;
+    String endPickupTime;
+    String pickupOption;
+    VehicleType vehicleType;
 
-   String pickupAddress;
-   String pickupPostcode;
-   String pickupState;
-   String pickupCountry;
-   String pickupCity;
-   Integer pickupLocationId;
+    String pickupAddress;
+    String pickupPostcode;
+    String pickupState;
+    String pickupCountry;
+    String pickupCity;
+    Integer pickupLocationId;
 
-   String pickupContactName;
-   String pickupContactPhone;
-   String pickupContactEmail;
-   boolean isTrolleyRequired;
-   String remarks;
-   String pickupZone;
-   String costCenterCode;
-//   BigDecimal latitude;
-//   BigDecimal longitude;
+    String pickupContactName;
+    String pickupContactPhone;
+    String pickupContactEmail;
+    boolean isTrolleyRequired;
+    String remarks;
+    String pickupZone;
+    String costCenterCode;
+    BigDecimal latitude;
+    BigDecimal longitude;
 
 
 }

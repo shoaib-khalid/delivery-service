@@ -14,4 +14,5 @@ public class QueryOrderResult {
     public int providerId;
     public DeliveryOrder orderFound;
     public boolean isSuccess;
+     
 }

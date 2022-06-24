@@ -1,4 +1,4 @@
-package com.kalsym.deliveryservice.models.requestbodies;
+package com.kalsym.deliveryservice.models.RequestBodies;
 
 import javax.validation.constraints.NotBlank;
 import lombok.Getter;

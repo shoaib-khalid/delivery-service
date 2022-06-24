@@ -9,24 +9,17 @@ import lombok.Setter;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.io.Serializable;
-import java.math.BigDecimal;
 
 @Entity
-@Table(name = "delivery_zone_price")
+@Table(name = "delivery_store_centers")
 @Getter
 @Setter
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class DeliveryZonePrice implements Serializable {
-
+public class DeliveryStoreCenters {
     @Id
-    private Long id;
-    private String spId;
-    private Double weight;
-    private BigDecimal withInCity;
-    private BigDecimal sameZone;
-    private BigDecimal differentZone;
+    Long id;
+    String storeId;
+    String centerId;
+    String deliveryProviderId;
 }
-
-
