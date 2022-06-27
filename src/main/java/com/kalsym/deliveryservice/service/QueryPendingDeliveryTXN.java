@@ -110,7 +110,7 @@ public class QueryPendingDeliveryTXN {
     }
 
 
-    @Scheduled(cron = "${pending-transaction:0 0/05 * * * ?}")
+    @Scheduled(cron = "${pending-transaction:0 0/01 * * * ?}")
     public void QueryPendingTransaction() throws ParseException {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 
