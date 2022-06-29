@@ -42,6 +42,8 @@ public class Store implements Serializable {
     private Integer invoiceSeqNo;
     private String regionCountryId;
     private String costCenterCode;
+    private String latitude;
+    private String longitude;
 
     @Transient
     int providerId;

@@ -1012,6 +1012,26 @@ public class OrdersController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+//    @PostMapping(path = {"/getPrice"}, name = "orders-get-price")
+//    public ResponseEntity<HttpReponse> getQuotation(HttpServletRequest request,
+//                                                @Valid @RequestBody List<Order> orderDetails) {
+//
+//        System.err.println("request.getRequestURI()" + request.getRequestURI());
+//        String logprefix = request.getRequestURI() + " ";
+//        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+//        HttpReponse response = deliveryService.getQuotation(orderDetails, request.getRequestURI());
+//
+//        final Date currentTime = new Date();
+//
+//        final SimpleDateFormat sdf =
+//                new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+//
+//// Give it to me in GMT time.
+//        sdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+//        LogUtil.info(logprefix, location, "Get Current Time From System : " + sdf.format(currentTime), "");
+//        return ResponseEntity.status(HttpStatus.OK).body(response);
+//    }
+
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
