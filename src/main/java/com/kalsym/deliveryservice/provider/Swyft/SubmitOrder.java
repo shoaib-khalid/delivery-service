@@ -82,11 +82,17 @@ public class SubmitOrder extends SyncDispatcher {
     }
 
     private String generateBody() {
-        System.err.println("OrderId : " + order.getOrderId());
+        LogUtil.info(logprefix, location, "OrderId : ", order.getOrderId());
 
         JsonObject jsonRequest = new JsonObject();
         jsonRequest.addProperty("ORDER_ID", order.getOrderId());
-        jsonRequest.addProperty("ORDER_TYPE", "COD");
+        if (order.getPaymentType().equals("COD")) {
+            jsonRequest.addProperty("ORDER_TYPE", "COD");
+            jsonRequest.addProperty("COD", order.getShipmentValue());
+        } else {
+            jsonRequest.addProperty("ORDER_TYPE", "NONCOD");
+            jsonRequest.addProperty("COD", 0);
+        }
         jsonRequest.addProperty("SHIPPER_ADDRESS_ID", order.getPickup().getCostCenterCode());
         jsonRequest.addProperty("CONSIGNEE_FIRST_NAME", order.getDelivery().getDeliveryContactName());
         jsonRequest.addProperty("CONSIGNEE_LAST_NAME", "");
@@ -97,7 +103,6 @@ public class SubmitOrder extends SyncDispatcher {
         jsonRequest.addProperty("CONSIGNEE_CITY", order.getDelivery().getDeliveryCity());
         jsonRequest.addProperty("WEIGHT", order.getTotalWeightKg());
         jsonRequest.addProperty("PIECES", order.getPieces());
-        jsonRequest.addProperty("COD", order.getShipmentValue());
         jsonRequest.addProperty("DESCRIPTION", "Testing");
         jsonRequest.addProperty("PACKAGING", packagingType);
 
@@ -127,12 +132,8 @@ public class SubmitOrder extends SyncDispatcher {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
             submitOrderResult.isSuccess = false;
             submitOrderResult.resultCode = -1;
-
             submitOrderResult.message = ex.getMessage();
-
         }
-
-
         return submitOrderResult;
     }
 
