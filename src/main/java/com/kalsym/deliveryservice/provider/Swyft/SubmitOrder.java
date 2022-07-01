@@ -14,6 +14,8 @@ import com.kalsym.deliveryservice.utils.HttpResult;
 import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
@@ -30,6 +32,9 @@ public class SubmitOrder extends SyncDispatcher {
     private String location = "SwyftSubmitOrder";
     private String packagingType;
 
+    private String timeSlotId;
+    private String createPickupReqUrl;
+
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
         logprefix = systemTransactionId;
@@ -44,6 +49,8 @@ public class SubmitOrder extends SyncDispatcher {
         this.waitTimeout = Integer.parseInt((String) config.get("submitorder_wait_timeout"));
         this.packagingType = (String) config.get("packagingType");
         this.order = order;
+        this.timeSlotId = (String) config.get("timeSlotId");
+        this.createPickupReqUrl = (String) config.get("createPickupReqUrl");
     }
 
     @Override
@@ -75,7 +82,7 @@ public class SubmitOrder extends SyncDispatcher {
             submitOrderResult.resultCode = -1;
             submitOrderResult.message = e.getMessage();
             response.returnObject = submitOrderResult;
-            LogUtil.info(logprefix, location, "Request failed TCS EXCEPTION : ", e.getMessage());
+            LogUtil.info(logprefix, location, "Request failed Swyft EXCEPTION : ", e.getMessage());
 
         }
         return response;
@@ -115,14 +122,49 @@ public class SubmitOrder extends SyncDispatcher {
 
     private SubmitOrderResult extractResponseBody(String respString) {
         SubmitOrderResult submitOrderResult = new SubmitOrderResult();
+        String spOrderName = "";
         try {
             JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
             JsonObject result = jsonResp.getAsJsonArray("data").get(0).getAsJsonObject();
             DeliveryOrder orderCreated = new DeliveryOrder();
             String parcelId = result.get("parcelId").getAsString();
 
+            JsonArray array = new JsonArray();
+            JsonObject createPickup = new JsonObject();
+
+            String pattern = "MM-dd-yyyy";
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+            String date = simpleDateFormat.format(new Date());
+
+            createPickup.addProperty("estimatedParcels", order.getTotalParcel());
+            createPickup.addProperty("timeSlotId", this.timeSlotId);
+            createPickup.addProperty("date", date);
+            createPickup.addProperty("pickupLocationId", order.getPickup().getCostCenterCode());
+            array.add(createPickup);
+
+
+            HashMap httpHeader = new HashMap();
+            httpHeader.put("Content-Type", "application/json");
+            httpHeader.put("Authorization", api_key);
+
+            LogUtil.info(logprefix, location, "Request Create Pickup : ", array.toString());
+            try {
+                HttpResult responsePickup = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, baseUrl + vendorId + createPickupReqUrl, httpHeader, array.toString(), this.connectTimeout, this.waitTimeout);
+                if (responsePickup.httpResponseCode == 200) {
+                    JsonObject pickupReqRes = new Gson().fromJson(responsePickup.responseString, JsonObject.class);
+                    LogUtil.info(logprefix, location, "Response  Create Pickup : ", pickupReqRes.toString());
+                    spOrderName = pickupReqRes.get("id").getAsString();
+
+                } else {
+                    LogUtil.info(logprefix, location, "Request failed", "");
+                }
+                LogUtil.info(logprefix, location, "Process finish", "");
+            } catch (Exception e) {
+                LogUtil.info(logprefix, location, "Request failed Swyft EXCEPTION : ", e.getMessage());
+            }
+
             orderCreated.setSpOrderId(parcelId);
-            orderCreated.setSpOrderName(parcelId);
+            orderCreated.setSpOrderName(spOrderName);
             orderCreated.setCreatedDate(DateTimeUtil.currentTimestamp());
             orderCreated.setStatus("ASSIGNING_DRIVER");
             submitOrderResult.orderCreated = orderCreated;

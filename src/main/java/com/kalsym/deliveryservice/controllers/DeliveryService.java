@@ -455,7 +455,7 @@ public class DeliveryService {
                                         bd = new BigDecimal(dPrice);
                                         bd = bd.setScale(2, RoundingMode.HALF_UP);
                                     } else {
-                                        LogUtil.info(systemTransactionId, location, "IF IN TIME, REDUCE PRICE BASED ON PRICE",list.price.toString());
+                                        LogUtil.info(systemTransactionId, location, "IF IN TIME, REDUCE PRICE BASED ON PRICE", list.price.toString());
                                         deliveryOrder.setAmount(Double.parseDouble(list.price.toString()));
                                         deliveryOrder.setServiceFee(0.00);
                                         double dPrice = Double.parseDouble(list.price.toString());
@@ -590,6 +590,7 @@ public class DeliveryService {
         Order orderDetails = new Order();
         orderDetails.setPaymentType(optProduct.get().getPaymentType());
         orderDetails.setPieces(quotation.getTotalPieces());
+        orderDetails.setTotalParcel(1);
         orderDetails.setOrderAmount(optProduct.get().getTotal());
         orderDetails.setCustomerId(quotation.getCustomerId());
         orderDetails.setCustomerId(quotation.getCustomerId());
@@ -936,6 +937,8 @@ public class DeliveryService {
         Order orderDetails = new Order();
         orderDetails.setPaymentType(optProduct.get().getPaymentType());
         orderDetails.setOrderAmount(optProduct.get().getTotal());
+        orderDetails.setTotalParcel(1);
+        orderDetails.setPieces(quotation.getTotalPieces());
         // orderDetails.setSignature(quotation.getSignature()); //TODO:ADD BACK
         orderDetails.setCustomerId(quotation.getCustomerId());
         if (quotation.getItemType() != null) {

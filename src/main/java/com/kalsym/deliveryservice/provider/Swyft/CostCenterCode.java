@@ -63,19 +63,18 @@ public class CostCenterCode extends SyncDispatcher {
         if (!city.isEmpty()) {
             String requestBody = generateBody(city);
             String url = this.baseUrl + vendorId + createCostUrl;
-//            HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
-            int rsponcode= 201;
-            if (rsponcode == 201) {
+            HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
+            if (httpResult.resultCode == 201) {
                 response.resultCode = 0;
-//                LogUtil.info(logprefix, location, "Swyft Response for Create Center Code: " + httpResult.responseString, "");
-                response.returnObject =extractResponseBody( "{\"shortId\":\"PL-741079\",\"brandName\":\"Awan Tech\",\"address\":\"no 19 Street 141, G-13/4 G 13/4 G-13, Islamabad, Pakistan\",\"geoPoints\":{\"lat\":0,\"lng\":0},\"timeSlotIds\":[\"5ddba65337121f0012e26e2e\",\"5ddba67937121f0012e26e2f\",\"62aaefac2d69ce67c591c24f\"],\"isActive\":true,\"id\":\"62bc208d45096d9ecd7054ba\",\"vendorId\":\"6260f08e3eb51743f095f965\",\"createdAt\":\"2022-06-29T09:51:09.863Z\",\"updatedAt\":\"2022-06-29T09:51:09.863Z\",\"cityId\":\"5ee1352a325af94c357e3722\",\"fname\":\"Awan Tech\",\"lname\":\"\",\"email\":\"israr.ahmad@kalsym.com\",\"phone\":null,\"zoneAreaId\":\"\",\"zoneId\":\"\"}");
+                LogUtil.info(logprefix, location, "Swyft Response for Create Center Code: " + httpResult.responseString, "");
+                response.returnObject = extractResponseBody(httpResult.responseString);
+//                response.returnObject =extractResponseBody( "{\"shortId\":\"PL-741079\",\"brandName\":\"Awan Tech\",\"address\":\"no 19 Street 141, G-13/4 G 13/4 G-13, Islamabad, Pakistan\",\"geoPoints\":{\"lat\":0,\"lng\":0},\"timeSlotIds\":[\"5ddba65337121f0012e26e2e\",\"5ddba67937121f0012e26e2f\",\"62aaefac2d69ce67c591c24f\"],\"isActive\":true,\"id\":\"62bc208d45096d9ecd7054ba\",\"vendorId\":\"6260f08e3eb51743f095f965\",\"createdAt\":\"2022-06-29T09:51:09.863Z\",\"updatedAt\":\"2022-06-29T09:51:09.863Z\",\"cityId\":\"5ee1352a325af94c357e3722\",\"fname\":\"Awan Tech\",\"lname\":\"\",\"email\":\"israr.ahmad@kalsym.com\",\"phone\":null,\"zoneAreaId\":\"\",\"zoneId\":\"\"}");
             } else {
                 LogUtil.info(logprefix, location, "Request failed", "");
                 response.resultCode = -1;
             }
             LogUtil.info(logprefix, location, "Process finish", "");
-        }
-        else{
+        } else {
             LogUtil.info(logprefix, location, "Request failed", "");
             response.resultCode = -1;
         }
@@ -91,7 +90,7 @@ public class CostCenterCode extends SyncDispatcher {
         request.addProperty("email", store.getEmail());
         request.addProperty("phone", store.getPhone());
         request.addProperty("cityId", cityCode); // QueryCity
-        request.addProperty("brandName",store.getName()); // QueryCity
+        request.addProperty("brandName", store.getName()); // QueryCity
         request.addProperty("shortId", "");
         request.addProperty("zoneAreaId", "");
         request.addProperty("zoneId", "");

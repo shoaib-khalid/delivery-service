@@ -1,4 +1,19 @@
 ##############################################################################################
+# **Version v.2.10.15| 01 -July-2022**
+###############################################################################################
+### Code Changes:
+
+added new api configuration for swyft to create pickup request ;
+
+//update in delivery sp config table
+INSERT INTO symplified.delivery_sp_config (spId,configField,configValue) VALUES
+(9,'createPickupReqUrl','/create-pickup-request'),
+(9,'timeSlotId','5ddba65337121f0012e26e2e');
+
+
+
+
+##############################################################################################
 # **Version v.2.10.14| 29 -June-2022**
 ###############################################################################################
 ### Code Changes:

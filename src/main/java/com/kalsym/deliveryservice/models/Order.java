@@ -53,5 +53,6 @@ public class Order {
     String pickupTime;
     String signature;
     BigDecimal codAmount;
+    Integer totalParcel;
 
 }

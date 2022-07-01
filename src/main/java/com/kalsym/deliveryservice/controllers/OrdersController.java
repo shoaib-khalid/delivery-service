@@ -279,6 +279,7 @@ public class OrdersController {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         List<BulkOrderResponse> orderResults = new ArrayList<>();
+
         for (OrderConfirm o : orderConfirm) {
             String systemTransactionId = StringUtility.CreateRefID("BL");
             LogUtil.info(systemTransactionId, location, "Order Id  :", o.getOrderId());
@@ -297,6 +298,8 @@ public class OrdersController {
             orderDetails.setProductCode(quotation.getProductCode());
             orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
             orderDetails.setShipmentValue(quotation.getAmount());
+            orderDetails.setPieces(quotation.getTotalPieces());
+            orderDetails.setTotalParcel(1);
             orderDetails.setOrderId(o.getOrderId());
 
             Pickup pickup = new Pickup();
