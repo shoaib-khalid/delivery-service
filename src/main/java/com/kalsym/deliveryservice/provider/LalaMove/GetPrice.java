@@ -22,6 +22,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -223,8 +224,8 @@ public class GetPrice extends SyncDispatcher {
         String payAmount = jsonResp.get("totalFee").getAsString();
         LogUtil.info(logprefix, location, "Payment Amount:" + payAmount, "");
         PriceResult priceResult = new PriceResult();
-        BigDecimal bd = new BigDecimal(Double.parseDouble(payAmount));
-        bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+        BigDecimal bd = BigDecimal.valueOf(Double.parseDouble(payAmount));
+        bd = bd.setScale(2, RoundingMode.HALF_UP);
         priceResult.price = bd;
         priceResult.pickupDateTime = pickupTime;
         priceResult.fulfillment = fulfillment.getFulfillment();
