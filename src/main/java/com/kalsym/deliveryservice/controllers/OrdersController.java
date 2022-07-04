@@ -114,16 +114,17 @@ public class OrdersController {
     @Autowired
     DeliveryZoneCityRepository deliveryZoneCityRepository;
 
-//    @Autowired
-//    DeliveryOrderStatusRepository orderStatusRepository;
+    @Autowired
+    DeliveryOrderStatusRepository orderStatusRepository;
 
-    @PostMapping(path = {"/getprice"}, name = "orders-get-price")
+    @PostMapping(path = {"/getPrice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
                                                 @Valid @RequestBody Order orderDetails) {
 
         System.err.println("request.getRequestURI()" + request.getRequestURI());
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+
         HttpReponse response = deliveryService.getPrice(orderDetails, request.getRequestURI());
 
         final Date currentTime = new Date();
@@ -557,21 +558,21 @@ public class OrdersController {
                 }
                 DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
                 System.err.println(o.getId());
-//                DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
-//                if (notExistStatus == null) {
-////                    assert false;
-//                    DeliveryOrderStatus order = new DeliveryOrderStatus();
-//                    order.setOrder(o);
-//                    order.setSpOrderId(o.getSpOrderId());
-//                    order.setStatus(o.getStatus());
-//                    order.setDeliveryCompletionStatus(o.getSystemStatus());
-//                    order.setDescription(o.getStatusDescription());
-//                    order.setUpdated(new Date());
-//                    order.setSystemTransactionId(o.getSystemTransactionId());
-//                    order.setOrderId(o.getOrderId());
-//
-//                    orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
-//                }
+                DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
+                if (notExistStatus == null) {
+//                    assert false;
+                    DeliveryOrderStatus order = new DeliveryOrderStatus();
+                    order.setOrder(o);
+                    order.setSpOrderId(o.getSpOrderId());
+                    order.setStatus(o.getStatus());
+                    order.setDeliveryCompletionStatus(o.getSystemStatus());
+                    order.setDescription(o.getStatusDescription());
+                    order.setUpdated(new Date());
+                    order.setSystemTransactionId(o.getSystemTransactionId());
+                    order.setOrderId(o.getOrderId());
+
+                    orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
+                }
 
                 if (deliveryId != null) {
                     getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
@@ -670,20 +671,20 @@ public class OrdersController {
                     deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                     DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
 
-//                    DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
-//                    if (notExistStatus == null) {
-//                        DeliveryOrderStatus order = new DeliveryOrderStatus();
-//                        order.setOrder(o);
-//                        order.setSpOrderId(o.getSpOrderId());
-//                        order.setStatus(o.getStatus());
-//                        order.setDeliveryCompletionStatus(o.getSystemStatus());
-//                        order.setDescription(o.getStatusDescription());
-//                        order.setUpdated(new Date());
-//                        order.setSystemTransactionId(o.getSystemTransactionId());
-//                        order.setOrderId(o.getOrderId());
-//
-//                        orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
-//                    }
+                    DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
+                    if (notExistStatus == null) {
+                        DeliveryOrderStatus order = new DeliveryOrderStatus();
+                        order.setOrder(o);
+                        order.setSpOrderId(o.getSpOrderId());
+                        order.setStatus(o.getStatus());
+                        order.setDeliveryCompletionStatus(o.getSystemStatus());
+                        order.setDescription(o.getStatusDescription());
+                        order.setUpdated(new Date());
+                        order.setSystemTransactionId(o.getSystemTransactionId());
+                        order.setOrderId(o.getOrderId());
+
+                        orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
+                    }
 
                     getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
                 } else {
@@ -1012,28 +1013,35 @@ public class OrdersController {
     public ResponseEntity<HttpReponse> getDeliveryOrderStatusList(HttpServletRequest request, @RequestParam(name = "orderId") String orderId) {
         HttpReponse response = new HttpReponse();
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        List<DeliveryOrderStatus> orderStatusList = orderStatusRepository.findAllByOrderId(orderId);
+        if (!orderStatusList.isEmpty()) {
+            response.setData(orderStatusList);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
     }
 
-//    @PostMapping(path = {"/getPrice"}, name = "orders-get-price")
-//    public ResponseEntity<HttpReponse> getQuotation(HttpServletRequest request,
-//                                                @Valid @RequestBody List<Order> orderDetails) {
-//
-//        System.err.println("request.getRequestURI()" + request.getRequestURI());
-//        String logprefix = request.getRequestURI() + " ";
-//        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
-//        HttpReponse response = deliveryService.getQuotation(orderDetails, request.getRequestURI());
-//
-//        final Date currentTime = new Date();
-//
-//        final SimpleDateFormat sdf =
-//                new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
-//
-//// Give it to me in GMT time.
-//        sdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));
-//        LogUtil.info(logprefix, location, "Get Current Time From System : " + sdf.format(currentTime), "");
-//        return ResponseEntity.status(HttpStatus.OK).body(response);
-//    }
+    @PostMapping(path = {"/getprice"}, name = "orders-get-price")
+    public ResponseEntity<HttpReponse> getQuotation(HttpServletRequest request,
+                                                    @Valid @RequestBody List<Order> orderDetails) {
+
+        System.err.println("request.getRequestURI()" + request.getRequestURI());
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = deliveryService.queryQuotation(orderDetails, request.getRequestURI());
+
+        final Date currentTime = new Date();
+
+        final SimpleDateFormat sdf =
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+
+// Give it to me in GMT time.
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+        LogUtil.info(logprefix, location, "Get Current Time From System : " + sdf.format(currentTime), "");
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
