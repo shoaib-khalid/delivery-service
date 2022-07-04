@@ -117,7 +117,7 @@ public class OrdersController {
     @Autowired
     DeliveryOrderStatusRepository orderStatusRepository;
 
-    @PostMapping(path = {"/getPrice"}, name = "orders-get-price")
+    @PostMapping(path = {"/getprice"}, name = "orders-get-price")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
                                                 @Valid @RequestBody Order orderDetails) {
 
@@ -1023,8 +1023,8 @@ public class OrdersController {
         }
     }
 
-    @PostMapping(path = {"/getprice"}, name = "orders-get-price")
-    public ResponseEntity<HttpReponse> getQuotation(HttpServletRequest request,
+    @PostMapping(path = {"/getPrices"}, name = "orders-get-price-mulitplecart")
+    public ResponseEntity<HttpReponse> getQuotationPrice(HttpServletRequest request,
                                                     @Valid @RequestBody List<Order> orderDetails) {
 
         System.err.println("request.getRequestURI()" + request.getRequestURI());
@@ -1072,7 +1072,5 @@ public class OrdersController {
         private String message;
         private boolean isSuccess;
     }
-
-
 }
 
