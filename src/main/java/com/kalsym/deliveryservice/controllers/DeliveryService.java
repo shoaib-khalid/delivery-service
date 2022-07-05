@@ -1394,6 +1394,9 @@ public class DeliveryService {
         List<GetQuotationPriceList> qetQuotationPriceList = new ArrayList<>();
 
         for (Order quotation : orderDetails) { // Start Loop
+
+            GetQuotationPriceList byCartId = new GetQuotationPriceList(); // Add Multiple Quotation
+
             //Get Store Delivery Details
             StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(quotation.getStoreId());
             LogUtil.info(logprefix, location, "Store Delivery Details : ", stores.toString());
@@ -1508,7 +1511,10 @@ public class DeliveryService {
                     bd = bd.setScale(2, RoundingMode.HALF_UP);
                     priceResult.price = bd;
                     priceResult.isError = true;
-                    priceResult.deliveryType = deliveryType;
+                    priceResult.deliveryType = stores.getType();
+                    byCartId.setCartId(quotation.getCartId());
+                    byCartId.setQuotation(priceResultList);
+                    qetQuotationPriceList.add(byCartId);
                 } else {
                     String price = deliveryOptions.getDeliveryPrice().toString();
                     Calendar date = Calendar.getInstance();
@@ -1559,11 +1565,15 @@ public class DeliveryService {
                     priceResult.refId = res.getId();
                     priceResult.validUpTo = currentTimeStamp;
                     priceResultList.add(priceResult);
+
+                    byCartId.setCartId(quotation.getCartId());
+                    byCartId.setQuotation(priceResultList);
+                    qetQuotationPriceList.add(byCartId);
                 }
-                response.setSuccessStatus(HttpStatus.OK);
-                response.setData(priceResultList);
-                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
-                return response;
+//                response.setSuccessStatus(HttpStatus.OK);
+//                response.setData(qetQuotationPriceList);
+//                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
+//                return response;
             } else {
                 List<Fulfillment> fulfillments = new ArrayList<>();
                 // if (!stores.getStoreDeliveryPeriodList().isEmpty()) {
@@ -1590,7 +1600,7 @@ public class DeliveryService {
                 ProcessRequest process = new ProcessRequest(systemTransactionId, quotation, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository, fulfillments, deliveryZonePriceRepository, deliveryStoreCenterRepository);
                 processResult = process.GetPrice();
                 LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
-                GetQuotationPriceList byCartId = new GetQuotationPriceList(); // Add Multiple Quotation
+//                GetQuotationPriceList byCartId = new GetQuotationPriceList(); // Add Multiple Quotation
                 if (processResult.resultCode == 0) {
                     // successfully get price from provider
                     Set<PriceResult> priceResultList = new HashSet<>();
