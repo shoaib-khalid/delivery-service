@@ -29,6 +29,7 @@ public class PriceResult {
     public String vehicleType;
     public String pickupDateTime;
     public DeliveryPeriod deliveryPeriod;
+    public String quotationId;
 
     @JsonIgnore
     public int resultCode;

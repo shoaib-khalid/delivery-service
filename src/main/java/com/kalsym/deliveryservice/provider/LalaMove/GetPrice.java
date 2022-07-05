@@ -1,10 +1,11 @@
 package com.kalsym.deliveryservice.provider.LalaMove;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Fulfillment;
 import com.kalsym.deliveryservice.models.Order;
-import com.kalsym.deliveryservice.models.RequestBodies.lalamoveGetPrice.*;
+import com.kalsym.deliveryservice.models.RequestBodies.lalamoveGetPrice.Delivery;
 import com.kalsym.deliveryservice.provider.PriceResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
@@ -36,20 +37,15 @@ public class GetPrice extends SyncDispatcher {
     private final int waitTimeout;
     private final String systemTransactionId;
     private final Order order;
-    private final HashMap productMap;
-    private final String atxProductCode = "";
     private final String logprefix;
     private final String location = "LalaMoveGetPrice";
     private final String secretKey;
     private final String apiKey;
-    private String sessionToken;
-    private String sslVersion = "SSL";
     private Fulfillment fulfillment;
-    private DeliveryZonePriceRepository deliveryZonePriceRepository;
 
-
-    public GetPrice(CountDownLatch latch, Integer providerId, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
-
+    public GetPrice(CountDownLatch latch, Integer providerId, HashMap config, Order order, String systemTransactionId,
+                    SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment,
+                    DeliveryZonePriceRepository deliveryZonePriceRepository) {
 
         super(latch);
         this.systemTransactionId = systemTransactionId;
@@ -62,11 +58,8 @@ public class GetPrice extends SyncDispatcher {
         this.apiKey = (String) config.get("apiKey");
         this.connectTimeout = Integer.parseInt((String) config.get("getprice_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("getprice_wait_timeout"));
-        productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
-        this.sslVersion = (String) config.get("ssl_version");
         this.fulfillment = fulfillment;
-        this.deliveryZonePriceRepository = deliveryZonePriceRepository;
     }
 
     @Override
@@ -75,39 +68,36 @@ public class GetPrice extends SyncDispatcher {
         ProcessResult response = new ProcessResult();
         String secretKey = this.secretKey;
         String apiKey = this.apiKey;
-        String ENDPOINT_URL = this.getprice_url;
         String METHOD = "POST";
         Mac mac = null;
 
-
         String BASE_URL = this.baseUrl;
-        String ENDPOINT_URL_PLACEORDER = this.getprice_url;
-        LogUtil.info(logprefix, location, "BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER, "");
+        LogUtil.info(logprefix, location, "BASEURL :" + BASE_URL + " ENDPOINT :" + this.getprice_url, "");
         try {
             mac = Mac.getInstance("HmacSHA256");
             SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
             mac.init(secret_key);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             e.printStackTrace();
         }
         String pickupTime = "";
-        if (fulfillment.getFulfillment().equals("FOURHOURS") || fulfillment.getFulfillment().equals("NEXTDAY") || fulfillment.getFulfillment().equals("FOURDAYS")) {
+        if (fulfillment.getFulfillment().equals("FOURHOURS") || fulfillment.getFulfillment().equals("NEXTDAY")
+                || fulfillment.getFulfillment().equals("FOURDAYS")) {
             Calendar cal = Calendar.getInstance(); // creates calendar
-            cal.setTime(new Date());               // sets calendar time/date
-            cal.add(Calendar.HOUR_OF_DAY, fulfillment.getInterval());      // adds one hour
+            cal.setTime(new Date()); // sets calendar time/date
+            cal.add(Calendar.HOUR_OF_DAY, fulfillment.getInterval()); // adds one hour
             cal.getTime();
             pickupTime = cal.getTime().toInstant().toString();
         }
 
-        GetPrices requ = generateRequestBody(pickupTime);
+        JsonObject requ = generateRequestBody(pickupTime);
         LogUtil.info(logprefix, location, "REQUST BODY FOR GET PRICE : ", requ.toString());
 
-        //JSONObject bodyJson = new JSONObject("{\"serviceType\":\"MOTORCYCLE\",\"specialRequests\":[],\"stops\":[{\"location\":{\"lat\":\"3.048593\",\"lng\":\"101.671568\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"Bumi Bukit Jalil, No 2-1, Jalan Jalil 1, Lebuhraya Bukit Jalil, Sungai Besi, 57000 Kuala Lumpur, Malaysia\",\"country\":\"MY_KUL\"}}},{\"location\":{\"lat\":\"2.754873\",\"lng\":\"101.703744\"},\"addresses\":{\"ms_MY\":{\"displayString\":\"64000 Sepang, Selangor, Malaysia\",\"country\":\"MY_KUL\"}}}],\"requesterContact\":{\"name\":\"Chris Wong\",\"phone\":\"0376886555\"},\"deliveries\":[{\"toStop\":1,\"toContact\":{\"name\":\"Shen Ong\",\"phone\":\"0376886555\"},\"remarks\":\"Remarks for drop-off point (#1).\"}]}");
         JSONObject bodyJson = new JSONObject(new Gson().toJson(requ));
         String timeStamp = String.valueOf(System.currentTimeMillis());
-        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + ENDPOINT_URL + "\r\n\r\n" + bodyJson.toString();
+
+        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v3/quotations" + "\r\n\r\n"
+                + bodyJson.toString();
         byte[] byteSig = mac.doFinal(rawSignature.getBytes());
         String signature = DatatypeConverter.printHexBinary(byteSig);
         signature = signature.toLowerCase();
@@ -120,24 +110,39 @@ public class GetPrice extends SyncDispatcher {
         headers.set("Authorization", "hmac " + authToken);
         headers.set("X-LLM-Country", "MY_KUL");
 
-        HashMap httpHeader = new HashMap();
+        HashMap<String, String> httpHeader = new HashMap<>();
         httpHeader.put("Content-Type", "application/json");
         httpHeader.put("Authorization", "hmac " + authToken);
         httpHeader.put("X-LLM-Country", "MY_KUL");
-        HttpEntity<String> request = new HttpEntity(bodyJson.toString(), headers);
+        httpHeader.put("Market", "MY");
+        HttpEntity<String> request = new HttpEntity<>(bodyJson.toString(), headers);
 
-        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, BASE_URL + ENDPOINT_URL, httpHeader, bodyJson.toString(), this.connectTimeout, this.waitTimeout);
+        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId,
+                BASE_URL + "/v3/quotations", httpHeader, bodyJson.toString(), this.connectTimeout, this.waitTimeout);
 
-        if (httpResult.httpResponseCode == 200) {
+        if (httpResult.httpResponseCode == 201) {
             LogUtil.info(logprefix, location, "Request successful", "");
-            response.resultCode = 0;
-            response.returnObject = extractResponseBody(httpResult.responseString, pickupTime);
+
+            try {
+                response.resultCode = 0;
+                response.returnObject = extractResponseBody(httpResult.responseString, pickupTime);
+            } catch (Exception ex) {
+                response.resultCode = -1;
+                response.returnObject = ex.getMessage();
+                LogUtil.info(logprefix, location, "Request failed", ex.getMessage());
+
+            }
         } else {
             JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
             PriceResult result = new PriceResult();
-            LogUtil.info(logprefix, location, "Request failed", jsonResp.get("message").getAsString());
+            try {
+                LogUtil.info(logprefix, location, "Request failed", jsonResp.get("errors").getAsString());
+            } catch (Exception ex) {
+                LogUtil.info(logprefix, location, "Request failed", ex.getMessage());
 
-            result.message = jsonResp.get("message").getAsString();
+            }
+            // result.message = jsonResp.get("message").getAsString();
+            result.message = jsonResp.get("errors").getAsJsonArray().get(0).getAsJsonObject().get("id").getAsString();
             result.isError = true;
             response.returnObject = result;
             response.resultCode = -1;
@@ -146,82 +151,77 @@ public class GetPrice extends SyncDispatcher {
         return response;
     }
 
-
-    private GetPrices generateRequestBody(String pickupTime) {
+    private JsonObject generateRequestBody(String pickupTime) {
         List<Delivery> deliveries = new ArrayList<>();
+
+        JsonObject data = new JsonObject();
+        JsonObject requestBody = new JsonObject();
+
 
         String pickupContactNO;
         String deliveryContactNo;
         if (order.getPickup().getPickupContactPhone().startsWith("6")) {
-            //national format
+            // national format
             pickupContactNO = (order.getPickup().getPickupContactPhone().substring(1)).replaceAll(" ", "");
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:" + pickupContactNO, "");
+            LogUtil.info(logprefix, location,
+                    "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:" + pickupContactNO, "");
         } else if (order.getPickup().getPickupContactPhone().startsWith("+6")) {
             pickupContactNO = (order.getPickup().getPickupContactPhone().substring(2)).replaceAll(" ", "");
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO, "");
+            LogUtil.info(logprefix, location,
+                    "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO, "");
         } else {
             pickupContactNO = (order.getPickup().getPickupContactPhone()).replaceAll(" ", "");
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO, "");
+            LogUtil.info(logprefix, location,
+                    "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO, "");
         }
         if (order.getDelivery().getDeliveryContactPhone().startsWith("6")) {
-            //national format
+            // national format
             deliveryContactNo = (order.getDelivery().getDeliveryContactPhone().substring(1)).replaceAll(" ", "");
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn: & Delivery : " + deliveryContactNo, "");
+            LogUtil.info(logprefix, location, "[" + systemTransactionId
+                    + "] Msisdn is national format. New Msisdn: & Delivery : " + deliveryContactNo, "");
         } else if (order.getDelivery().getDeliveryContactPhone().startsWith("+6")) {
             deliveryContactNo = (order.getDelivery().getDeliveryContactPhone().substring(2));
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn: & Delivery : " + deliveryContactNo, "");
+            LogUtil.info(logprefix, location, "[" + systemTransactionId
+                    + "] Remove is national format. New Msisdn: & Delivery : " + deliveryContactNo, "");
         } else {
             deliveryContactNo = (order.getDelivery().getDeliveryContactPhone()).replaceAll(" ", "");
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn: & Delivery : " + deliveryContactNo, "");
+            LogUtil.info(logprefix, location, "[" + systemTransactionId
+                    + "] Remove is national format. New Msisdn: & Delivery : " + deliveryContactNo, "");
         }
 
+        JsonObject stops = new JsonObject();
+        JsonObject stops1 = new JsonObject();
+        JsonObject coordinates = new JsonObject();
+        JsonObject coordinates2 = new JsonObject();
 
-        deliveries.add(
-                new Delivery(
-                        1,
-                        new Contact(order.getDelivery().getDeliveryContactName(), deliveryContactNo),
-                        ""
-                )
-        );
+        JsonArray stop = new JsonArray();
+        stops.addProperty("address", order.getPickup().getPickupAddress());
+        coordinates.addProperty("lat", String.valueOf(order.getPickup().getLatitude()));
+        coordinates.addProperty("lng", String.valueOf(order.getPickup().getLongitude()));
+        stops.add("coordinates", coordinates);
+        stops1.addProperty("address", order.getDelivery().getDeliveryAddress());
+        coordinates2.addProperty("lat", String.valueOf(order.getDelivery().getLatitude()));
+        coordinates2.addProperty("lng", String.valueOf(order.getDelivery().getLongitude()));
+        stops1.add("coordinates", coordinates2);
+        stop.add(stops);
+        stop.add(stops1);
+        data.addProperty("serviceType", order.getPickup().getVehicleType().name());
+        data.addProperty("language", "en_MY");
+        data.add("stops", stop);
+        data.addProperty("isRouteOptimized", true);
+        requestBody.add("data", data);
 
-        GetPrices req = new GetPrices();
-        req.serviceType = order.getPickup().getVehicleType().name();
-        req.specialRequests = null;
 
-        if (fulfillment.getFulfillment().equals("FOURHOURS") || fulfillment.getFulfillment().equals("NEXTDAY") || fulfillment.getFulfillment().equals("FOURDAYS")) {
-            req.scheduleAt = pickupTime;
-        }
-        Stop s1 = new Stop();
-        s1.addresses = new Addresses(
-                new MsMY(order.getPickup().getPickupAddress(),
-                        "MY_KUL")
-        );
-        Stop s2 = new Stop();
-        s2.addresses = new Addresses(
-                new MsMY(order.getDelivery().getDeliveryAddress(),
-                        "MY_KUL"));
-        List<Stop> stopList = new ArrayList<>();
-        stopList.add(s1);
-        stopList.add(s2);
-
-        req.stops = stopList;
-        req.requesterContact = new Contact(order.getPickup().getPickupContactName(), pickupContactNO);
-        req.deliveries = deliveries;
-        return req;
+        return requestBody;
     }
 
     private PriceResult extractResponseBody(String respString, String pickupTime) {
-//        if (order.getDeliveryType().equals("SCHEDULED")) {
-//            Calendar cal = Calendar.getInstance(); // creates calendar
-//            cal.setTime(new Date());               // sets calendar time/date
-//            cal.add(Calendar.HOUR_OF_DAY, order.getInterval());      // adds one hour
-//            cal.getTime();        }
-
 
         LogUtil.info(logprefix, location, "Response: ", respString);
         JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
         LogUtil.info(logprefix, location, "Lalamove jsonResp: " + jsonResp, "");
-        String payAmount = jsonResp.get("totalFee").getAsString();
+        String payAmount = jsonResp.get("data").getAsJsonObject().get("priceBreakdown").getAsJsonObject().get("total").getAsString();
+        String quotationId = jsonResp.get("data").getAsJsonObject().get("quotationId").getAsString();
         LogUtil.info(logprefix, location, "Payment Amount:" + payAmount, "");
         PriceResult priceResult = new PriceResult();
         BigDecimal bd = BigDecimal.valueOf(Double.parseDouble(payAmount));
@@ -230,6 +230,7 @@ public class GetPrice extends SyncDispatcher {
         priceResult.pickupDateTime = pickupTime;
         priceResult.fulfillment = fulfillment.getFulfillment();
         priceResult.isError = false;
+        priceResult.quotationId = quotationId;
         if (fulfillment.getInterval() != null) {
             priceResult.interval = fulfillment.getInterval();
         } else {

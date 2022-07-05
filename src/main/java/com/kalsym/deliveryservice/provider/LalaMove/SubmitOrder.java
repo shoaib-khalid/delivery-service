@@ -33,7 +33,6 @@ import java.util.concurrent.CountDownLatch;
 
 public class SubmitOrder extends SyncDispatcher {
 
-
     private final String baseUrl;
     private final String endpointUrl;
     private final String queryOrder_url;
@@ -54,7 +53,8 @@ public class SubmitOrder extends SyncDispatcher {
     private String shareLink;
     private String status;
 
-    public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
+    public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId,
+            SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
         logprefix = systemTransactionId;
         this.systemTransactionId = systemTransactionId;
@@ -81,7 +81,8 @@ public class SubmitOrder extends SyncDispatcher {
 
         String BASE_URL = this.baseUrl;
         String ENDPOINT_URL_PLACEORDER = this.endpointUrl;
-        LogUtil.info(logprefix, location, "BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER, "" + order.getDeliveryType());
+        LogUtil.info(logprefix, location, "BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER,
+                "" + order.getDeliveryType());
 
         String METHOD = "POST";
         Mac mac = null;
@@ -94,7 +95,6 @@ public class SubmitOrder extends SyncDispatcher {
         } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
-
 
         JSONObject bodyJson = new JSONObject(new Gson().toJson(requestBody));
         String timeStamp = String.valueOf(System.currentTimeMillis());
@@ -116,9 +116,10 @@ public class SubmitOrder extends SyncDispatcher {
         httpHeader.put("Authorization", "hmac " + authToken);
         httpHeader.put("X-LLM-Country", "MY_KUL");
 
-
         try {
-            HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, BASE_URL + ENDPOINT_URL_PLACEORDER, httpHeader, orderBody.toString(), this.connectTimeout, this.waitTimeout);
+            HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId,
+                    BASE_URL + ENDPOINT_URL_PLACEORDER, httpHeader, orderBody.toString(), this.connectTimeout,
+                    this.waitTimeout);
             int statusCode = httpResult.httpResponseCode;
 
             if (statusCode == 200) {
@@ -163,41 +164,43 @@ public class SubmitOrder extends SyncDispatcher {
         String pickupContactNO;
         String deliveryContactNo;
         if (order.getPickup().getPickupContactPhone().startsWith("6")) {
-            //national format
+            // national format
             pickupContactNO = order.getPickup().getPickupContactPhone().substring(1);
             deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(1);
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:"
+                    + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
         } else if (order.getPickup().getPickupContactPhone().startsWith("+6")) {
             pickupContactNO = order.getPickup().getPickupContactPhone().substring(2);
             deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(2);
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:"
+                    + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
         } else {
             pickupContactNO = order.getPickup().getPickupContactPhone();
             deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:"
+                    + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
         }
 
         deliveries.add(
                 new Delivery(
                         1,
                         new Contact(order.getDelivery().getDeliveryContactName(), deliveryContactNo),
-                        ""
-                )
-        );
+                        ""));
 
         GetPrices req = new GetPrices();
         req.serviceType = order.getPickup().getVehicleType().name();
         req.specialRequests = null;
 
         System.err.println("order.getDeliveryPeriod() : " + order.getDeliveryPeriod());
-        if (order.getDeliveryPeriod().equals("FOURHOURS") || order.getDeliveryPeriod().equals("NEXTDAY") || order.getDeliveryPeriod().equals("FOURDAYS")) {
+        if (order.getDeliveryPeriod().equals("FOURHOURS") || order.getDeliveryPeriod().equals("NEXTDAY")
+                || order.getDeliveryPeriod().equals("FOURDAYS")) {
             DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
             Date schedule = null;
             Date currentDate = null;
             try {
-//                schedule = dateFormat.parse(order.getPickupTime());
+                // schedule = dateFormat.parse(order.getPickupTime());
                 dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-//                currentDate =  dateFormat.parse(new Date().toString());
+                // currentDate = dateFormat.parse(new Date().toString());
                 schedule = dateFormat.parse(order.getPickupTime().toString());
 
                 LogUtil.info(logprefix, location, "Schedule Time", schedule.toString());
@@ -206,7 +209,6 @@ public class SubmitOrder extends SyncDispatcher {
                 e.printStackTrace();
             }
             LogUtil.info(logprefix, location, "Current Time", new Date().toString());
-
 
             if (new Date().compareTo(schedule) < 0) {
                 LogUtil.info(logprefix, location, "Date 1 occurs after Date 2", "");
@@ -217,14 +219,9 @@ public class SubmitOrder extends SyncDispatcher {
 
         }
         Stop s1 = new Stop();
-        s1.addresses = new Addresses(
-                new MsMY(order.getPickup().getPickupAddress(),
-                        "MY_KUL")
-        );
+        s1.address = order.getPickup().getPickupAddress();
         Stop s2 = new Stop();
-        s2.addresses = new Addresses(
-                new MsMY(order.getDelivery().getDeliveryAddress(),
-                        "MY_KUL"));
+        s2.address = order.getDelivery().getDeliveryAddress();
         List<Stop> stopList = new ArrayList<>();
         stopList.add(s1);
         stopList.add(s2);
@@ -233,14 +230,13 @@ public class SubmitOrder extends SyncDispatcher {
         req.requesterContact = new Contact(order.getPickup().getPickupContactName(), pickupContactNO);
         req.deliveries = deliveries;
 
-
         QuotedTotalFee quotation = new QuotedTotalFee();
 
         quotation.setAmount(order.getShipmentValue().toString());
         quotation.setCurrency("MYR");
 
-
-        // ######### BUILD PLACEORDER REQUEST USING PREVIOUSLY USED GETPRICE OBJECT AND QUOTATION OBJECT #########
+        // ######### BUILD PLACEORDER REQUEST USING PREVIOUSLY USED GETPRICE OBJECT AND
+        // QUOTATION OBJECT #########
         PlaceOrder placeOrder = new PlaceOrder(req, quotation);
         placeOrder.fleetOption = "FLEET_ALL";
 
@@ -249,7 +245,6 @@ public class SubmitOrder extends SyncDispatcher {
         return placeOrder;
     }
 
-
     private SubmitOrderResult extractResponseBody(String respString) {
         SubmitOrderResult submitOrderResult = new SubmitOrderResult();
         try {
@@ -257,7 +252,7 @@ public class SubmitOrder extends SyncDispatcher {
             LogUtil.info(logprefix, location, "the json resp for submitOrder " + jsonResp, "");
             LogUtil.info(logprefix, location, "OrderNumber:" + spOrderId, "");
 
-            //extract order create
+            // extract order create
             DeliveryOrder orderCreated = new DeliveryOrder();
             orderCreated.setSpOrderId(spOrderId);
             orderCreated.setSpOrderName(spOrderId);
@@ -273,7 +268,6 @@ public class SubmitOrder extends SyncDispatcher {
         }
         return submitOrderResult;
     }
-
 
     private ProcessResult getDetails(String orderRef) {
         LogUtil.info(logprefix, location, "OrderNumber in getDetails function: " + orderRef, "");
@@ -292,7 +286,6 @@ public class SubmitOrder extends SyncDispatcher {
             e.printStackTrace();
         }
 
-
         String url = this.queryOrder_url + orderRef;
         String timeStamp = String.valueOf(System.currentTimeMillis());
         String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v2/orders/" + orderRef + "\r\n\r\n";
@@ -302,7 +295,6 @@ public class SubmitOrder extends SyncDispatcher {
         signature = signature.toLowerCase();
 
         String token = apiKey + ":" + timeStamp + ":" + signature;
-
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
