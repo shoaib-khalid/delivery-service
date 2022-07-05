@@ -572,7 +572,7 @@ public class OrdersController {
                     order.setOrderId(o.getOrderId());
 
                     orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
-                }else{
+                } else {
                     notExistStatus.setOrder(o);
                     notExistStatus.setSpOrderId(o.getSpOrderId());
                     notExistStatus.setStatus(o.getStatus());
@@ -684,6 +684,7 @@ public class OrdersController {
 
                     DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
                     if (notExistStatus == null) {
+
                         DeliveryOrderStatus order = new DeliveryOrderStatus();
                         order.setOrder(o);
                         order.setSpOrderId(o.getSpOrderId());
@@ -694,9 +695,12 @@ public class OrdersController {
                         order.setSystemTransactionId(o.getSystemTransactionId());
                         order.setOrderId(o.getOrderId());
 
+                        System.err.println("Get All the Record " + order.toString());
+
+
                         orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
-                    }
-                    else{
+                    } else {
+                        System.err.println("Get All the Record " + notExistStatus.toString());
                         notExistStatus.setOrder(o);
                         notExistStatus.setSpOrderId(o.getSpOrderId());
                         notExistStatus.setStatus(o.getStatus());
@@ -1048,7 +1052,7 @@ public class OrdersController {
 
     @PostMapping(path = {"/getPrices"}, name = "orders-get-price-mulitplecart")
     public ResponseEntity<HttpReponse> getQuotationPrice(HttpServletRequest request,
-                                                    @Valid @RequestBody List<Order> orderDetails) {
+                                                         @Valid @RequestBody List<Order> orderDetails) {
 
         System.err.println("request.getRequestURI()" + request.getRequestURI());
         String logprefix = request.getRequestURI() + " ";

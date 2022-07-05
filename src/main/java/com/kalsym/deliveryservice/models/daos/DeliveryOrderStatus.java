@@ -1,5 +1,6 @@
 package com.kalsym.deliveryservice.models.daos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
 import lombok.Getter;
@@ -30,8 +31,11 @@ public class DeliveryOrderStatus {
     Date updated;
     String systemTransactionId;
     String deliveryCompletionStatus;
+
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deliveryOrderId")
     @NotFound(action = NotFoundAction.IGNORE)
+    @ToString.Exclude
     private DeliveryOrder order;
 }
