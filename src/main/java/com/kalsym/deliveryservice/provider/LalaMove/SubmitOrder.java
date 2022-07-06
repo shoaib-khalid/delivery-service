@@ -1,6 +1,7 @@
 package com.kalsym.deliveryservice.provider.LalaMove;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.RequestBodies.lalamoveGetPrice.*;
@@ -40,16 +41,11 @@ public class SubmitOrder extends SyncDispatcher {
     private final int waitTimeout;
     private final String systemTransactionId;
     private Order order;
-    private HashMap productMap;
-    private String atxProductCode = "";
-    private String sessionToken;
-    private String sslVersion = "SSL";
     private String logprefix;
     private String location = "LalaMoveSubmitOrder";
     private String secretKey;
     private String apiKey;
     private String spOrderId;
-    private String driverId;
     private String shareLink;
     private String status;
 
@@ -67,7 +63,6 @@ public class SubmitOrder extends SyncDispatcher {
         this.endpointUrl = (String) config.get("place_orderUrl");
         this.connectTimeout = Integer.parseInt((String) config.get("submitorder_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("submitorder_wait_timeout"));
-        productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
     }
 
@@ -80,8 +75,8 @@ public class SubmitOrder extends SyncDispatcher {
         PlaceOrder requestBody = generateRequestBody();
 
         String BASE_URL = this.baseUrl;
-        String ENDPOINT_URL_PLACEORDER = this.endpointUrl;
-        LogUtil.info(logprefix, location, "BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEORDER,
+        String ENDPOINT_URL_PLACEHOLDER = this.endpointUrl;
+        LogUtil.info(logprefix, location, "BASEURL :" + BASE_URL + " ENDPOINT :" + ENDPOINT_URL_PLACEHOLDER,
                 "" + order.getDeliveryType());
 
         String METHOD = "POST";
@@ -90,24 +85,21 @@ public class SubmitOrder extends SyncDispatcher {
             mac = Mac.getInstance("HmacSHA256");
             SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
             mac.init(secret_key);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             e.printStackTrace();
         }
 
         JSONObject bodyJson = new JSONObject(new Gson().toJson(requestBody));
         String timeStamp = String.valueOf(System.currentTimeMillis());
-        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + endpointUrl + "\r\n\r\n" + bodyJson.toString();
+//        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + endpointUrl + "\r\n\r\n" + bodyJson.toString();
+        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v3/orders" + "\r\n\r\n" + bodyJson.toString();
         LogUtil.info(logprefix, location, "rawSignature", rawSignature);
+        assert mac != null;
         byte[] byteSig = mac.doFinal(rawSignature.getBytes());
         String signature = DatatypeConverter.printHexBinary(byteSig);
         signature = signature.toLowerCase();
         LogUtil.info(logprefix, location, "SIGNATURE", signature);
         String authToken = apiKey + ":" + timeStamp + ":" + signature;
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
 
         JSONObject orderBody = new JSONObject(new Gson().toJson(requestBody));
 
@@ -115,10 +107,11 @@ public class SubmitOrder extends SyncDispatcher {
         httpHeader.put("Content-Type", "application/json");
         httpHeader.put("Authorization", "hmac " + authToken);
         httpHeader.put("X-LLM-Country", "MY_KUL");
+        httpHeader.put("Market", "MY");
 
         try {
             HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId,
-                    BASE_URL + ENDPOINT_URL_PLACEORDER, httpHeader, orderBody.toString(), this.connectTimeout,
+                    BASE_URL + ENDPOINT_URL_PLACEHOLDER, httpHeader, orderBody.toString(), this.connectTimeout,
                     this.waitTimeout);
             int statusCode = httpResult.httpResponseCode;
 
@@ -158,7 +151,7 @@ public class SubmitOrder extends SyncDispatcher {
         return response;
     }
 
-    private PlaceOrder generateRequestBody() {
+    private JsonObject generateRequestBody() {
         List<Delivery> deliveries = new ArrayList<>();
 
         String pickupContactNO;
@@ -181,68 +174,94 @@ public class SubmitOrder extends SyncDispatcher {
                     + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
         }
 
-        deliveries.add(
-                new Delivery(
-                        1,
-                        new Contact(order.getDelivery().getDeliveryContactName(), deliveryContactNo),
-                        ""));
+//        deliveries.add(
+//                new Delivery(
+//                        1,
+//                        new Contact(order.getDelivery().getDeliveryContactName(), deliveryContactNo),
+//                        ""));
+//
+//        GetPrices req = new GetPrices();
+//        req.serviceType = order.getPickup().getVehicleType().name();
+//        req.specialRequests = null;
+//
+//        System.err.println("order.getDeliveryPeriod() : " + order.getDeliveryPeriod());
+//        if (order.getDeliveryPeriod().equals("FOURHOURS") || order.getDeliveryPeriod().equals("NEXTDAY")
+//                || order.getDeliveryPeriod().equals("FOURDAYS")) {
+//            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+//            Date schedule = null;
+//            Date currentDate = null;
+//            try {
+//                // schedule = dateFormat.parse(order.getPickupTime());
+//                dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+//                // currentDate = dateFormat.parse(new Date().toString());
+//                schedule = dateFormat.parse(order.getPickupTime().toString());
+//
+//                LogUtil.info(logprefix, location, "Schedule Time", schedule.toString());
+//
+//            } catch (ParseException e) {
+//                e.printStackTrace();
+//            }
+//            LogUtil.info(logprefix, location, "Current Time", new Date().toString());
+//
+//            if (new Date().compareTo(schedule) < 0) {
+//                LogUtil.info(logprefix, location, "Date 1 occurs after Date 2", "");
+//                req.scheduleAt = order.getPickupTime();
+//            } else {
+//                LogUtil.info(logprefix, location, "Date Does Not Match", "");
+//            }
+//
+//        }
+//        Stop s1 = new Stop();
+//        s1.address = order.getPickup().getPickupAddress();
+//        Stop s2 = new Stop();
+//        s2.address = order.getDelivery().getDeliveryAddress();
+//        List<Stop> stopList = new ArrayList<>();
+//        stopList.add(s1);
+//        stopList.add(s2);
+//
+//        req.stops = stopList;
+//        req.requesterContact = new Contact(order.getPickup().getPickupContactName(), pickupContactNO);
+//        req.deliveries = deliveries;
+//
+//        QuotedTotalFee quotation = new QuotedTotalFee();
+//
+//        quotation.setAmount(order.getShipmentValue().toString());
+//        quotation.setCurrency("MYR");
+//
+//        // ######### BUILD PLACEORDER REQUEST USING PREVIOUSLY USED GETPRICE OBJECT AND
+//        // QUOTATION OBJECT #########
+//        PlaceOrder placeOrder = new PlaceOrder(req, quotation);
+//        placeOrder.fleetOption = "FLEET_ALL";
 
-        GetPrices req = new GetPrices();
-        req.serviceType = order.getPickup().getVehicleType().name();
-        req.specialRequests = null;
+        JsonObject data = new JsonObject();
+        JsonObject requestBody = new JsonObject();
+        JsonObject sender = new JsonObject();
+        JsonObject recipients = new JsonObject();
+        JsonObject metadata = new JsonObject();
 
-        System.err.println("order.getDeliveryPeriod() : " + order.getDeliveryPeriod());
-        if (order.getDeliveryPeriod().equals("FOURHOURS") || order.getDeliveryPeriod().equals("NEXTDAY")
-                || order.getDeliveryPeriod().equals("FOURDAYS")) {
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-            Date schedule = null;
-            Date currentDate = null;
-            try {
-                // schedule = dateFormat.parse(order.getPickupTime());
-                dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-                // currentDate = dateFormat.parse(new Date().toString());
-                schedule = dateFormat.parse(order.getPickupTime().toString());
+        JsonArray stop = new JsonArray();
+        data.addProperty("quotationId", order.getQuotationId());
+        sender.addProperty("stopId", order.getPickupStopId());
+        sender.addProperty("name", order.getPickup().getPickupContactName());
+        sender.addProperty("phone", order.getPickup().getPickupContactPhone());
+        coordinates.addProperty("lat", String.valueOf(order.getPickup().getLatitude()));
+        coordinates.addProperty("lng", String.valueOf(order.getPickup().getLongitude()));
+        stops.add("coordinates", coordinates);
+        stops1.addProperty("address", order.getDelivery().getDeliveryAddress());
+        coordinates2.addProperty("lat", String.valueOf(order.getDelivery().getLatitude()));
+        coordinates2.addProperty("lng", String.valueOf(order.getDelivery().getLongitude()));
+        stops1.add("coordinates", coordinates2);
+        stop.add(stops);
+        stop.add(stops1);
+        data.addProperty("serviceType", order.getPickup().getVehicleType().name());
+        data.addProperty("language", "en_MY");
+        data.add("stops", stop);
+        data.addProperty("isRouteOptimized", true);
+        requestBody.add("data", data);
 
-                LogUtil.info(logprefix, location, "Schedule Time", schedule.toString());
+        LogUtil.info(logprefix, location, "Place Order Request : " + requestBody.toString(), "");
 
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            LogUtil.info(logprefix, location, "Current Time", new Date().toString());
-
-            if (new Date().compareTo(schedule) < 0) {
-                LogUtil.info(logprefix, location, "Date 1 occurs after Date 2", "");
-                req.scheduleAt = order.getPickupTime();
-            } else {
-                LogUtil.info(logprefix, location, "Date Does Not Match", "");
-            }
-
-        }
-        Stop s1 = new Stop();
-        s1.address = order.getPickup().getPickupAddress();
-        Stop s2 = new Stop();
-        s2.address = order.getDelivery().getDeliveryAddress();
-        List<Stop> stopList = new ArrayList<>();
-        stopList.add(s1);
-        stopList.add(s2);
-
-        req.stops = stopList;
-        req.requesterContact = new Contact(order.getPickup().getPickupContactName(), pickupContactNO);
-        req.deliveries = deliveries;
-
-        QuotedTotalFee quotation = new QuotedTotalFee();
-
-        quotation.setAmount(order.getShipmentValue().toString());
-        quotation.setCurrency("MYR");
-
-        // ######### BUILD PLACEORDER REQUEST USING PREVIOUSLY USED GETPRICE OBJECT AND
-        // QUOTATION OBJECT #########
-        PlaceOrder placeOrder = new PlaceOrder(req, quotation);
-        placeOrder.fleetOption = "FLEET_ALL";
-
-        LogUtil.info(logprefix, location, "Place Order Request : " + placeOrder.toString(), "");
-
-        return placeOrder;
+        return requestBody;
     }
 
     private SubmitOrderResult extractResponseBody(String respString) {
@@ -280,9 +299,7 @@ public class SubmitOrder extends SyncDispatcher {
             mac = Mac.getInstance("HmacSHA256");
             SecretKeySpec secret_key = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
             mac.init(secret_key);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             e.printStackTrace();
         }
 
@@ -313,7 +330,7 @@ public class SubmitOrder extends SyncDispatcher {
             response.resultCode = 0;
             response.returnObject = responses.getBody();
             JsonObject jsonResp = new Gson().fromJson(responses.getBody(), JsonObject.class);
-            driverId = jsonResp.get("driverId").getAsString();
+            String driverId = jsonResp.get("driverId").getAsString();
             shareLink = jsonResp.get("shareLink").getAsString();
             status = jsonResp.get("status").getAsString();
         } else {

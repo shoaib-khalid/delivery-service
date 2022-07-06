@@ -111,7 +111,6 @@ public class DeliveryService {
         c1.set(Calendar.MINUTE, 0);
 
         Date dateOne = c1.getTime();
-        System.err.println(" TIME NEED TO PRINT : " + dateOne.getTime() / 1000);
         DeliveryVehicleTypes deliveryVehicleTypes = null;
 
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
@@ -353,6 +352,9 @@ public class DeliveryService {
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
                     deliveryOrder.setFulfillmentType(list.fulfillment);
                     deliveryOrder.setSignature(list.signature);
+                    deliveryOrder.setQuotationId(list.quotationId);                    //TODO : ALTER TABLE symplified.delivery_quotation ADD quotationId varchar(500) NULL;
+                    deliveryOrder.setPickupStopId(list.pickupStopId);
+                    deliveryOrder.setDeliveryStopId(list.deliveryStopId);
                     if (list.interval != null) {
                         deliveryOrder.setIntervalTime(list.interval);
                     }
@@ -647,7 +649,9 @@ public class DeliveryService {
         orderDetails.setCartId(quotation.getCartId());
         orderDetails.setPickupTime(quotation.getPickupTime());
         orderDetails.setSignature(quotation.getSignature());
-
+        orderDetails.setQuotationId(quotation.getQuotationId());
+        orderDetails.setDeliveryStopId(quotation.getDeliveryStopId());
+        orderDetails.setPickupStopId(quotation.getPickupStopId());
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(quotation.getStoreId());
         LogUtil.info(systemTransactionId, location, "Get Store " + stores.getType(), "");
         orderDetails.setDeliveryType(stores.getType());

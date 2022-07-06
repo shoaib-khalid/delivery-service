@@ -222,6 +222,8 @@ public class GetPrice extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Lalamove jsonResp: " + jsonResp, "");
         String payAmount = jsonResp.get("data").getAsJsonObject().get("priceBreakdown").getAsJsonObject().get("total").getAsString();
         String quotationId = jsonResp.get("data").getAsJsonObject().get("quotationId").getAsString();
+        String deliveryStopId = jsonResp.get("data").getAsJsonObject().get("stops").getAsJsonArray().get(1).getAsJsonObject().get("stopId").getAsString();
+        String pickupStopId = jsonResp.get("data").getAsJsonObject().get("stops").getAsJsonArray().get(0).getAsJsonObject().get("stopId").getAsString();
         LogUtil.info(logprefix, location, "Payment Amount:" + payAmount, "");
         PriceResult priceResult = new PriceResult();
         BigDecimal bd = BigDecimal.valueOf(Double.parseDouble(payAmount));
@@ -231,6 +233,9 @@ public class GetPrice extends SyncDispatcher {
         priceResult.fulfillment = fulfillment.getFulfillment();
         priceResult.isError = false;
         priceResult.quotationId = quotationId;
+        priceResult.deliveryStopId = deliveryStopId;
+        priceResult.pickupStopId = pickupStopId;
+
         if (fulfillment.getInterval() != null) {
             priceResult.interval = fulfillment.getInterval();
         } else {

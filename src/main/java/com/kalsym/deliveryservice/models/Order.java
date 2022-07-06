@@ -53,5 +53,8 @@ public class Order {
     String pickupTime;
     String signature;
     BigDecimal codAmount;
+    String quotationId;
+    String deliveryStopId;
+    String pickupStopId;
 
 }
