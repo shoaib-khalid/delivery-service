@@ -15,6 +15,7 @@ import com.kalsym.deliveryservice.utils.StringUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,6 +51,7 @@ public class GenerateCodeController {
 
 
     @PostMapping(path = {"/createCentreCode/{storeId}"}, name = "generate-cost-center-code")
+    @PreAuthorize("hasAnyAuthority('generate-cost-center-code', 'all')")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
                                                 @PathVariable("storeId") String storeId) {
         String systemTransactionId = StringUtility.CreateRefID("CC");
