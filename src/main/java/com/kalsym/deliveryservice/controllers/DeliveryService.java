@@ -1222,8 +1222,7 @@ public class DeliveryService {
                     s.setOrderId(o.getOrderId());
 
                     orderStatusRepository.save(s); //SAVE ORDER STATUS LIST
-                }
-                else{
+                } else {
                     notExistStatus.setOrder(o);
                     notExistStatus.setSpOrderId(o.getSpOrderId());
                     notExistStatus.setStatus(o.getStatus());
@@ -1391,7 +1390,7 @@ public class DeliveryService {
         String systemTransactionId = StringUtility.CreateRefID("DL");
 
         DeliveryVehicleTypes deliveryVehicleTypes = null;
-        List<GetQuotationPriceList> qetQuotationPriceList = new ArrayList<>();
+        Set<GetQuotationPriceList> qetQuotationPriceList = new HashSet<>();
 
         for (Order quotation : orderDetails) { // Start Loop
 
@@ -1570,20 +1569,15 @@ public class DeliveryService {
                     byCartId.setQuotation(priceResultList);
                     qetQuotationPriceList.add(byCartId);
                 }
-//                response.setSuccessStatus(HttpStatus.OK);
-//                response.setData(qetQuotationPriceList);
-//                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
-//                return response;
+
             } else {
                 List<Fulfillment> fulfillments = new ArrayList<>();
-                // if (!stores.getStoreDeliveryPeriodList().isEmpty()) {
                 for (StoreDeliveryPeriod storeDeliveryPeriod : stores.getStoreDeliveryPeriodList()) {
                     if (storeDeliveryPeriod.isEnabled()) {
                         Fulfillment fulfillment = new Fulfillment();
                         fulfillment.setFulfillment(storeDeliveryPeriod.getDeliveryPeriod());
                         fulfillments.add(fulfillment);
                     }
-                    // }
                 }
 
                 quotation.setItemType(stores.getItemType());
@@ -1592,15 +1586,14 @@ public class DeliveryService {
                 List<StoreDeliverySp> storeDeliverySp = storeDeliverySpRepository.findByStoreId(store.getId());
                 if (!storeDeliverySp.isEmpty()) {
                     quotation.setDeliveryProviderId(storeDeliverySp.get(0).getProvider().getId());
-                    List<String> periods = new ArrayList<>();
-                    for (StoreDeliverySp s : storeDeliverySp) {
-                        periods.add(s.getFulfilment());
-                    }
+//                    List<String> periods = new ArrayList<>();
+//                    for (StoreDeliverySp s : storeDeliverySp) {
+//                        periods.add(s.getFulfilment());
+//                    }
                 }
                 ProcessRequest process = new ProcessRequest(systemTransactionId, quotation, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository, fulfillments, deliveryZonePriceRepository, deliveryStoreCenterRepository);
                 processResult = process.GetPrice();
                 LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
-//                GetQuotationPriceList byCartId = new GetQuotationPriceList(); // Add Multiple Quotation
                 if (processResult.resultCode == 0) {
                     // successfully get price from provider
                     Set<PriceResult> priceResultList = new HashSet<>();
