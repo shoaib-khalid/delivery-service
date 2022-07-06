@@ -48,9 +48,10 @@ public class SubmitOrder extends SyncDispatcher {
     private String spOrderId;
     private String shareLink;
     private String status;
+    private String partner;
 
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId,
-            SequenceNumberRepository sequenceNumberRepository) {
+                       SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
         logprefix = systemTransactionId;
         this.systemTransactionId = systemTransactionId;
@@ -63,6 +64,7 @@ public class SubmitOrder extends SyncDispatcher {
         this.endpointUrl = (String) config.get("place_orderUrl");
         this.connectTimeout = Integer.parseInt((String) config.get("submitorder_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("submitorder_wait_timeout"));
+        this.partner = (String) config.get("partner");
         this.order = order;
     }
 
@@ -72,7 +74,7 @@ public class SubmitOrder extends SyncDispatcher {
 
         LogUtil.info(logprefix, location, "Process start", "");
 
-        PlaceOrder requestBody = generateRequestBody();
+        JsonObject requestBody = generateRequestBody();
 
         String BASE_URL = this.baseUrl;
         String ENDPOINT_URL_PLACEHOLDER = this.endpointUrl;
@@ -152,8 +154,6 @@ public class SubmitOrder extends SyncDispatcher {
     }
 
     private JsonObject generateRequestBody() {
-        List<Delivery> deliveries = new ArrayList<>();
-
         String pickupContactNO;
         String deliveryContactNo;
         if (order.getPickup().getPickupContactPhone().startsWith("6")) {
@@ -174,90 +174,29 @@ public class SubmitOrder extends SyncDispatcher {
                     + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
         }
 
-//        deliveries.add(
-//                new Delivery(
-//                        1,
-//                        new Contact(order.getDelivery().getDeliveryContactName(), deliveryContactNo),
-//                        ""));
-//
-//        GetPrices req = new GetPrices();
-//        req.serviceType = order.getPickup().getVehicleType().name();
-//        req.specialRequests = null;
-//
-//        System.err.println("order.getDeliveryPeriod() : " + order.getDeliveryPeriod());
-//        if (order.getDeliveryPeriod().equals("FOURHOURS") || order.getDeliveryPeriod().equals("NEXTDAY")
-//                || order.getDeliveryPeriod().equals("FOURDAYS")) {
-//            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-//            Date schedule = null;
-//            Date currentDate = null;
-//            try {
-//                // schedule = dateFormat.parse(order.getPickupTime());
-//                dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-//                // currentDate = dateFormat.parse(new Date().toString());
-//                schedule = dateFormat.parse(order.getPickupTime().toString());
-//
-//                LogUtil.info(logprefix, location, "Schedule Time", schedule.toString());
-//
-//            } catch (ParseException e) {
-//                e.printStackTrace();
-//            }
-//            LogUtil.info(logprefix, location, "Current Time", new Date().toString());
-//
-//            if (new Date().compareTo(schedule) < 0) {
-//                LogUtil.info(logprefix, location, "Date 1 occurs after Date 2", "");
-//                req.scheduleAt = order.getPickupTime();
-//            } else {
-//                LogUtil.info(logprefix, location, "Date Does Not Match", "");
-//            }
-//
-//        }
-//        Stop s1 = new Stop();
-//        s1.address = order.getPickup().getPickupAddress();
-//        Stop s2 = new Stop();
-//        s2.address = order.getDelivery().getDeliveryAddress();
-//        List<Stop> stopList = new ArrayList<>();
-//        stopList.add(s1);
-//        stopList.add(s2);
-//
-//        req.stops = stopList;
-//        req.requesterContact = new Contact(order.getPickup().getPickupContactName(), pickupContactNO);
-//        req.deliveries = deliveries;
-//
-//        QuotedTotalFee quotation = new QuotedTotalFee();
-//
-//        quotation.setAmount(order.getShipmentValue().toString());
-//        quotation.setCurrency("MYR");
-//
-//        // ######### BUILD PLACEORDER REQUEST USING PREVIOUSLY USED GETPRICE OBJECT AND
-//        // QUOTATION OBJECT #########
-//        PlaceOrder placeOrder = new PlaceOrder(req, quotation);
-//        placeOrder.fleetOption = "FLEET_ALL";
 
         JsonObject data = new JsonObject();
         JsonObject requestBody = new JsonObject();
         JsonObject sender = new JsonObject();
-        JsonObject recipients = new JsonObject();
+        JsonObject recipient = new JsonObject();
+        JsonArray recipients = new JsonArray();
         JsonObject metadata = new JsonObject();
 
         JsonArray stop = new JsonArray();
         data.addProperty("quotationId", order.getQuotationId());
         sender.addProperty("stopId", order.getPickupStopId());
         sender.addProperty("name", order.getPickup().getPickupContactName());
-        sender.addProperty("phone", order.getPickup().getPickupContactPhone());
-        coordinates.addProperty("lat", String.valueOf(order.getPickup().getLatitude()));
-        coordinates.addProperty("lng", String.valueOf(order.getPickup().getLongitude()));
-        stops.add("coordinates", coordinates);
-        stops1.addProperty("address", order.getDelivery().getDeliveryAddress());
-        coordinates2.addProperty("lat", String.valueOf(order.getDelivery().getLatitude()));
-        coordinates2.addProperty("lng", String.valueOf(order.getDelivery().getLongitude()));
-        stops1.add("coordinates", coordinates2);
-        stop.add(stops);
-        stop.add(stops1);
-        data.addProperty("serviceType", order.getPickup().getVehicleType().name());
-        data.addProperty("language", "en_MY");
-        data.add("stops", stop);
-        data.addProperty("isRouteOptimized", true);
-        requestBody.add("data", data);
+        sender.addProperty("phone", pickupContactNO);
+        recipient.addProperty("stopId", order.getDeliveryStopId());
+        recipient.addProperty("name", order.getDelivery().getDeliveryContactName());
+        recipient.addProperty("phone", deliveryContactNo);
+        recipient.addProperty("remarks", order.getRemarks());
+        recipients.add(recipient);
+        data.add("sender", sender);
+        data.add("recipients", recipient);
+        data.addProperty("isPODEnabled", true);
+        data.addProperty("isRecipientSMSEnabled", true);
+
 
         LogUtil.info(logprefix, location, "Place Order Request : " + requestBody.toString(), "");
 
