@@ -1050,7 +1050,7 @@ public class OrdersController {
         }
     }
 
-    @PostMapping(path = {"/getPrices"}, name = "orders-get-price-mulitplecart")
+    @PostMapping(path = {"/queryQuotation"}, name = "orders-get-price-mulitplecart")
     public ResponseEntity<HttpReponse> getQuotationPrice(HttpServletRequest request,
                                                          @Valid @RequestBody List<Order> orderDetails) {
 
