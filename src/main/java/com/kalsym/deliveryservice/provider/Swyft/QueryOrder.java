@@ -24,7 +24,7 @@ public class QueryOrder extends SyncDispatcher {
     private final int waitTimeout;
     private final String systemTransactionId;
     private String logprefix;
-    private String location = "TCSQueryOrder";
+    private String location = "SwyftQueryOrder";
     private String spOrderId;
 
     private String apiKey;
@@ -35,7 +35,7 @@ public class QueryOrder extends SyncDispatcher {
         super(latch);
         logprefix = systemTransactionId;
         this.systemTransactionId = systemTransactionId;
-        LogUtil.info(logprefix, location, "TCS QueryOrder class initiliazed!!", "");
+        LogUtil.info(logprefix, location, "Swyft QueryOrder class initiliazed!!", "");
 
         //TODO : ADD IN DB DETAILS
         this.queryOrder_url = (String) config.get("query_order_endpoint");
@@ -71,7 +71,7 @@ public class QueryOrder extends SyncDispatcher {
             }
             if (httpResult.httpResponseCode == 200) {
                 response.resultCode = 0;
-                LogUtil.info(logprefix, location, "TCS Response for Submit Order: " + httpResult.responseString, "");
+                LogUtil.info(logprefix, location, "Swyft Response for Submit Order: " + httpResult.responseString, "");
                 response.returnObject = extractResponseBody(httpResult.responseString);
             } else {
                 LogUtil.info(logprefix, location, "Request failed", "");

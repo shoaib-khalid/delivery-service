@@ -479,9 +479,10 @@ public class ProviderThread extends Thread implements Runnable {
                 airwayBillResult.providerId = provider.getId();
                 caller.setAirwayBillResult(airwayBillResult);
             } else if (functionName.equalsIgnoreCase("GetAdditionalInfo")) {
+                System.err.println("REpoSNES : " + response.returnObject);
                 AdditionalInfoResult additionalInfoResult = (AdditionalInfoResult) response.returnObject;
                 additionalInfoResult.providerId = provider.getId();
-                caller.setAdditionalInfoResult(additionalInfoResult);
+                caller.addAdditionalInfoResults(additionalInfoResult);
             } else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
                 PriceResult priceResult = (PriceResult) response.returnObject;
                 System.err.println("PRINT ID HERE " + provider.getId());

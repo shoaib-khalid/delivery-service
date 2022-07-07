@@ -56,5 +56,7 @@ public class Order {
     String quotationId;
     String deliveryStopId;
     String pickupStopId;
+    Integer totalParcel;
+
 
 }

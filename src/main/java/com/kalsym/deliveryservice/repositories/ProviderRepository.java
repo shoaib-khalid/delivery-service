@@ -14,6 +14,7 @@ import java.util.Optional;
 public interface ProviderRepository extends JpaRepository<Provider, Integer> {
     public Provider findOneById(Integer id);
     public Optional<Provider> findByIdAndQueryOrderClassnameIsNotNull(Integer id);
+    public List<Provider> findByRegionCountryIdAndAdditionalQueryClassNameIsNotNull(String id);
 
 //    public List<Provider> findAllByRegionCountryId(String regionCountry);
 }

@@ -57,8 +57,8 @@ public class Provider implements Serializable {
     String additionalQueryClassName;
     @JsonIgnore
     String addPriorityClassName;
-    ;
-    //    String regionCountryId;
+    @JsonIgnore
+    String regionCountryId;
     @JsonIgnore
     Integer minimumOrderQuantity;
     @JsonIgnore
