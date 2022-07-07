@@ -113,16 +113,16 @@ public class SubmitOrder extends SyncDispatcher {
 
         try {
             HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId,
-                    BASE_URL + ENDPOINT_URL_PLACEHOLDER, httpHeader, orderBody.toString(), this.connectTimeout,
+                    BASE_URL + "/v3/orders", httpHeader, orderBody.toString(), this.connectTimeout,
                     this.waitTimeout);
             int statusCode = httpResult.httpResponseCode;
 
-            if (statusCode == 200) {
+            if (statusCode == 201) {
                 response.resultCode = 0;
                 JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
-                spOrderId = jsonResp.get("orderRef").getAsString();
+                spOrderId = jsonResp.get("data").getAsJsonObject().get("orderId").getAsString();
                 LogUtil.info(logprefix, location, "OrderNumber in process function:" + spOrderId, "");
-                getDetails(spOrderId);
+//                getDetails(spOrderId);
                 response.returnObject = extractResponseBody(httpResult.responseString);
             } else {
                 JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
@@ -186,17 +186,17 @@ public class SubmitOrder extends SyncDispatcher {
         data.addProperty("quotationId", order.getQuotationId());
         sender.addProperty("stopId", order.getPickupStopId());
         sender.addProperty("name", order.getPickup().getPickupContactName());
-        sender.addProperty("phone", pickupContactNO);
+        sender.addProperty("phone", order.getPickup().getPickupContactPhone());
         recipient.addProperty("stopId", order.getDeliveryStopId());
         recipient.addProperty("name", order.getDelivery().getDeliveryContactName());
-        recipient.addProperty("phone", deliveryContactNo);
+        recipient.addProperty("phone", order.getDelivery().getDeliveryContactPhone());
         recipient.addProperty("remarks", order.getRemarks());
         recipients.add(recipient);
         data.add("sender", sender);
-        data.add("recipients", recipient);
+        data.add("recipients", recipients);
         data.addProperty("isPODEnabled", true);
         data.addProperty("isRecipientSMSEnabled", true);
-
+        requestBody.add("data", data);
 
         LogUtil.info(logprefix, location, "Place Order Request : " + requestBody.toString(), "");
 

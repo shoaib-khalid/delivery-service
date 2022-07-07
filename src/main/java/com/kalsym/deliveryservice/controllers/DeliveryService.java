@@ -352,9 +352,10 @@ public class DeliveryService {
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
                     deliveryOrder.setFulfillmentType(list.fulfillment);
                     deliveryOrder.setSignature(list.signature);
-                    deliveryOrder.setQuotationId(list.quotationId);                    //TODO : ALTER TABLE symplified.delivery_quotation ADD quotationId varchar(500) NULL;
-                    deliveryOrder.setPickupStopId(list.pickupStopId);
-                    deliveryOrder.setDeliveryStopId(list.deliveryStopId);
+                    deliveryOrder.setQuotationId(list.quotationId); //FIXME : ALTER TABLE symplified.delivery_quotation ADD quotationId varchar(500) NULL;
+                    deliveryOrder.setPickupStopId(list.pickupStopId);//  FIXME :    ALTER TABLE symplified.delivery_quotation ADD pickupStopId varchar(100) NULL;
+                    deliveryOrder.setDeliveryStopId(list.deliveryStopId); //  FIXME :   ALTER TABLE symplified.delivery_quotation ADD deliveryStopId varchar(100) NULL;
+
                     if (list.interval != null) {
                         deliveryOrder.setIntervalTime(list.interval);
                     }
@@ -367,7 +368,7 @@ public class DeliveryService {
 
                     BigDecimal bd = new BigDecimal("0.00");
                     if (!list.isError) {
-//TODO: Bug Need To Be Fixed
+//FIXME: Bug Need To Be Fixed
                         if (deliveryType.equalsIgnoreCase("adhoc")) {
 
 //                            String pattern = "HH:mm:ss";
