@@ -94,8 +94,9 @@ public class SubmitOrder extends SyncDispatcher {
         JsonObject jsonRequest = new JsonObject();
         jsonRequest.addProperty("ORDER_ID", order.getOrderId());
         if (order.getPaymentType().equals("COD")) {
+            LogUtil.info(logprefix, location, "Total Cod Value Body: ", String.valueOf(order.getOrderAmount() + order.getShipmentValue()));
             jsonRequest.addProperty("ORDER_TYPE", "COD");
-            jsonRequest.addProperty("COD", order.getShipmentValue());
+            jsonRequest.addProperty("COD", order.getOrderAmount());
         } else {
             jsonRequest.addProperty("ORDER_TYPE", "NONCOD");
             jsonRequest.addProperty("COD", 0);

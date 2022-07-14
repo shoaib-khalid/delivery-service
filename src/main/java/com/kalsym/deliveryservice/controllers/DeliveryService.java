@@ -572,7 +572,8 @@ public class DeliveryService {
         orderDetails.setPaymentType(optProduct.get().getPaymentType());
         orderDetails.setPieces(quotation.getTotalPieces());
         orderDetails.setTotalParcel(1);
-        orderDetails.setOrderAmount(optProduct.get().getTotal());
+        LogUtil.info(systemTransactionId, location, "Order Amount : ", String.valueOf(optProduct.get().getTotal() - quotation.getAmount()));
+        orderDetails.setOrderAmount(optProduct.get().getTotal() - quotation.getAmount());
         orderDetails.setCustomerId(quotation.getCustomerId());
         orderDetails.setCustomerId(quotation.getCustomerId());
         if (!quotation.getItemType().isEmpty()) {
@@ -917,7 +918,8 @@ public class DeliveryService {
         LogUtil.info(systemTransactionId, location, "schedule : ", submitDelivery.toString());
         Order orderDetails = new Order();
         orderDetails.setPaymentType(optProduct.get().getPaymentType());
-        orderDetails.setOrderAmount(optProduct.get().getTotal());
+        LogUtil.info(systemTransactionId, location, "Order Amount : ", String.valueOf(optProduct.get().getTotal() - quotation.getAmount()));
+        orderDetails.setOrderAmount(optProduct.get().getTotal() - quotation.getAmount());
         orderDetails.setTotalParcel(1);
         orderDetails.setPieces(quotation.getTotalPieces());
         // orderDetails.setSignature(quotation.getSignature()); //TODO:ADD BACK
