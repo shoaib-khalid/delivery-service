@@ -133,7 +133,7 @@ public class SubmitOrder extends SyncDispatcher {
             JsonArray array = new JsonArray();
             JsonObject createPickup = new JsonObject();
 
-            String pattern = "MM-dd-yyyy";
+            String pattern = "yyyy-MM-dd";
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
             String date = simpleDateFormat.format(new Date());
 

@@ -38,7 +38,8 @@ public class SubmitOrder extends SyncDispatcher {
     private final String codCode;
     private final String serviceCode;
     private final String reference;
-    private String userAgent;
+    private final String userAgent;
+    private final String remarks;
 
 
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
@@ -59,6 +60,7 @@ public class SubmitOrder extends SyncDispatcher {
         this.serviceCode = (String) config.get("serviceCode");
         this.reference = (String) config.get("reference");
         this.userAgent = (String) config.get("userAgent");
+        this.remarks = (String) config.get("remarks");
 
 
         this.order = order;
@@ -146,10 +148,10 @@ public class SubmitOrder extends SyncDispatcher {
         dropoff.addProperty("address", order.getDelivery().getDeliveryAddress());
         dropoff.addProperty("gps_address", order.getDelivery().getDeliveryAddress());
         if (order.getRemarks() != null) {
-            details.addProperty("voice_note", order.getRemarks());
+            details.addProperty("voice_note", remarks);
 
         } else {
-            details.addProperty("voice_note", order.getOrderId());
+            details.addProperty("voice_note", "Order Id : " + order.getOrderId() + " Remarks : " + remarks);
         }
         details.addProperty("parcel_value", order.getOrderAmount() - order.getShipmentValue());
         details.addProperty("reference", reference);
