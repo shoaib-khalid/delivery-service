@@ -103,27 +103,24 @@ public class QueryOrder extends SyncDispatcher {
 //            Reattempted
 //            Cancelled
 //            Void Lable
-           if (status.equals("Picked Up")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-            } else if (status.equals("At Swyft's Warehouse")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-            } else if (status.equals("Dispatched")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-            } else if (status.equals("Delivered")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
-            } else if (status.equals("Request for Reattempt")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-            } else if (status.equals("Cancelled")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
-            } else if (status.equals("Void Lable")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
+            switch (status) {
+                case "Picked Up":
+                case "At Swyft's Warehouse":
+                case "Dispatched":
+                case "Request for Reattempt":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+                    break;
+                case "Delivered":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+                    break;
+                case "Cancelled":
+                case "Void Label":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
+                    break;
+                default:
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                    break;
             }
-           else{
-               orderFound.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
-
-           }
-
-
             queryOrderResult.orderFound = orderFound;
             queryOrderResult.isSuccess = true;
 
