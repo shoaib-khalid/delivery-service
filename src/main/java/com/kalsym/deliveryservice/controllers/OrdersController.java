@@ -538,7 +538,13 @@ public class OrdersController {
                 }
                 deliveryOrder.setSystemStatus(systemStatus);
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
+                try {
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", spCallbackResult.driveNoPlate + " " + spCallbackResult.riderName + " " + spCallbackResult.riderPhone + " " + spCallbackResult.trackingUrl);
 
+                } catch (Exception e) {
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", e.getMessage());
+
+                }
                 if (deliveryOrder.getRiderCarPlateNo() != null) {
                     deliveryOrder.setRiderPhoneNo(spCallbackResult.driveNoPlate);
                 }
