@@ -153,7 +153,8 @@ public class SubmitOrder extends SyncDispatcher {
         } else {
             details.addProperty("voice_note", "Order Id : " + order.getOrderId() + " Remarks : " + remarks);
         }
-        details.addProperty("parcel_value", order.getOrderAmount() - order.getShipmentValue());
+//        Double parcelValue ;
+        details.addProperty("parcel_value", order.getCodAmount().doubleValue() - order.getShipmentValue());
         details.addProperty("reference", reference);
         details.addProperty("insurance", true);
 
