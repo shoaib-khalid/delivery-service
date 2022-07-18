@@ -65,7 +65,7 @@ public class OrderCallback extends SyncDispatcher {
                 case "booking.updated.trackinglink":
 //                    driverId = jsonBody.get("data").getAsJsonObject().get("trip_id").getAsString();
                     try {
-                        trackingLink = jsonBody.get("data").getAsJsonObject().get("tracking_url").getAsString();
+                        trackingLink = jsonBody.get("data").getAsJsonObject().get("tracking_link").getAsString();
                     } catch (Exception ex) {
                         LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Tracking Url: " + ex.getMessage());
                     }
