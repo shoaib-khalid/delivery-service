@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.kalsym</groupId>
     <artifactId>delivery-service</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1-lalamove-testing</version>
     <name>delivery-service</name>
     <description>Integration to Delivery Provider service</description>
 

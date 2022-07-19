@@ -117,7 +117,7 @@ public class GetPrice extends SyncDispatcher {
         httpHeader.put("Market", "MY");
         HttpEntity<String> request = new HttpEntity<>(bodyJson.toString(), headers);
 
-        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId,
+        HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, //TODO: update the url
                 BASE_URL + "/v3/quotations", httpHeader, bodyJson.toString(), this.connectTimeout, this.waitTimeout);
 
         if (httpResult.httpResponseCode == 201) {
@@ -193,6 +193,9 @@ public class GetPrice extends SyncDispatcher {
         JsonObject stops1 = new JsonObject();
         JsonObject coordinates = new JsonObject();
         JsonObject coordinates2 = new JsonObject();
+        LogUtil.info(logprefix, location, "[" + systemTransactionId
+                + "] lat  : " +  String.valueOf(order.getPickup().getLatitude()), "Delivery " + String.valueOf(order.getDelivery().getLatitude()));
+
 
         JsonArray stop = new JsonArray();
         stops.addProperty("address", order.getPickup().getPickupAddress());

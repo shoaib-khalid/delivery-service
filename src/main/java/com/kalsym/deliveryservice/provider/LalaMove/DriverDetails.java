@@ -77,7 +77,7 @@ public class DriverDetails extends SyncDispatcher {
         }
 
 //        String url = queryRiderDetails_url + order.getSpOrderId() + "/drivers/" + order.getDriverId();
-        String url = "https://rest.sandbox.lalamove.com/v3/orders/" + order.getSpOrderId() + "/drivers/" + order.getDriverId();
+        String url = "https://rest.sandbox.lalamove.com/v3/orders/" + order.getSpOrderId() + "/drivers/" + order.getDriverId(); //TODO: update the url
         String timeStamp = String.valueOf(System.currentTimeMillis());
         String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v3/orders/" + order.getSpOrderId() + "/drivers/" + order.getDriverId() + "\r\n\r\n";
         byte[] byteSig = mac.doFinal(rawSignature.getBytes());
