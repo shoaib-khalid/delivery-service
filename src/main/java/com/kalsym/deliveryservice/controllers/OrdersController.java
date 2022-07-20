@@ -1131,6 +1131,7 @@ public class OrdersController {
         @NotFound(action = NotFoundAction.IGNORE)
         @ToString.Exclude
         private DeliveryOrder order;
+        private String orderTimeConverted;
 
         public SortedDeliveryOrderStatus() {
             super();
@@ -1151,6 +1152,7 @@ public class OrdersController {
             this.setDescription(o.getDescription());
             this.setUpdated(o.getUpdated());
             this.setSystemTransactionId(o.getSystemTransactionId());
+            this.setOrderTimeConverted(o.getOrderTimeConverted());
         }
     }
 }
