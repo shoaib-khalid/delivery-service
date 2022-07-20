@@ -76,9 +76,10 @@ public class DriverDetails extends SyncDispatcher {
             e.printStackTrace();
         }
 
-        String url = queryRiderDetails_url + order.getSpOrderId() + "/drivers/" + order.getDriverId();
+//        String url = queryRiderDetails_url + order.getSpOrderId() + "/drivers/" + order.getDriverId();
+        String url = "https://rest.sandbox.lalamove.com/v3/orders/" + order.getSpOrderId() + "/drivers/" + order.getDriverId(); //TODO: update the url
         String timeStamp = String.valueOf(System.currentTimeMillis());
-        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v2/orders/" + order.getSpOrderId() + "/drivers/" + order.getDriverId() + "\r\n\r\n";
+        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v3/orders/" + order.getSpOrderId() + "/drivers/" + order.getDriverId() + "\r\n\r\n";
         byte[] byteSig = mac.doFinal(rawSignature.getBytes());
         String signature = DatatypeConverter.printHexBinary(byteSig);
         signature = signature.toLowerCase();
@@ -90,6 +91,7 @@ public class DriverDetails extends SyncDispatcher {
         headers.set("Content-Type", "application/json");
         headers.set("Authorization", "hmac " + token);
         headers.set("X-LLM-Country", "MY_KUL");
+        headers.set("Market", "MY");
         headers.set("X-Request-ID", transactionId);
         HttpEntity<String> request = new HttpEntity(headers);
         System.err.println("url for orderDetails" + url);
@@ -121,14 +123,15 @@ public class DriverDetails extends SyncDispatcher {
         DriverDetailsResult driverDetailsResult = new DriverDetailsResult();
         try {
             JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
+            JsonObject data =jsonResp.getAsJsonObject("data");
             LogUtil.info(logprefix, location, "JsonResp from Driver Details: " + jsonResp, "");
             boolean isSuccess = true;
 //            JsonArray pod = jsonResp.get("pod").getAsJsonArray();
             LogUtil.info(logprefix, location, "isSuccess:" + isSuccess, "");
 
-            String driverName = jsonResp.get("name").getAsString();
-            String driverPhoneNo = jsonResp.get("phone").getAsString();
-            String driverCarPlateNo = jsonResp.get("plateNumber").getAsString();
+            String driverName = data.get("name").getAsString();
+            String driverPhoneNo = data.get("phone").getAsString();
+            String driverCarPlateNo = data.get("plateNumber").getAsString();
 
             RiderDetails driverDetails = new RiderDetails();
             driverDetails.setName(driverName);

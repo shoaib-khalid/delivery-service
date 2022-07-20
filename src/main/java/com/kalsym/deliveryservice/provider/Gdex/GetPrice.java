@@ -107,6 +107,8 @@ public class GetPrice extends SyncDispatcher {
             BigDecimal bd = new BigDecimal(Double.parseDouble(payAmount));
             bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
             priceResult.price = bd;
+            priceResult.quotationId = "";
+
         } else {
             BigDecimal bd = new BigDecimal(0.00);
             bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);

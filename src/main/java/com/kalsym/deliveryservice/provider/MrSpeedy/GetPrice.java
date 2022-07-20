@@ -19,6 +19,7 @@ import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
@@ -30,14 +31,9 @@ public class GetPrice extends SyncDispatcher {
     private final int waitTimeout;
     private final String systemTransactionId;
     private Order order;
-    private HashMap productMap;
-    private String atxProductCode = "";
-    private String sessionToken;
-    private String sslVersion = "SSL";
     private String logprefix;
     private String location = "MrSpeedyGetPrice";
     private Fulfillment fulfillment;
-    private DeliveryZonePriceRepository deliveryZonePriceRepository;
 
     public GetPrice(CountDownLatch latch, Integer providerId, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
 
@@ -49,11 +45,8 @@ public class GetPrice extends SyncDispatcher {
         this.getprice_token = (String) config.get("getprice_token");
         this.connectTimeout = Integer.parseInt((String) config.get("getprice_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("getprice_wait_timeout"));
-        productMap = (HashMap) config.get("productCodeMapping");
         this.order = order;
-        this.sslVersion = (String) config.get("ssl_version");
         this.fulfillment = fulfillment;
-        this.deliveryZonePriceRepository = deliveryZonePriceRepository;
     }
 
     @Override
@@ -70,7 +63,6 @@ public class GetPrice extends SyncDispatcher {
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, this.getprice_url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
         if (httpResult.resultCode == 0) {
             JsonObject jsonReponse = new Gson().fromJson(httpResult.responseString, JsonObject.class);
-//            System.err.println("paeameters warrings :" + jsonReponse.get("warnings").getAsJsonArray());
             if (jsonReponse.get("parameter_warnings").isJsonNull()) {
                 LogUtil.info(logprefix, location, "Request successful", "");
                 response.resultCode = 0;
@@ -156,11 +148,12 @@ public class GetPrice extends SyncDispatcher {
         } else {
             priceResult.isError = false;
         }
-        BigDecimal bd = new BigDecimal(Double.parseDouble(payAmount));
-        bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+        BigDecimal bd = BigDecimal.valueOf(Double.parseDouble(payAmount));
+        bd = bd.setScale(2, RoundingMode.HALF_UP);
         priceResult.price = bd;
         priceResult.fulfillment = fulfillment.getFulfillment();
         priceResult.interval = null;
+        priceResult.quotationId = "";
         return priceResult;
     }
 

@@ -64,9 +64,9 @@ public class HttpsGetConn {
             LogUtil.info(refId, loglocation, "Sending Request to :" + targetUrl, "");
             URL url = new URL(targetUrl);
 
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-//            con.setSSLSocketFactory(sc.getSocketFactory());
-//            con.setHostnameVerifier(hv);
+            HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+            con.setSSLSocketFactory(sc.getSocketFactory());
+            con.setHostnameVerifier(hv);
             con.setConnectTimeout(connectTimeout);
             con.setReadTimeout(waitTimeout);
             con.setRequestMethod(httpMethod);

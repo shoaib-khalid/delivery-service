@@ -48,6 +48,7 @@ public class SwaggerConfig {
                 .license("not added yet")
                 .licenseUrl("").version("3.0.2-production").build();
 
+
     }
     
     @Bean

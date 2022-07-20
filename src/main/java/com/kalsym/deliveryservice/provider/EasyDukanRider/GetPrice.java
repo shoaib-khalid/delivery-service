@@ -119,6 +119,8 @@ public class GetPrice extends SyncDispatcher {
             priceResult.resultCode = 0;
             priceResult.interval = null;
             priceResult.fulfillment = fulfillment.getFulfillment();
+            priceResult.quotationId = "";
+
 
 
         } else {

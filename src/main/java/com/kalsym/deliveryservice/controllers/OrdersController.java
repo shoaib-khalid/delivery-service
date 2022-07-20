@@ -124,7 +124,9 @@ public class OrdersController {
 
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
 //    @PreAuthorize("hasAnyAuthority('orders-get-price', 'all')")
-    public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request, @Valid @RequestBody Order orderDetails) {
+
+    public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
+                                                @Valid @RequestBody Order orderDetails) {
 
         System.err.println("request.getRequestURI()" + request.getRequestURI());
         String logprefix = request.getRequestURI() + " ";
@@ -194,7 +196,9 @@ public class OrdersController {
 
     @RequestMapping(method = RequestMethod.GET, value = "/getpickuptime/{spId}/{pickupdate}", name = "orders-get-pickuptime")
 //    @PreAuthorize("hasAnyAuthority('orders-get-pickuptime', 'all')")
-    public ResponseEntity<HttpReponse> getPickupTime(HttpServletRequest request, @PathVariable("spId") Integer serviceProviderId, @PathVariable("pickupdate") String pickupdate) {
+    public ResponseEntity<HttpReponse> getPickupTime(HttpServletRequest request, @PathVariable("spId") Integer
+            serviceProviderId, @PathVariable("pickupdate") String pickupdate) {
+
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -225,7 +229,9 @@ public class OrdersController {
 
     @RequestMapping(method = RequestMethod.GET, value = "/getlocationid/{postcode}/{productCode}", name = "orders-get-locationid")
 //    @PreAuthorize("hasAnyAuthority('orders-get-locationid', 'all')")
-    public ResponseEntity<HttpReponse> getLocationId(HttpServletRequest request, @PathVariable("postcode") String postcode, @PathVariable("productCode") String productCode) {
+    public ResponseEntity<HttpReponse> getLocationId(HttpServletRequest
+                                                             request, @PathVariable("postcode") String postcode, @PathVariable("productCode") String productCode) {
+
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -257,7 +263,10 @@ public class OrdersController {
 
     @PostMapping(path = {"/confirmDelivery/{refId}/{orderId}"}, name = "orders-confirm-delivery")
 //    @PreAuthorize("hasAnyAuthority('orders-confirm-delivery', 'all')")
-    public ResponseEntity<HttpReponse> submitOrder(HttpServletRequest request, @PathVariable("refId") long refId, @PathVariable("orderId") String orderId, @RequestBody SubmitDelivery submitDelivery) {
+    public ResponseEntity<HttpReponse> submitOrder(HttpServletRequest request,
+                                                   @PathVariable("refId") long refId, @PathVariable("orderId") String orderId,
+                                                   @RequestBody SubmitDelivery submitDelivery) {
+
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -272,7 +281,9 @@ public class OrdersController {
     // TODO: TESTING PENDING
     @PostMapping(path = {"/bulkConfirm"}, name = "bulk-orders-confirm-delivery")
 //    @PreAuthorize("hasAnyAuthority('bulk-orders-confirm-delivery', 'all')")
-    public ResponseEntity<HttpReponse> batchSubmitDelivery(HttpServletRequest request, @RequestBody List<OrderConfirm> orderConfirm) throws InterruptedException {
+    public ResponseEntity<HttpReponse> batchSubmitDelivery(HttpServletRequest
+                                                                   request, @RequestBody List<OrderConfirm> orderConfirm) throws InterruptedException {
+
         HttpReponse response = new HttpReponse(request.getRequestURI());
 
         String logprefix = request.getRequestURI() + " ";
@@ -424,7 +435,9 @@ public class OrdersController {
     // FIXME: HANDLE THE ORDER TO CANCEL
     @RequestMapping(method = RequestMethod.POST, value = "/cancelorder/{order-id}", name = "orders-cancel-order")
 //    @PreAuthorize("hasAnyAuthority('orders-cancel-order', 'all')")
-    public ResponseEntity<HttpReponse> cancelOrder(HttpServletRequest request, @PathVariable("order-id") Long orderId) {
+    public ResponseEntity<HttpReponse> cancelOrder(HttpServletRequest
+                                                           request, @PathVariable("order-id") Long orderId) {
+
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -434,7 +447,9 @@ public class OrdersController {
 
     @RequestMapping(method = RequestMethod.GET, value = "/queryorder/{order-id}", name = "delivery-order-query")
 //    @PreAuthorize("hasAnyAuthority('delivery-order-query', 'all')")
-    public ResponseEntity<HttpReponse> queryOrder(HttpServletRequest request, @PathVariable("order-id") Long orderId) {
+    public ResponseEntity<HttpReponse> queryOrder(HttpServletRequest
+                                                          request, @PathVariable("order-id") Long orderId) {
+
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -447,7 +462,8 @@ public class OrdersController {
 
     @RequestMapping(method = RequestMethod.GET, value = "/queryQuotation/{order-id}", name = "orders-query-order")
 //    @PreAuthorize("hasAnyAuthority('orders-query-order', 'all')")
-    public ResponseEntity<HttpReponse> queryQuotation(HttpServletRequest request, @PathVariable("order-id") Long orderId) {
+    public ResponseEntity<HttpReponse> queryQuotation(HttpServletRequest
+                                                              request, @PathVariable("order-id") Long orderId) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -482,7 +498,8 @@ public class OrdersController {
     }
 
     @PostMapping(path = {"/callback"}, name = "orders-sp-callback")
-    public ResponseEntity<HttpReponse> spCallback(HttpServletRequest request, @Valid @RequestBody Object requestBody) {
+    public ResponseEntity<HttpReponse> spCallback(HttpServletRequest
+                                                          request, @Valid @RequestBody Object requestBody) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -625,7 +642,8 @@ public class OrdersController {
     }
 
     @PostMapping(path = {"lalamove/callback"}, name = "orders-lalamove-callback")
-    public ResponseEntity<HttpReponse> lalamoveCallback(HttpServletRequest request, @RequestBody Map<String, Object> json) {
+    public ResponseEntity<HttpReponse> lalamoveCallback(HttpServletRequest
+                                                                request, @RequestBody Map<String, Object> json) {
         HttpReponse response = new HttpReponse(request.getRequestURI());
         if (!json.isEmpty()) {
             String logprefix = request.getRequestURI() + " ";
@@ -733,7 +751,9 @@ public class OrdersController {
 
     @GetMapping(path = {"/getDeliveryProvider/{type}/{country}"}, name = "delivery-get-provider")
 //    @PreAuthorize("hasAnyAuthority('delivery-get-provider', 'all')")
-    public ResponseEntity<HttpReponse> getDeliveryProvider(HttpServletRequest request, @PathVariable("type") String type, @PathVariable("country") String country) {
+    public ResponseEntity<HttpReponse> getDeliveryProvider(HttpServletRequest
+                                                                   request, @PathVariable("type") String type, @PathVariable("country") String country) {
+
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -754,7 +774,9 @@ public class OrdersController {
 
     @GetMapping(path = {"/getDeliveryRiderDetails/{orderId}"}, name = "delivery-rider-details")
 //    @PreAuthorize("hasAnyAuthority('delivery-rider-details', 'all')")
-    public ResponseEntity<HttpReponse> getDeliveryRiderDetails(HttpServletRequest request, @PathVariable("orderId") String orderId) {
+    public ResponseEntity<HttpReponse> getDeliveryRiderDetails(HttpServletRequest
+                                                                       request, @PathVariable("orderId") String orderId) {
+
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -838,7 +860,9 @@ public class OrdersController {
 
     @GetMapping(path = {"/getDeliveryProviderDetails/{providerId}/{quantity}"}, name = "get-provider-remarks")
 //    @PreAuthorize("hasAnyAuthority('get-provider-remarks', 'all')")
-    public ResponseEntity<HttpReponse> getDeliveryProviderDetails(HttpServletRequest request, @PathVariable("providerId") String providerId, @PathVariable("quantity") String quantity) {
+    public ResponseEntity<HttpReponse> getDeliveryProviderDetails
+            (HttpServletRequest request, @PathVariable("providerId") String
+                    providerId, @PathVariable("quantity") String quantity) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -870,7 +894,9 @@ public class OrdersController {
 
     @GetMapping(path = {"/getAirwayBill/{orderId}"}, name = "get-airwayBill-delivery")
 //    @PreAuthorize("hasAnyAuthority('get-airwayBill-delivery', 'all')")
-    public ResponseEntity<HttpReponse> getAirwayBill(HttpServletRequest request, @PathVariable("orderId") String orderId) {
+    public ResponseEntity<HttpReponse> getAirwayBill(HttpServletRequest
+                                                             request, @PathVariable("orderId") String orderId) {
+
 
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -946,7 +972,9 @@ public class OrdersController {
 
     @PostMapping(path = {"/addPriorityFee/{id}"}, name = "add-priority-fee")
 //    @PreAuthorize("hasAnyAuthority('add-priority-fee', 'all')")
-    public ResponseEntity<HttpReponse> getAirwayBill(HttpServletRequest request, @PathVariable("id") Long id) {
+    public ResponseEntity<HttpReponse> getAirwayBill(HttpServletRequest
+                                                             request, @PathVariable("id") Long id) {
+
 
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -962,7 +990,8 @@ public class OrdersController {
 
     @GetMapping(path = {"/getDeliveryType"}, name = "get-delivery-type")
 //    @PreAuthorize("hasAnyAuthority('get-delivery-type', 'all')")
-    public ResponseEntity<HttpReponse> getDeliveryType(HttpServletRequest request) {
+    public ResponseEntity<HttpReponse> getDeliveryType
+            (HttpServletRequest request) {
 
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -986,7 +1015,8 @@ public class OrdersController {
 
     @GetMapping(path = {"/getDeliveryVehicleType"}, name = "get-delivery-vehicle-type")
 //    @PreAuthorize("hasAnyAuthority('get-delivery-vehicle-type', 'all')")
-    public ResponseEntity<HttpReponse> getDeliveryVehicleType(HttpServletRequest request) {
+    public ResponseEntity<HttpReponse> getDeliveryVehicleType
+            (HttpServletRequest request) {
 
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -1001,7 +1031,8 @@ public class OrdersController {
 
     @PostMapping(path = {"/getCity"}, name = "get-delivery-city")
 //    @PreAuthorize("hasAnyAuthority('get-delivery-city', 'all')")
-    public ResponseEntity<Set<String>> getCity(HttpServletRequest request, @RequestBody Object json) {
+    public ResponseEntity<Set<String>> getCity(HttpServletRequest
+                                                       request, @RequestBody Object json) {
 
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -1037,7 +1068,9 @@ public class OrdersController {
     //TODO : Get Order Status List
     @GetMapping(path = {"/getDeliveryOrderStatusList"}, name = "get-delivery-order-status-list")
 //    @PreAuthorize("hasAnyAuthority('get-delivery-order-status-list', 'all')")
-    public ResponseEntity<HttpReponse> getDeliveryOrderStatusList(HttpServletRequest request, @RequestParam(name = "orderId") String orderId) {
+    public ResponseEntity<HttpReponse> getDeliveryOrderStatusList
+    (HttpServletRequest request, @RequestParam(name = "orderId") String
+            orderId) {
         HttpReponse response = new HttpReponse();
 
         DeliveryOrderStatus status = new DeliveryOrderStatus();
@@ -1063,8 +1096,10 @@ public class OrdersController {
     }
 
     @PostMapping(path = {"/getPrices"}, name = "orders-get-price-multipleCart")
-//    @PreAuthorize("hasAnyAuthority('orders-get-price-multipleCart', 'all')")
-    public ResponseEntity<HttpReponse> getQuotationPrice(HttpServletRequest request, @Valid @RequestBody List<Order> orderDetails) {
+    public ResponseEntity<HttpReponse> getQuotationPrice
+            (HttpServletRequest
+                     request, @Valid @RequestBody List<Order> orderDetails) {
+
 
         System.err.println("request.getRequestURI()" + request.getRequestURI());
         String logprefix = request.getRequestURI() + " ";
@@ -1084,7 +1119,8 @@ public class OrdersController {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public Map<String, String> handleValidationExceptions
+            (MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();

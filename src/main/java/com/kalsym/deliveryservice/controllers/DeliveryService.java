@@ -110,7 +110,6 @@ public class DeliveryService {
         c1.set(Calendar.MINUTE, 0);
 
         Date dateOne = c1.getTime();
-        System.err.println(" Store Id " + orderDetails.getStoreId());
         DeliveryVehicleTypes deliveryVehicleTypes = null;
 
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
@@ -344,6 +343,10 @@ public class DeliveryService {
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
                     deliveryOrder.setFulfillmentType(list.fulfillment);
                     deliveryOrder.setSignature(list.signature);
+                    deliveryOrder.setQuotationId(list.quotationId); //FIXME : ALTER TABLE symplified.delivery_quotation ADD quotationId varchar(500) NULL;
+                    deliveryOrder.setPickupStopId(list.pickupStopId);//  FIXME :    ALTER TABLE symplified.delivery_quotation ADD pickupStopId varchar(100) NULL;
+                    deliveryOrder.setDeliveryStopId(list.deliveryStopId); //  FIXME :   ALTER TABLE symplified.delivery_quotation ADD deliveryStopId varchar(100) NULL;
+
                     if (list.interval != null) {
                         deliveryOrder.setIntervalTime(list.interval);
                     }
@@ -356,7 +359,7 @@ public class DeliveryService {
 
                     BigDecimal bd = new BigDecimal("0.00");
                     if (!list.isError) {
-//TODO: Bug Need To Be Fixed
+//FIXME: Bug Need To Be Fixed
                         if (deliveryType.equalsIgnoreCase("adhoc")) {
 
 //                            String pattern = "HH:mm:ss";
@@ -643,7 +646,9 @@ public class DeliveryService {
         orderDetails.setCartId(quotation.getCartId());
         orderDetails.setPickupTime(quotation.getPickupTime());
         orderDetails.setSignature(quotation.getSignature());
-
+        orderDetails.setQuotationId(quotation.getQuotationId());
+        orderDetails.setDeliveryStopId(quotation.getDeliveryStopId());
+        orderDetails.setPickupStopId(quotation.getPickupStopId());
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(quotation.getStoreId());
         LogUtil.info(systemTransactionId, location, "Get Store " + stores.getType(), "");
         orderDetails.setDeliveryType(stores.getType());
@@ -1633,6 +1638,10 @@ public class DeliveryService {
                         deliveryOrder.setSystemTransactionId(systemTransactionId);
                         deliveryOrder.setFulfillmentType(list.fulfillment);
                         deliveryOrder.setSignature(list.signature);
+                        deliveryOrder.setQuotationId(list.quotationId); //FIXME : ALTER TABLE symplified.delivery_quotation ADD quotationId varchar(500) NULL;
+                        deliveryOrder.setPickupStopId(list.pickupStopId);//  FIXME :    ALTER TABLE symplified.delivery_quotation ADD pickupStopId varchar(100) NULL;
+                        deliveryOrder.setDeliveryStopId(list.deliveryStopId); //  FIXME :   ALTER TABLE symplified.delivery_quotation ADD deliveryStopId varchar(100) NULL;
+
                         if (list.interval != null) {
                             deliveryOrder.setIntervalTime(list.interval);
                         }
