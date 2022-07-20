@@ -1162,7 +1162,7 @@ public class DeliveryService {
                 DeliveryOrder orderFound = queryOrderResult.orderFound;
                 orderDetails.get().setStatus(orderFound.getStatus());
                 orderDetails.get().setSystemStatus(orderFound.getSystemStatus());
-                if (orderDetails.get().getCustomerTrackingUrl().isEmpty()) {
+                if (orderDetails.get().getCustomerTrackingUrl() != null) {
                     orderDetails.get().setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
                 }
                 String orderStatus = "";
