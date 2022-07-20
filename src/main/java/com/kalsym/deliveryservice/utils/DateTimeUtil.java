@@ -1,6 +1,8 @@
 package com.kalsym.deliveryservice.utils;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -39,5 +41,11 @@ public class DateTimeUtil {
         c.add(Calendar.SECOND, seconds);
         Date expiryDate = c.getTime();
         return dateFormat.format(expiryDate);
+    }
+
+    public static LocalDateTime convertToLocalDateTimeViaInstant(Date dateToConvert, ZoneId timezone) {
+        return dateToConvert.toInstant()
+                .atZone(timezone)
+                .toLocalDateTime();
     }
 }

@@ -207,22 +207,4 @@ public class SymplifiedService {
         return null;
     }
 
-//    public JSONObject getSpeedyStatus(String orderId){
-//
-////        String ENDPOINT_URL = SPEEDY_BASE_URL+ "courier?order_id="+orderId;
-//
-//        String ENDPOINT_URL = "http://localhost:5000/orders/confirmDelivery/34/000e0d1a-ed1a-4741-8a55-d5e598421364";
-//        RestTemplate restTemplate = new RestTemplate();
-//        HttpHeaders headers = new HttpHeaders();
-////        headers.add("X-DV-Auth-Token",speedyAuthToken);
-//        headers.add("Authorization","Bearer Bearer accessToken");
-//        HttpEntity<String> request = new HttpEntity<>(headers);
-//        ResponseEntity<JSONObject> response = restTemplate.exchange(ENDPOINT_URL, HttpMethod.POST, request, JSONObject.class);
-//        JSONObject responseBody = response.getBody();
-//
-//        return responseBody;
-//
-//    }
-
-
 }

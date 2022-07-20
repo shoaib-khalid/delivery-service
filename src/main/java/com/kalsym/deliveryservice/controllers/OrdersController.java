@@ -1,5 +1,7 @@
 package com.kalsym.deliveryservice.controllers;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -19,6 +21,9 @@ import com.kalsym.deliveryservice.utils.StringUtility;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +33,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.File;
@@ -44,7 +50,6 @@ import static com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus.A
 
 /**
  * @author Sarosh
- * @updateBy Irasakumar
  */
 @RestController()
 @RequestMapping("/orders")
@@ -114,22 +119,22 @@ public class OrdersController {
     @Autowired
     DeliveryZoneCityRepository deliveryZoneCityRepository;
 
-//    @Autowired
-//    DeliveryOrderStatusRepository orderStatusRepository;
+    @Autowired
+    DeliveryOrderStatusRepository orderStatusRepository;
 
     @PostMapping(path = {"/getprice"}, name = "orders-get-price")
-    public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
-                                                @Valid @RequestBody Order orderDetails) {
+//    @PreAuthorize("hasAnyAuthority('orders-get-price', 'all')")
+    public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request, @Valid @RequestBody Order orderDetails) {
 
         System.err.println("request.getRequestURI()" + request.getRequestURI());
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+
         HttpReponse response = deliveryService.getPrice(orderDetails, request.getRequestURI());
 
         final Date currentTime = new Date();
 
-        final SimpleDateFormat sdf =
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
 
 // Give it to me in GMT time.
         sdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));
@@ -139,8 +144,8 @@ public class OrdersController {
 
 
     @GetMapping(path = {"/getQuotation/{id}"}, name = "get-quotation-details")
-    public ResponseEntity<HttpReponse> getQuotation(HttpServletRequest request,
-                                                    @PathVariable("id") Long id) {
+//    @PreAuthorize("hasAnyAuthority('get-quotation-details', 'all')")
+    public ResponseEntity<HttpReponse> getQuotation(HttpServletRequest request, @PathVariable("id") Long id) {
 
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -157,10 +162,8 @@ public class OrdersController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/getpickupdate/{spId}/{postcode}", name = "orders-get-pickupdate")
-    public ResponseEntity<HttpReponse> getPickupDate(HttpServletRequest request,
-                                                     @PathVariable("spId") Integer serviceProviderId,
-                                                     @PathVariable("postcode") String postcode
-    ) {
+//    @PreAuthorize("hasAnyAuthority('orders-get-pickupdate', 'all')")
+    public ResponseEntity<HttpReponse> getPickupDate(HttpServletRequest request, @PathVariable("spId") Integer serviceProviderId, @PathVariable("postcode") String postcode) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -190,10 +193,8 @@ public class OrdersController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/getpickuptime/{spId}/{pickupdate}", name = "orders-get-pickuptime")
-    public ResponseEntity<HttpReponse> getPickupTime(HttpServletRequest request,
-                                                     @PathVariable("spId") Integer serviceProviderId,
-                                                     @PathVariable("pickupdate") String pickupdate
-    ) {
+//    @PreAuthorize("hasAnyAuthority('orders-get-pickuptime', 'all')")
+    public ResponseEntity<HttpReponse> getPickupTime(HttpServletRequest request, @PathVariable("spId") Integer serviceProviderId, @PathVariable("pickupdate") String pickupdate) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -223,10 +224,8 @@ public class OrdersController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/getlocationid/{postcode}/{productCode}", name = "orders-get-locationid")
-    public ResponseEntity<HttpReponse> getLocationId(HttpServletRequest request,
-                                                     @PathVariable("postcode") String postcode,
-                                                     @PathVariable("productCode") String productCode
-    ) {
+//    @PreAuthorize("hasAnyAuthority('orders-get-locationid', 'all')")
+    public ResponseEntity<HttpReponse> getLocationId(HttpServletRequest request, @PathVariable("postcode") String postcode, @PathVariable("productCode") String productCode) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -257,8 +256,8 @@ public class OrdersController {
     }
 
     @PostMapping(path = {"/confirmDelivery/{refId}/{orderId}"}, name = "orders-confirm-delivery")
-    public ResponseEntity<HttpReponse> submitOrder(HttpServletRequest request,
-                                                   @PathVariable("refId") long refId, @PathVariable("orderId") String orderId, @RequestBody SubmitDelivery submitDelivery) {
+//    @PreAuthorize("hasAnyAuthority('orders-confirm-delivery', 'all')")
+    public ResponseEntity<HttpReponse> submitOrder(HttpServletRequest request, @PathVariable("refId") long refId, @PathVariable("orderId") String orderId, @RequestBody SubmitDelivery submitDelivery) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -272,13 +271,14 @@ public class OrdersController {
 
     // TODO: TESTING PENDING
     @PostMapping(path = {"/bulkConfirm"}, name = "bulk-orders-confirm-delivery")
-    public ResponseEntity<HttpReponse> batchSubmitDelivery(HttpServletRequest request,
-                                                           @RequestBody List<OrderConfirm> orderConfirm) throws InterruptedException {
+//    @PreAuthorize("hasAnyAuthority('bulk-orders-confirm-delivery', 'all')")
+    public ResponseEntity<HttpReponse> batchSubmitDelivery(HttpServletRequest request, @RequestBody List<OrderConfirm> orderConfirm) throws InterruptedException {
         HttpReponse response = new HttpReponse(request.getRequestURI());
 
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         List<BulkOrderResponse> orderResults = new ArrayList<>();
+
         for (OrderConfirm o : orderConfirm) {
             String systemTransactionId = StringUtility.CreateRefID("BL");
             LogUtil.info(systemTransactionId, location, "Order Id  :", o.getOrderId());
@@ -297,6 +297,8 @@ public class OrdersController {
             orderDetails.setProductCode(quotation.getProductCode());
             orderDetails.setTotalWeightKg(quotation.getTotalWeightKg());
             orderDetails.setShipmentValue(quotation.getAmount());
+            orderDetails.setPieces(quotation.getTotalPieces());
+            orderDetails.setTotalParcel(1);
             orderDetails.setOrderId(o.getOrderId());
 
             Pickup pickup = new Pickup();
@@ -332,10 +334,9 @@ public class OrdersController {
 
 
             //generate transaction id
-            LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " "
-                    + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
-            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository,
-                    providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository, deliveryStoreCenterRepository);
+
+            LogUtil.info(systemTransactionId, location, "Receive new order productCode:" + orderDetails.getProductCode() + " " + " pickupContactName:" + orderDetails.getPickup().getPickupContactName(), "");
+            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository, deliveryStoreCenterRepository);
             ProcessResult processResult = process.SubmitOrder();
             LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
@@ -423,8 +424,8 @@ public class OrdersController {
 
     // FIXME: HANDLE THE ORDER TO CANCEL
     @RequestMapping(method = RequestMethod.POST, value = "/cancelorder/{order-id}", name = "orders-cancel-order")
-    public ResponseEntity<HttpReponse> cancelOrder(HttpServletRequest request,
-                                                   @PathVariable("order-id") Long orderId) {
+//    @PreAuthorize("hasAnyAuthority('orders-cancel-order', 'all')")
+    public ResponseEntity<HttpReponse> cancelOrder(HttpServletRequest request, @PathVariable("order-id") Long orderId) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -433,8 +434,8 @@ public class OrdersController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/queryorder/{order-id}", name = "delivery-order-query")
-    public ResponseEntity<HttpReponse> queryOrder(HttpServletRequest request,
-                                                  @PathVariable("order-id") Long orderId) {
+//    @PreAuthorize("hasAnyAuthority('delivery-order-query', 'all')")
+    public ResponseEntity<HttpReponse> queryOrder(HttpServletRequest request, @PathVariable("order-id") Long orderId) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -446,8 +447,8 @@ public class OrdersController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/queryQuotation/{order-id}", name = "orders-query-order")
-    public ResponseEntity<HttpReponse> queryQuotation(HttpServletRequest request,
-                                                      @PathVariable("order-id") Long orderId) {
+//    @PreAuthorize("hasAnyAuthority('orders-query-order', 'all')")
+    public ResponseEntity<HttpReponse> queryQuotation(HttpServletRequest request, @PathVariable("order-id") Long orderId) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -482,8 +483,7 @@ public class OrdersController {
     }
 
     @PostMapping(path = {"/callback"}, name = "orders-sp-callback")
-    public ResponseEntity<HttpReponse> spCallback(HttpServletRequest request,
-                                                  @Valid @RequestBody Object requestBody) {
+    public ResponseEntity<HttpReponse> spCallback(HttpServletRequest request, @Valid @RequestBody Object requestBody) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -540,6 +540,13 @@ public class OrdersController {
                 deliveryOrder.setSystemStatus(systemStatus);
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
 
+                try {
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", spCallbackResult.driveNoPlate + " " + spCallbackResult.riderName + " " + spCallbackResult.riderPhone + " " + spCallbackResult.trackingUrl);
+
+                } catch (Exception e) {
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", e.getMessage());
+
+                }
                 if (deliveryOrder.getRiderCarPlateNo() != null) {
                     deliveryOrder.setRiderPhoneNo(spCallbackResult.driveNoPlate);
                 }
@@ -554,21 +561,33 @@ public class OrdersController {
                 }
                 DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
                 System.err.println(o.getId());
-//                DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
-//                if (notExistStatus == null) {
-////                    assert false;
-//                    DeliveryOrderStatus order = new DeliveryOrderStatus();
-//                    order.setOrder(o);
-//                    order.setSpOrderId(o.getSpOrderId());
-//                    order.setStatus(o.getStatus());
-//                    order.setDeliveryCompletionStatus(o.getSystemStatus());
-//                    order.setDescription(o.getStatusDescription());
-//                    order.setUpdated(new Date());
-//                    order.setSystemTransactionId(o.getSystemTransactionId());
-//                    order.setOrderId(o.getOrderId());
-//
-//                    orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
-//                }
+
+                DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
+                if (notExistStatus == null) {
+//                    assert false;
+                    DeliveryOrderStatus order = new DeliveryOrderStatus();
+                    order.setOrder(o);
+                    order.setSpOrderId(o.getSpOrderId());
+                    order.setStatus(o.getStatus());
+                    order.setDeliveryCompletionStatus(o.getSystemStatus().toString());
+                    order.setDescription(o.getStatusDescription());
+                    order.setUpdated(new Date());
+                    order.setSystemTransactionId(o.getSystemTransactionId());
+                    order.setOrderId(o.getOrderId());
+
+                    orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
+                } else {
+                    notExistStatus.setOrder(o);
+                    notExistStatus.setSpOrderId(o.getSpOrderId());
+                    notExistStatus.setStatus(o.getStatus());
+                    notExistStatus.setDeliveryCompletionStatus(o.getSystemStatus());
+                    notExistStatus.setDescription(o.getStatusDescription());
+                    notExistStatus.setUpdated(new Date());
+                    notExistStatus.setSystemTransactionId(o.getSystemTransactionId());
+                    notExistStatus.setOrderId(o.getOrderId());
+
+                    orderStatusRepository.save(notExistStatus); //SA
+                }
 
                 if (deliveryId != null) {
                     getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
@@ -590,6 +609,7 @@ public class OrdersController {
     }
 
     @GetMapping(path = {"/getServerTime"}, name = "get-server-time")
+//    @PreAuthorize("hasAnyAuthority('get-server-time', 'all')")
     public ResponseEntity<HttpReponse> getServerTime(HttpServletRequest request) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -608,9 +628,7 @@ public class OrdersController {
     }
 
     @PostMapping(path = {"lalamove/callback"}, name = "orders-lalamove-callback")
-    public ResponseEntity<HttpReponse> lalamoveCallback(HttpServletRequest request
-            , @RequestBody Map<String, Object> json
-    ) {
+    public ResponseEntity<HttpReponse> lalamoveCallback(HttpServletRequest request, @RequestBody Map<String, Object> json) {
         HttpReponse response = new HttpReponse(request.getRequestURI());
         if (!json.isEmpty()) {
             String logprefix = request.getRequestURI() + " ";
@@ -667,20 +685,37 @@ public class OrdersController {
                     deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                     DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
 
-//                    DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
-//                    if (notExistStatus == null) {
-//                        DeliveryOrderStatus order = new DeliveryOrderStatus();
-//                        order.setOrder(o);
-//                        order.setSpOrderId(o.getSpOrderId());
-//                        order.setStatus(o.getStatus());
-//                        order.setDeliveryCompletionStatus(o.getSystemStatus());
-//                        order.setDescription(o.getStatusDescription());
-//                        order.setUpdated(new Date());
-//                        order.setSystemTransactionId(o.getSystemTransactionId());
-//                        order.setOrderId(o.getOrderId());
-//
-//                        orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
-//                    }
+
+                    DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
+                    if (notExistStatus == null) {
+
+                        DeliveryOrderStatus order = new DeliveryOrderStatus();
+                        order.setOrder(o);
+                        order.setSpOrderId(o.getSpOrderId());
+                        order.setStatus(o.getStatus());
+                        order.setDeliveryCompletionStatus(o.getSystemStatus());
+                        order.setDescription(o.getStatusDescription());
+                        order.setUpdated(new Date());
+                        order.setSystemTransactionId(o.getSystemTransactionId());
+                        order.setOrderId(o.getOrderId());
+
+                        System.err.println("Get All the Record " + order.toString());
+
+
+                        orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
+                    } else {
+                        System.err.println("Get All the Record " + notExistStatus.toString());
+                        notExistStatus.setOrder(o);
+                        notExistStatus.setSpOrderId(o.getSpOrderId());
+                        notExistStatus.setStatus(o.getStatus());
+                        notExistStatus.setDeliveryCompletionStatus(o.getSystemStatus());
+                        notExistStatus.setDescription(o.getStatusDescription());
+                        notExistStatus.setUpdated(new Date());
+                        notExistStatus.setSystemTransactionId(o.getSystemTransactionId());
+                        notExistStatus.setOrderId(o.getOrderId());
+
+                        orderStatusRepository.save(notExistStatus); //SA
+                    }
 
                     getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
                 } else {
@@ -701,8 +736,8 @@ public class OrdersController {
     }
 
     @GetMapping(path = {"/getDeliveryProvider/{type}/{country}"}, name = "delivery-get-provider")
-    public ResponseEntity<HttpReponse> getDeliveryProvider(HttpServletRequest request,
-                                                           @PathVariable("type") String type, @PathVariable("country") String country) {
+//    @PreAuthorize("hasAnyAuthority('delivery-get-provider', 'all')")
+    public ResponseEntity<HttpReponse> getDeliveryProvider(HttpServletRequest request, @PathVariable("type") String type, @PathVariable("country") String country) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -710,7 +745,6 @@ public class OrdersController {
 
 
         LogUtil.info(logprefix, location, "", "");
-//        RegionCountry regionCountry = regionCountryRepository.findByName(country);
         List<DeliverySpType> deliverySpType = deliverySpTypeRepository.findAllByDeliveryTypeAndRegionCountry(type, country);
         if (deliverySpType != null) {
             response.setSuccessStatus(HttpStatus.OK);
@@ -723,8 +757,8 @@ public class OrdersController {
     }
 
     @GetMapping(path = {"/getDeliveryRiderDetails/{orderId}"}, name = "delivery-rider-details")
-    public ResponseEntity<HttpReponse> getDeliveryRiderDetails(HttpServletRequest request,
-                                                               @PathVariable("orderId") String orderId) {
+//    @PreAuthorize("hasAnyAuthority('delivery-rider-details', 'all')")
+    public ResponseEntity<HttpReponse> getDeliveryRiderDetails(HttpServletRequest request, @PathVariable("orderId") String orderId) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -807,8 +841,8 @@ public class OrdersController {
 
 
     @GetMapping(path = {"/getDeliveryProviderDetails/{providerId}/{quantity}"}, name = "get-provider-remarks")
-    public ResponseEntity<HttpReponse> getDeliveryProviderDetails(HttpServletRequest request,
-                                                                  @PathVariable("providerId") String providerId, @PathVariable("quantity") String quantity) {
+//    @PreAuthorize("hasAnyAuthority('get-provider-remarks', 'all')")
+    public ResponseEntity<HttpReponse> getDeliveryProviderDetails(HttpServletRequest request, @PathVariable("providerId") String providerId, @PathVariable("quantity") String quantity) {
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         HttpReponse response = new HttpReponse(request.getRequestURI());
@@ -839,8 +873,8 @@ public class OrdersController {
 
 
     @GetMapping(path = {"/getAirwayBill/{orderId}"}, name = "get-airwayBill-delivery")
-    public ResponseEntity<HttpReponse> getAirwayBill(HttpServletRequest request,
-                                                     @PathVariable("orderId") String orderId) {
+//    @PreAuthorize("hasAnyAuthority('get-airwayBill-delivery', 'all')")
+    public ResponseEntity<HttpReponse> getAirwayBill(HttpServletRequest request, @PathVariable("orderId") String orderId) {
 
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -862,7 +896,7 @@ public class OrdersController {
                 AirwayBillResult airwayBillResult = (AirwayBillResult) processResult.returnObject;
                 if (airwayBillResult.consignmentNote != null) {
 
-                    LogUtil.info(logprefix, location, "Consignment Response  FILE : ", airwayBillResult.consignmentNote.toString());
+                    LogUtil.info(logprefix, location, "Consignment Response  FILE : ", Arrays.toString(airwayBillResult.consignmentNote));
                     try {
                         Date date = new Date();
                         String path = folderPath + date.getMonth() + "-" + (date.getYear() + 1900);
@@ -889,7 +923,7 @@ public class OrdersController {
                         response.setData(riderDetails);
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     } catch (IOException e) {
-                        LogUtil.info(logprefix, location, "Consignment Response ", airwayBillResult.consignmentNote.toString());
+                        LogUtil.info(logprefix, location, "Consignment Response ", Arrays.toString(airwayBillResult.consignmentNote));
                         response.setMessage(e.getMessage());
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     }
@@ -915,8 +949,8 @@ public class OrdersController {
 
 
     @PostMapping(path = {"/addPriorityFee/{id}"}, name = "add-priority-fee")
-    public ResponseEntity<HttpReponse> getAirwayBill(HttpServletRequest request,
-                                                     @PathVariable("id") Long id) {
+//    @PreAuthorize("hasAnyAuthority('add-priority-fee', 'all')")
+    public ResponseEntity<HttpReponse> getAirwayBill(HttpServletRequest request, @PathVariable("id") Long id) {
 
         String logprefix = request.getRequestURI() + " ";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -931,6 +965,7 @@ public class OrdersController {
     }
 
     @GetMapping(path = {"/getDeliveryType"}, name = "get-delivery-type")
+//    @PreAuthorize("hasAnyAuthority('get-delivery-type', 'all')")
     public ResponseEntity<HttpReponse> getDeliveryType(HttpServletRequest request) {
 
         String logprefix = request.getRequestURI() + " ";
@@ -944,9 +979,8 @@ public class OrdersController {
                 mainCategory.add(c);
             }
         }
-        List<DeliveryMainType> sortedList = mainCategory.stream()
-                .sorted(Comparator.comparingLong(DeliveryMainType::getId))
-                .collect(Collectors.toList());
+
+        List<DeliveryMainType> sortedList = mainCategory.stream().sorted(Comparator.comparingLong(DeliveryMainType::getId)).collect(Collectors.toList());
 
 
         response.setData(sortedList);
@@ -956,6 +990,7 @@ public class OrdersController {
 
 
     @GetMapping(path = {"/getDeliveryVehicleType"}, name = "get-delivery-vehicle-type")
+//    @PreAuthorize("hasAnyAuthority('get-delivery-vehicle-type', 'all')")
     public ResponseEntity<HttpReponse> getDeliveryVehicleType(HttpServletRequest request) {
 
         String logprefix = request.getRequestURI() + " ";
@@ -969,7 +1004,8 @@ public class OrdersController {
 
     }
 
-    @PostMapping(path = {"/getCity"}, name = "get-delivery-vehicle-type")
+    @PostMapping(path = {"/getCity"}, name = "get-delivery-city")
+//    @PreAuthorize("hasAnyAuthority('get-delivery-city', 'all')")
     public ResponseEntity<Set<String>> getCity(HttpServletRequest request, @RequestBody Object json) {
 
         String logprefix = request.getRequestURI() + " ";
@@ -987,7 +1023,6 @@ public class OrdersController {
             for (int i = 0; i < predictions.size(); i++) {
                 JsonObject p = predictions.get(i).getAsJsonObject();
                 String city = p.get("terms").getAsJsonArray().get(0).getAsJsonObject().get("value").getAsString();
-                assert cities != null;
                 cities.add(city);
                 System.err.println("City :" + p.get("terms").getAsJsonArray().get(0).getAsJsonObject().get("value"));
                 DeliveryZoneCity cit = new DeliveryZoneCity();
@@ -1006,17 +1041,55 @@ public class OrdersController {
 
     //TODO : Get Order Status List
     @GetMapping(path = {"/getDeliveryOrderStatusList"}, name = "get-delivery-order-status-list")
+//    @PreAuthorize("hasAnyAuthority('get-delivery-order-status-list', 'all')")
     public ResponseEntity<HttpReponse> getDeliveryOrderStatusList(HttpServletRequest request, @RequestParam(name = "orderId") String orderId) {
         HttpReponse response = new HttpReponse();
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        DeliveryOrderStatus status = new DeliveryOrderStatus();
+
+        List<DeliveryOrderStatus> orderStatusList = orderStatusRepository.findAllByOrderId(orderId);
+        if (!orderStatusList.isEmpty()) {
+            List<SortedDeliveryOrderStatus> sorted = new ArrayList<>();
+            for (DeliveryOrderStatus d : orderStatusList) {
+                SortedDeliveryOrderStatus s = new SortedDeliveryOrderStatus();
+                s.bindFromOrder(d);
+                sorted.add(s);
+            }
+
+
+            sorted.sort(Comparator.comparing(SortedDeliveryOrderStatus::getDeliveryCompletionStatus));
+            response.setData(sorted);
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+
+    @PostMapping(path = {"/getPrices"}, name = "orders-get-price-multipleCart")
+//    @PreAuthorize("hasAnyAuthority('orders-get-price-multipleCart', 'all')")
+    public ResponseEntity<HttpReponse> getQuotationPrice(HttpServletRequest request, @Valid @RequestBody List<Order> orderDetails) {
+
+        System.err.println("request.getRequestURI()" + request.getRequestURI());
+        String logprefix = request.getRequestURI() + " ";
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+        HttpReponse response = deliveryService.queryQuotation(orderDetails, request.getRequestURI());
+
+        final Date currentTime = new Date();
+
+        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+
+// Give it to me in GMT time.
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+        LogUtil.info(logprefix, location, "Get Current Time From System : " + sdf.format(currentTime), "");
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String, String> handleValidationExceptions(
-            MethodArgumentNotValidException ex) {
+    public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
@@ -1042,6 +1115,48 @@ public class OrdersController {
         private boolean isSuccess;
     }
 
+    @Getter
+    @Setter
+    public static class SortedDeliveryOrderStatus {
+        Long id;
+        String orderId;
+        String spOrderId;
+        String status;
+        String description;
+        @UpdateTimestamp
+        @Temporal(TemporalType.TIMESTAMP)
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+        Date updated;
+        String systemTransactionId;
+        DeliveryCompletionStatus deliveryCompletionStatus;
 
+        @JsonIgnore
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "deliveryOrderId")
+        @NotFound(action = NotFoundAction.IGNORE)
+        @ToString.Exclude
+        private DeliveryOrder order;
+
+        public SortedDeliveryOrderStatus() {
+            super();
+        }
+
+        public SortedDeliveryOrderStatus(DeliveryCompletionStatus deliveryCompletionStatus) {
+            super();
+            this.deliveryCompletionStatus = deliveryCompletionStatus;
+        }
+
+        void bindFromOrder(DeliveryOrderStatus o) {
+            this.setId(o.getId());
+            this.setDeliveryCompletionStatus(DeliveryCompletionStatus.valueOf(o.getDeliveryCompletionStatus()));
+            this.setOrder(o.getOrder());
+            this.setSpOrderId(o.getSpOrderId());
+            this.setOrderId(o.getOrderId());
+            this.setStatus(o.getStatus());
+            this.setDescription(o.getDescription());
+            this.setUpdated(o.getUpdated());
+            this.setSystemTransactionId(o.getSystemTransactionId());
+        }
+    }
 }
 

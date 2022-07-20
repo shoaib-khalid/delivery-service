@@ -12,7 +12,6 @@ import lombok.ToString;
 
 import javax.validation.Valid;
 import java.math.BigDecimal;
-import java.util.List;
 
 /**
  * @author user
@@ -53,5 +52,7 @@ public class Order {
     String pickupTime;
     String signature;
     BigDecimal codAmount;
+
+    Integer totalParcel;
 
 }

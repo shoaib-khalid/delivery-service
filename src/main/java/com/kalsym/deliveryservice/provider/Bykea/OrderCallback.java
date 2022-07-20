@@ -65,21 +65,30 @@ public class OrderCallback extends SyncDispatcher {
                 case "booking.updated.trackinglink":
 //                    driverId = jsonBody.get("data").getAsJsonObject().get("trip_id").getAsString();
                     try {
-                        trackingLink = jsonBody.get("data").getAsJsonObject().get("tracking_url").getAsString();
+
+                        trackingLink = jsonBody.get("data").getAsJsonObject().get("tracking_link").getAsString();
                     } catch (Exception ex) {
                         LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Tracking Url: " + ex.getMessage());
                     }
                     try {
                         riderName = jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("name").getAsString();
+
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Get Name: " +jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("name").getAsString());
+
                     } catch (Exception ex) {
                         LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Name: " + ex.getMessage());
                     }
                     try {
                         riderPhone = jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("mobile").getAsString();
+
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Get Name: " +jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("mobile").getAsString());
+
                     } catch (Exception ex) {
                         LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Phone: " + ex.getMessage());
                     }
                     try {
+
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Get Name: " +jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("plate_no").getAsString());
                         carNoPlate = jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("plate_no").getAsString();
                     } catch (Exception ex) {
                         LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Plate No : " + ex.getMessage());

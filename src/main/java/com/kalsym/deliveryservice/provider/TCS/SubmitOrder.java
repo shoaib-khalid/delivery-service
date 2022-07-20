@@ -99,7 +99,7 @@ public class SubmitOrder extends SyncDispatcher {
         jsonRequest.addProperty("destinationCityName", order.getDelivery().getDeliveryCity());
         jsonRequest.addProperty("weight", order.getTotalWeightKg());
         jsonRequest.addProperty("pieces", 1);
-        jsonRequest.addProperty("codAmount", order.getShipmentValue());
+        jsonRequest.addProperty("codAmount", order.getOrderAmount());
         jsonRequest.addProperty("customerReferenceNo", order.getOrderId());
         jsonRequest.addProperty("services", "O"); // incase future need this need to handle
         jsonRequest.addProperty("fragile", "yes");

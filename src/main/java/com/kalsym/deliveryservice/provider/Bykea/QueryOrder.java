@@ -90,14 +90,17 @@ public class QueryOrder extends SyncDispatcher {
             JsonObject data = jsonResp.get("data").getAsJsonObject();
             String status = data.get("trip_status").getAsString();
 
+            queryOrderResult.isSuccess = true;
+
             DeliveryOrder orderFound = new DeliveryOrder();
             orderFound.setSpOrderId(spOrderId);
             orderFound.setStatus(status);
-            if (status.equals("started")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
-            } else if (status.equals("tracking_available")) {
+
+            if (status.equals("accepted")) {
+                orderFound.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
+            } else if (status.equals("tracking_available") || status.equals("arrived") || status.equals("started")) {
                 orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-            } else if (status.equals("finished")) {
+            } else if (status.equals("finished") || status.equals("feedback") || status.equals("completed")) {
                 orderFound.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
             } else if (status.equals("expired")) {
                 orderFound.setSystemStatus(DeliveryCompletionStatus.FAILED.name());

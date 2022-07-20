@@ -24,7 +24,8 @@ public class QueryOrder extends SyncDispatcher {
     private final int waitTimeout;
     private final String systemTransactionId;
     private String logprefix;
-    private String location = "TCSQueryOrder";
+
+    private String location = "SwyftQueryOrder";
     private String spOrderId;
 
     private String apiKey;
@@ -35,7 +36,8 @@ public class QueryOrder extends SyncDispatcher {
         super(latch);
         logprefix = systemTransactionId;
         this.systemTransactionId = systemTransactionId;
-        LogUtil.info(logprefix, location, "TCS QueryOrder class initiliazed!!", "");
+
+        LogUtil.info(logprefix, location, "Swyft QueryOrder class initiliazed!!", "");
 
         //TODO : ADD IN DB DETAILS
         this.queryOrder_url = (String) config.get("query_order_endpoint");
@@ -71,7 +73,8 @@ public class QueryOrder extends SyncDispatcher {
             }
             if (httpResult.httpResponseCode == 200) {
                 response.resultCode = 0;
-                LogUtil.info(logprefix, location, "TCS Response for Submit Order: " + httpResult.responseString, "");
+
+                LogUtil.info(logprefix, location, "Swyft Response for Submit Order: " + httpResult.responseString, "");
                 response.returnObject = extractResponseBody(httpResult.responseString);
             } else {
                 LogUtil.info(logprefix, location, "Request failed", "");
@@ -103,27 +106,25 @@ public class QueryOrder extends SyncDispatcher {
 //            Reattempted
 //            Cancelled
 //            Void Lable
-           if (status.equals("Picked Up")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-            } else if (status.equals("At Swyft's Warehouse")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-            } else if (status.equals("Dispatched")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-            } else if (status.equals("Delivered")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
-            } else if (status.equals("Request for Reattempt")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-            } else if (status.equals("Cancelled")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
-            } else if (status.equals("Void Lable")) {
-                orderFound.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
+
+            switch (status) {
+                case "Picked Up":
+                case "At Swyft's Warehouse":
+                case "Dispatched":
+                case "Request for Reattempt":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+                    break;
+                case "Delivered":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+                    break;
+                case "Cancelled":
+                case "Void Label":
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
+                    break;
+                default:
+                    orderFound.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
+                    break;
             }
-           else{
-               orderFound.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
-
-           }
-
-
             queryOrderResult.orderFound = orderFound;
             queryOrderResult.isSuccess = true;
 

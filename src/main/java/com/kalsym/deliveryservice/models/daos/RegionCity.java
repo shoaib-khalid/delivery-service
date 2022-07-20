@@ -5,22 +5,22 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.*;
 
 @Entity
-@Table(name = "delivery_store_centers")
+@Table(name = "region_city")
 @Getter
 @Setter
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class DeliveryStoreCenters {
+public class RegionCity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
-    String storeId;
-    String centerId;
-    String deliveryProviderId;
+
+    public String id;
+    public String name;
+    public String regionStateId;
+
 }

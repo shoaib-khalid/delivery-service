@@ -35,9 +35,12 @@ public class SubmitOrder extends SyncDispatcher {
     private final String username;
     private final String password;
     private final String paymentCode;
+
+    private final String codCode;
     private final String serviceCode;
     private final String reference;
-    private String userAgent;
+    private final String userAgent;
+    private final String remarks;
 
 
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
@@ -54,9 +57,12 @@ public class SubmitOrder extends SyncDispatcher {
         this.username = (String) config.get("username");
         this.password = (String) config.get("password");
         this.paymentCode = (String) config.get("paymentCode");
+
+        this.codCode = (String) config.get("codCode");
         this.serviceCode = (String) config.get("serviceCode");
         this.reference = (String) config.get("reference");
         this.userAgent = (String) config.get("userAgent");
+        this.remarks = (String) config.get("remarks");
 
 
         this.order = order;
@@ -130,7 +136,14 @@ public class SubmitOrder extends SyncDispatcher {
         pickup.addProperty("address", order.getPickup().getPickupAddress());
         pickup.addProperty("gps_address", order.getPickup().getPickupAddress());
 
-        inMeta.addProperty("service_code", paymentCode);
+
+        if (order.getPaymentType().equals("COD")) {
+            inMeta.addProperty("service_code", codCode);
+            details.addProperty("cod_value", order.getCodAmount());
+        } else {
+            inMeta.addProperty("service_code", paymentCode);
+        }
+
         dropoff.addProperty("name", order.getDelivery().getDeliveryContactName());
         dropoff.addProperty("phone", order.getDelivery().getDeliveryContactPhone());
         dropoff.addProperty("lat", order.getDelivery().getLatitude());
@@ -138,12 +151,14 @@ public class SubmitOrder extends SyncDispatcher {
         dropoff.addProperty("address", order.getDelivery().getDeliveryAddress());
         dropoff.addProperty("gps_address", order.getDelivery().getDeliveryAddress());
         if (order.getRemarks() != null) {
-            details.addProperty("voice_note", order.getRemarks());
+
+            details.addProperty("voice_note", remarks);
 
         } else {
-            details.addProperty("voice_note", order.getOrderId());
+            details.addProperty("voice_note", "Order Id : " + order.getOrderId() + " Remarks : " + remarks);
         }
-        details.addProperty("parcel_value", order.getCodAmount());
+//        Double parcelValue ;
+        details.addProperty("parcel_value", order.getCodAmount().doubleValue() - order.getShipmentValue());
         details.addProperty("reference", reference);
         details.addProperty("insurance", true);
 
