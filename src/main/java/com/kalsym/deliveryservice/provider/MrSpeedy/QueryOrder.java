@@ -115,6 +115,7 @@ public class QueryOrder extends SyncDispatcher {
             orderFound.setStatusDescription(description);
             orderFound.setCreatedDate(created);
             orderFound.setVehicleType(vehicleType.toString());
+            orderFound.setCustomerTrackingUrl("");
             queryOrderResult.orderFound = orderFound;
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
