@@ -545,17 +545,22 @@ public class OrdersController {
                     LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", e.getMessage());
 
                 }
-                if (deliveryOrder.getRiderCarPlateNo() != null) {
-                    deliveryOrder.setRiderPhoneNo(spCallbackResult.driveNoPlate);
+                if (deliveryOrder.getRiderCarPlateNo() == null) {
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider PLATE ", spCallbackResult.driveNoPlate);
+                    deliveryOrder.setRiderCarPlateNo(spCallbackResult.driveNoPlate);
                 }
-                if (deliveryOrder.getRiderName() != null) {
+                if (deliveryOrder.getRiderName() == null) {
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider Name ", spCallbackResult.riderName);
                     deliveryOrder.setRiderName(spCallbackResult.riderName);
                 }
-                if (deliveryOrder.getRiderPhoneNo() != null) {
+                if (deliveryOrder.getRiderPhoneNo() == null) {
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider Phone No ", spCallbackResult.riderPhone);
                     deliveryOrder.setRiderPhoneNo(spCallbackResult.riderPhone);
                 }
-                if (deliveryOrder.getCustomerTrackingUrl() != null) {
+                if (deliveryOrder.getCustomerTrackingUrl() == null) {
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", spCallbackResult.trackingUrl);
                     deliveryOrder.setCustomerTrackingUrl(spCallbackResult.trackingUrl);
+
                 }
                 DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
                 System.err.println(o.getId());
