@@ -590,7 +590,7 @@ public class OrdersController {
                     orderStatusRepository.save(notExistStatus); //SA
                 }
 
-                if (deliveryId != null) {
+                if (deliveryId != null || !(deliveryId.isEmpty())) {
                     getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
                 }
             } else {

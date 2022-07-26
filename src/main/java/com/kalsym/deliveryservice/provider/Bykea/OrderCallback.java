@@ -49,7 +49,7 @@ public class OrderCallback extends SyncDispatcher {
         try {
             String status = jsonBody.get("event").getAsString();
             String spOrderId = jsonBody.get("data").getAsJsonObject().get("trip_id").getAsString();
-            String driverId = null;
+            String driverId = "";
             String riderName = null;
             String riderPhone = null;
             String carNoPlate = null;
@@ -139,6 +139,7 @@ public class OrderCallback extends SyncDispatcher {
             if (carNoPlate != null) {
                 callbackResult.driveNoPlate = carNoPlate;
             }
+            callbackResult.driverId = driverId;
             LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId + " Status: " + status + " Rider Id : " + driverId, "");
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
