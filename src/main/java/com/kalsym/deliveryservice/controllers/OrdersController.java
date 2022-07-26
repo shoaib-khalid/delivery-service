@@ -557,10 +557,9 @@ public class OrdersController {
                     LogUtil.info(systemTransactionId, location, "Delivery Rider Phone No ", spCallbackResult.riderPhone);
                     deliveryOrder.setRiderPhoneNo(spCallbackResult.riderPhone);
                 }
-                if (deliveryOrder.getCustomerTrackingUrl() == null) {
+                if (deliveryOrder.getCustomerTrackingUrl().isEmpty() || deliveryOrder.getCustomerTrackingUrl() == null) {
                     LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", spCallbackResult.trackingUrl);
                     deliveryOrder.setCustomerTrackingUrl(spCallbackResult.trackingUrl);
-
                 }
                 DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
                 System.err.println(o.getId());
@@ -604,7 +603,7 @@ public class OrdersController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
             //fail to get price
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
 

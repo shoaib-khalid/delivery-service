@@ -59,6 +59,13 @@ public class OrderCallback extends SyncDispatcher {
                 case "booking.created":
                 case "booking.opened":
                     systemStatus = DeliveryCompletionStatus.ASSIGNING_RIDER.name();
+
+                    try {
+                        trackingLink = jsonBody.get("data").getAsJsonObject().get("tracking_url").getAsString();
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Get Tracking Id: " + jsonBody.get("data").getAsJsonObject().get("tracking_url").getAsString());
+                    } catch (Exception ex) {
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Tracking Url: " + ex.getMessage());
+                    }
                     break;
 
                 case "booking.updated.trackinglink":
