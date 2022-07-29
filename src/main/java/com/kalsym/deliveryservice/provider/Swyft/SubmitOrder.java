@@ -130,7 +130,7 @@ public class SubmitOrder extends SyncDispatcher {
             DeliveryOrder orderCreated = new DeliveryOrder();
             String parcelId = result.get("parcelId").getAsString();
 
-            JsonArray array = new JsonArray();
+//            JsonArray array = new JsonArray();
             JsonObject createPickup = new JsonObject();
 
             String pattern = "yyyy-MM-dd";
@@ -141,16 +141,15 @@ public class SubmitOrder extends SyncDispatcher {
             createPickup.addProperty("timeSlotId", this.timeSlotId);
             createPickup.addProperty("date", date);
             createPickup.addProperty("pickupLocationId", order.getPickup().getCostCenterCode());
-            array.add(createPickup);
 
 
             HashMap httpHeader = new HashMap();
             httpHeader.put("Content-Type", "application/json");
             httpHeader.put("Authorization", api_key);
 
-            LogUtil.info(logprefix, location, "Request Create Pickup : ", array.toString());
+            LogUtil.info(logprefix, location, "Request Create Pickup : ", createPickup.toString());
             try {
-                HttpResult responsePickup = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, baseUrl + vendorId + createPickupReqUrl, httpHeader, array.toString(), this.connectTimeout, this.waitTimeout);
+                HttpResult responsePickup = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, baseUrl + vendorId + createPickupReqUrl, httpHeader, createPickup.toString(), this.connectTimeout, this.waitTimeout);
                 if (responsePickup.httpResponseCode == 200) {
                     JsonObject pickupReqRes = new Gson().fromJson(responsePickup.responseString, JsonObject.class);
                     LogUtil.info(logprefix, location, "Response  Create Pickup : ", pickupReqRes.toString());
