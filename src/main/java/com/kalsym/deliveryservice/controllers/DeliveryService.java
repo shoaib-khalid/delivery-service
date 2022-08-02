@@ -817,7 +817,7 @@ public class DeliveryService {
             response.setMessage(processResult.resultString);
             // fail to get price
             // retryOrder(orderDetails);
-            RetryThread thread = new RetryThread(quotation, systemTransactionId, deliveryQuotationRepository, deliveryService, symplifiedService, new PriceResult());
+            RetryThread thread = new RetryThread(quotation, systemTransactionId, deliveryQuotationRepository, deliveryService, symplifiedService, new PriceResult(), false);
             thread.start();
             return response;
 
@@ -826,17 +826,29 @@ public class DeliveryService {
             quotation.setOrderId(orderId);
             quotation.setUpdatedDate(new Date());
             deliveryQuotationRepository.save(quotation);
-            SubmitOrderResult orderResult = (SubmitOrderResult) processResult.returnObject;
+      /*      SubmitOrderResult orderResult = (SubmitOrderResult) processResult.returnObject;
             orderResult.deliveryProviderId = quotation.getDeliveryProviderId();
             orderResult.isSuccess = false;
             orderResult.message = processResult.resultString;
             orderResult.status = "FAILED";
             orderResult.systemTransactionId = systemTransactionId;
             orderResult.orderId = orderId;
+            orderResult.orderCreated = null;*/
+
+            SubmitOrderResult orderResult = (SubmitOrderResult) processResult.returnObject;
+            orderResult.deliveryProviderId = quotation.getDeliveryProviderId();
+            orderResult.isSuccess = false;
+            orderResult.message = processResult.resultString;
+            orderResult.status = "PENDING";
+            orderResult.systemTransactionId = systemTransactionId;
+            orderResult.orderId = orderId;
             orderResult.orderCreated = null;
 
             response.setData(orderResult);
             response.setMessage(processResult.resultString);
+
+            RetryThread thread = new RetryThread(quotation, systemTransactionId, deliveryQuotationRepository, deliveryService, symplifiedService, new PriceResult(), true);
+            thread.start();
             // fail to get price
             return response;
         }
@@ -1263,7 +1275,7 @@ public class DeliveryService {
         }
     }
 
-    public void retryOrder(Long id) {
+    public void retryOrder(Long id, Boolean difProvider) {
         String logprefix = "Delivery Service - Retry Order";
 
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -1296,8 +1308,16 @@ public class DeliveryService {
         LogUtil.info("QueryPendingDeliveryTXN", location, "priceResult ", priceResult.toString());
         Long refId = null;
         for (PriceResult res : priceResult) {
-            if (res.providerId == quotation.get().getDeliveryProviderId()) {
-                refId = res.refId;
+            if (!difProvider) {
+                if (res.providerId == quotation.get().getDeliveryProviderId()) {
+                    refId = res.refId;
+                }
+            }
+            else{
+                if (res.providerId != quotation.get().getDeliveryProviderId()) {
+                    refId = res.refId;
+                    break;
+                }
             }
         }
         Optional<DeliveryQuotation> request = deliveryQuotationRepository.findById(refId);

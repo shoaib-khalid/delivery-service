@@ -14,15 +14,27 @@ public class RetryThread extends Thread implements Runnable {
     private DeliveryQuotation quotation;
     private SymplifiedService symplifiedService;
     private PriceResult priceResult;
+    private Boolean difProvider;
 
 
-    public RetryThread(DeliveryQuotation quotation, String sysTransactionId, DeliveryQuotationRepository deliveryQuotationRepository, DeliveryService deliveryService, SymplifiedService symplifiedService, PriceResult priceResult) {
+//    public RetryThread(DeliveryQuotation quotation, String sysTransactionId, DeliveryQuotationRepository deliveryQuotationRepository, DeliveryService deliveryService, SymplifiedService symplifiedService, PriceResult priceResult) {
+//        this.sysTransactionId = sysTransactionId;
+//        this.quotation = quotation;
+//        this.deliveryQuotationRepository = deliveryQuotationRepository;
+//        this.deliveryService = deliveryService;
+//        this.symplifiedService = symplifiedService;
+//        this.priceResult = priceResult;
+//
+//    }
+
+    public RetryThread(DeliveryQuotation quotation, String sysTransactionId, DeliveryQuotationRepository deliveryQuotationRepository, DeliveryService deliveryService, SymplifiedService symplifiedService, PriceResult priceResult, Boolean difProvider) {
         this.sysTransactionId = sysTransactionId;
         this.quotation = quotation;
         this.deliveryQuotationRepository = deliveryQuotationRepository;
         this.deliveryService = deliveryService;
         this.symplifiedService = symplifiedService;
         this.priceResult = priceResult;
+        this.difProvider = difProvider;
 
     }
 
@@ -30,6 +42,6 @@ public class RetryThread extends Thread implements Runnable {
     public void run() {
         super.run();
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
-        deliveryService.retryOrder(quotation.getId());
+        deliveryService.retryOrder(quotation.getId(), difProvider);
     }
 }
