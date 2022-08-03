@@ -158,18 +158,18 @@ public class SubmitOrder extends SyncDispatcher {
         String deliveryContactNo;
         if (order.getPickup().getPickupContactPhone().startsWith("6")) {
             // national format
-            pickupContactNO = order.getPickup().getPickupContactPhone().substring(1);
-            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(1);
+            pickupContactNO = "+" + order.getPickup().getPickupContactPhone();
+            deliveryContactNo = "+"+ order.getDelivery().getDeliveryContactPhone();
             LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:"
                     + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
         } else if (order.getPickup().getPickupContactPhone().startsWith("+6")) {
-            pickupContactNO = order.getPickup().getPickupContactPhone().substring(2);
-            deliveryContactNo = order.getDelivery().getDeliveryContactPhone().substring(2);
+            pickupContactNO = order.getPickup().getPickupContactPhone();
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
             LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:"
                     + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
         } else {
-            pickupContactNO = order.getPickup().getPickupContactPhone();
-            deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
+            pickupContactNO = "+6" + order.getPickup().getPickupContactPhone();
+            deliveryContactNo = "+6" + order.getDelivery().getDeliveryContactPhone();
             LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:"
                     + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
         }
@@ -186,10 +186,10 @@ public class SubmitOrder extends SyncDispatcher {
         data.addProperty("quotationId", order.getQuotationId());
         sender.addProperty("stopId", order.getPickupStopId());
         sender.addProperty("name", order.getPickup().getPickupContactName());
-        sender.addProperty("phone", order.getPickup().getPickupContactPhone());
+        sender.addProperty("phone", pickupContactNO);
         recipient.addProperty("stopId", order.getDeliveryStopId());
         recipient.addProperty("name", order.getDelivery().getDeliveryContactName());
-        recipient.addProperty("phone", order.getDelivery().getDeliveryContactPhone());
+        recipient.addProperty("phone", deliveryContactNo);
         recipient.addProperty("remarks", order.getRemarks());
         recipients.add(recipient);
         data.add("sender", sender);

@@ -648,10 +648,9 @@ public class OrdersController {
         if (!json.isEmpty()) {
             String logprefix = request.getRequestURI() + " ";
             String location = Thread.currentThread().getStackTrace()[1].getMethodName();
-
             JSONObject bodyJson = new JSONObject(new Gson().toJson(json));
+            LogUtil.info(logprefix, location, "Callback Lalamove: ", bodyJson.toString());
             LogUtil.info(logprefix, location, "data: ", bodyJson.get("data").toString());
-
 
             String systemTransactionId = StringUtility.CreateRefID("CB");
             String IP = request.getRemoteAddr();

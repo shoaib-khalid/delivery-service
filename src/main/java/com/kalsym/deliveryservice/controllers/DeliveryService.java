@@ -988,6 +988,9 @@ public class DeliveryService {
         }
 
         orderDetails.setPickup(pickup);
+        orderDetails.setDeliveryStopId(quotation.getDeliveryStopId());
+        orderDetails.setPickupStopId(quotation.getPickupStopId());
+        orderDetails.setQuotationId(quotation.getQuotationId());
 
         delivery.setDeliveryAddress(quotation.getDeliveryAddress());
         delivery.setDeliveryContactName(quotation.getDeliveryContactName());
@@ -1294,6 +1297,8 @@ public class DeliveryService {
         delivery.setDeliveryContactName(quotation.get().getDeliveryContactName());
         delivery.setDeliveryContactPhone(quotation.get().getDeliveryContactPhone());
         delivery.setDeliveryPostcode(quotation.get().getDeliveryPostcode());
+        delivery.setLatitude(new BigDecimal(quotation.get().getDeliveryLatitude()));
+        delivery.setLongitude(new BigDecimal(quotation.get().getDeliveryLongitude()));
         order.setDelivery(delivery);
         order.setDeliveryProviderId(quotation.get().getDeliveryProviderId());
         order.setDeliveryPeriod(quotation.get().getFulfillmentType());
@@ -1312,11 +1317,18 @@ public class DeliveryService {
                 if (res.providerId == quotation.get().getDeliveryProviderId()) {
                     refId = res.refId;
                 }
-            }
-            else{
+            } else {
                 if (res.providerId != quotation.get().getDeliveryProviderId()) {
+                    System.err.println("res.refId = " + res.refId);
                     refId = res.refId;
                     break;
+                }
+            }
+        }
+        if (refId == null) {
+            for (PriceResult res : priceResult) {
+                if (res.providerId == quotation.get().getDeliveryProviderId()) {
+                    refId = res.refId;
                 }
             }
         }
