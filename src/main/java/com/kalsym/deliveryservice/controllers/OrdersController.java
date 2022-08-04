@@ -511,7 +511,7 @@ public class OrdersController {
         String IP = request.getRemoteAddr();
         LogUtil.info(logprefix, location, "Get Provider List : ", IP);
         ProcessRequest process = new ProcessRequest(systemTransactionId, requestBody, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 10);
+        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, null);
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
         if (processResult.resultCode == 0) {
@@ -562,16 +562,20 @@ public class OrdersController {
                     LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", e.getMessage());
 
                 }
-                if (deliveryOrder.getRiderCarPlateNo() != null) {
-                    deliveryOrder.setRiderPhoneNo(spCallbackResult.driveNoPlate);
+                if (deliveryOrder.getRiderCarPlateNo() == null) {
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider PLATE ", spCallbackResult.driveNoPlate);
+                    deliveryOrder.setRiderCarPlateNo(spCallbackResult.driveNoPlate);
                 }
-                if (deliveryOrder.getRiderName() != null) {
+                if (deliveryOrder.getRiderName() == null) {
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider Name ", spCallbackResult.riderName);
                     deliveryOrder.setRiderName(spCallbackResult.riderName);
                 }
-                if (deliveryOrder.getRiderPhoneNo() != null) {
+                if (deliveryOrder.getRiderPhoneNo() == null) {
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider Phone No ", spCallbackResult.riderPhone);
                     deliveryOrder.setRiderPhoneNo(spCallbackResult.riderPhone);
                 }
-                if (deliveryOrder.getCustomerTrackingUrl() != null) {
+                if (deliveryOrder.getCustomerTrackingUrl().isEmpty() || deliveryOrder.getCustomerTrackingUrl() == null) {
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", spCallbackResult.trackingUrl);
                     deliveryOrder.setCustomerTrackingUrl(spCallbackResult.trackingUrl);
                 }
                 DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
@@ -603,7 +607,7 @@ public class OrdersController {
                     orderStatusRepository.save(notExistStatus); //SA
                 }
 
-                if (deliveryId != null) {
+                if (deliveryId != null || !(deliveryId.isEmpty())) {
                     getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
                 }
             } else {
@@ -616,7 +620,7 @@ public class OrdersController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } else {
             //fail to get price
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
 
@@ -668,7 +672,6 @@ public class OrdersController {
                 DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
                 if (deliveryOrder != null) {
                     LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
-                    deliveryOrder.setStatus(status);
                     String orderStatus = "";
                     String res;
                     // change from order status codes to delivery status codes.
@@ -686,16 +689,22 @@ public class OrdersController {
                         deliveryOrder.setDriverId(deliveryId);
                         orderStatus = "BEING_DELIVERED";
                         deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        if (!deliveryOrder.getStatus().equals(status)) {
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        }
                     } else if (status.equals("COMPLETED")) {
                         orderStatus = "DELIVERED_TO_CUSTOMER";
                         deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        if (!deliveryOrder.getStatus().equals(status)) {
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        }
                     } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
                         orderStatus = "FAILED_FIND_DRIVER";
                         deliveryOrder.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
                         res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                     }
+
+                    deliveryOrder.setStatus(status);
                     deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                     DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
 
@@ -1166,6 +1175,7 @@ public class OrdersController {
         @NotFound(action = NotFoundAction.IGNORE)
         @ToString.Exclude
         private DeliveryOrder order;
+        private String orderTimeConverted;
 
         public SortedDeliveryOrderStatus() {
             super();
@@ -1186,6 +1196,7 @@ public class OrdersController {
             this.setDescription(o.getDescription());
             this.setUpdated(o.getUpdated());
             this.setSystemTransactionId(o.getSystemTransactionId());
+            this.setOrderTimeConverted(o.getOrderTimeConverted());
         }
     }
 }

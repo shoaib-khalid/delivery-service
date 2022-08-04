@@ -50,41 +50,59 @@ public class OrderCallback extends SyncDispatcher {
             String status = jsonBody.get("event").getAsString();
             String spOrderId = jsonBody.get("data").getAsJsonObject().get("trip_id").getAsString();
             String driverId = "";
-            String riderName = "";
-            String riderPhone = "";
-            String carNoPlate = "";
-            String trackingLink = "";
+            String riderName = null;
+            String riderPhone = null;
+            String carNoPlate = null;
+            String trackingLink = null;
             String systemStatus = "";
             switch (status) {
                 case "booking.created":
                 case "booking.opened":
                     systemStatus = DeliveryCompletionStatus.ASSIGNING_RIDER.name();
-                    break;
-                case "booking.accepted":
-                case "booking.arrived":
-                case "booking.updated.trackinglink":
-//                    driverId = jsonBody.get("data").getAsJsonObject().get("trip_id").getAsString();
+
                     try {
-                        trackingLink = jsonBody.get("data").getAsJsonObject().get("tracking_link").getAsString();
+                        trackingLink = jsonBody.get("data").getAsJsonObject().get("tracking_url").getAsString();
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Get Tracking Id: " + jsonBody.get("data").getAsJsonObject().get("tracking_url").getAsString());
                     } catch (Exception ex) {
                         LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Tracking Url: " + ex.getMessage());
                     }
+                    break;
+
+                case "booking.updated.trackinglink":
+                    try {
+                        trackingLink = jsonBody.get("data").getAsJsonObject().get("tracking_link").getAsString();
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Get Tracking Id: " + jsonBody.get("data").getAsJsonObject().get("tracking_link").getAsString());
+                    } catch (Exception ex) {
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Tracking Url: " + ex.getMessage());
+                    }
+                    systemStatus = DeliveryCompletionStatus.AWAITING_PICKUP.name();
+                    break;
+                case "booking.accepted":
+                case "booking.arrived":
+
+                    try {
+                        trackingLink = jsonBody.get("data").getAsJsonObject().get("tracking_url").getAsString();
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Get Tracking Id: " + jsonBody.get("data").getAsJsonObject().get("tracking_url").getAsString());
+                    } catch (Exception ex) {
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Tracking Url: " + ex.getMessage());
+                    }
+
                     try {
                         riderName = jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("name").getAsString();
-                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Get Name: " +jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("name").getAsString());
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Get Name: " + jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("name").getAsString());
 
                     } catch (Exception ex) {
                         LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Name: " + ex.getMessage());
                     }
                     try {
                         riderPhone = jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("mobile").getAsString();
-                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Get Name: " +jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("mobile").getAsString());
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Get Name: " + jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("mobile").getAsString());
 
                     } catch (Exception ex) {
                         LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Phone: " + ex.getMessage());
                     }
                     try {
-                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Get Name: " +jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("plate_no").getAsString());
+                        LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Get Name: " + jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("plate_no").getAsString());
                         carNoPlate = jsonBody.get("data").getAsJsonObject().get("partner").getAsJsonObject().get("plate_no").getAsString();
                     } catch (Exception ex) {
                         LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId, "Exception Get Plate No : " + ex.getMessage());
@@ -105,13 +123,23 @@ public class OrderCallback extends SyncDispatcher {
                     break;
             }
 
+
             callbackResult.spOrderId = spOrderId;
             callbackResult.status = status;
-            callbackResult.trackingUrl = trackingLink;
+            if (!(trackingLink == null)) {
+                callbackResult.trackingUrl = trackingLink;
+            }
             callbackResult.systemStatus = systemStatus;
-            callbackResult.riderName = riderName;
-            callbackResult.riderPhone = riderPhone;
-            callbackResult.driveNoPlate = carNoPlate;
+            if (riderName != null) {
+                callbackResult.riderName = riderName;
+            }
+            if (riderPhone != null) {
+                callbackResult.riderPhone = riderPhone;
+            }
+            if (carNoPlate != null) {
+                callbackResult.driveNoPlate = carNoPlate;
+            }
+            callbackResult.driverId = driverId;
             LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId + " Status: " + status + " Rider Id : " + driverId, "");
         } catch (Exception ex) {
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);

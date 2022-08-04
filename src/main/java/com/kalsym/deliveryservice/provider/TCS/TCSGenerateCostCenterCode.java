@@ -56,31 +56,50 @@ public class TCSGenerateCostCenterCode extends SyncDispatcher {
         httpHeader.put("Content-Type", "application/json");
         httpHeader.put("X-IBM-Client-Id", clientId);
         String requestBody = generateBody();
-        System.err.println("Testing" + store.toString());
-
         HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, costCentreCode, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
-//        JsonObject test = new JsonObject();
-//        JsonObject inside = new JsonObject();
-//        JsonObject another = new JsonObject();
-//        inside.addProperty("code", "0200");
-//        inside.addProperty("status", "SUCCESS");
-//        inside.addProperty("message", "The operation was successful");
-//        inside.addProperty("requestTime", "20211224150140646");
-//        inside.addProperty("responseTime", "20211224145535310");
-//        another.addProperty("result", "Your Cost Center Code is: awan-tech");
-//        test.add("returnStatus", inside);
-//        test.add("costCenterCodeReply", another);
 
-//        httpResult.responseString = test.toString();
-//        httpResult.resultCode = 200;
-        if (httpResult.httpResponseCode == 200) {
-        response.resultCode = 0;
-        LogUtil.info(logprefix, location, "TCS Response for Submit Order: " + httpResult.responseString, "");
-        response.returnObject = extractResponseBody(httpResult.responseString);
-        } else {
-            LogUtil.info(logprefix, location, "Request failed", "");
+        JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);
+        JsonObject returnStatus = jsonResp.get("returnStatus").getAsJsonObject();
+        String code = returnStatus.get("code").getAsString();
+        String message = returnStatus.get("message").getAsString();
+
+        AdditionalInfoResult additionalInfoResult = new AdditionalInfoResult();
+
+        if (code.equals("0200")) {
+            JsonObject costCenterCodeReply = jsonResp.get("costCenterCodeReply").getAsJsonObject();
+            String[] res = costCenterCodeReply.get("result").getAsString().split(":");
+            String costCentreCode = res[1].replaceAll("\\s+", "");
+
+
+            additionalInfoResult.costCentreCode = costCentreCode;
+            additionalInfoResult.isSuccess = true;
+            additionalInfoResult.storeId = store.getId();
+            additionalInfoResult.providerId = store.getProviderId();
+            additionalInfoResult.resultCode = 0;
+            response.resultCode = 0;
+            response.returnObject = additionalInfoResult;
+            LogUtil.info(logprefix, location, "CostCentreCode for TCS: " + costCentreCode, "");
+        } else if (code.equals("0400")) {
+
+            additionalInfoResult.providerId = store.getProviderId();
+            additionalInfoResult.isSuccess = false;
+            additionalInfoResult.message = message;
+            additionalInfoResult.resultCode = -1;
+
             response.resultCode = -1;
+            response.returnObject = additionalInfoResult;
+
+            LogUtil.info(logprefix, location, "TCS: Bad Request / Custom validation message. Message: " + message, "");
         }
+//
+//        if (httpResult.httpResponseCode == 200) {
+//            response.resultCode = 0;
+//            LogUtil.info(logprefix, location, "TCS Response for Submit Order: " + httpResult.responseString, "");
+//            response.returnObject = extractResponseBody(httpResult.responseString);
+//        } else {
+//            LogUtil.info(logprefix, location, "Request failed", "");
+//            response.resultCode = -1;
+//        }
         LogUtil.info(logprefix, location, "Process finish", "");
 
         return response;

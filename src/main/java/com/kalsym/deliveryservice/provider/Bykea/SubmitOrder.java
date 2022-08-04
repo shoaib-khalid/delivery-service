@@ -41,6 +41,8 @@ public class SubmitOrder extends SyncDispatcher {
     private final String userAgent;
     private final String remarks;
 
+    private final String contactNo;
+
 
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository) {
         super(latch);
@@ -61,6 +63,7 @@ public class SubmitOrder extends SyncDispatcher {
         this.reference = (String) config.get("reference");
         this.userAgent = (String) config.get("userAgent");
         this.remarks = (String) config.get("remarks");
+        this.contactNo = (String) config.get("contactNo");
 
 
         this.order = order;
@@ -126,7 +129,7 @@ public class SubmitOrder extends SyncDispatcher {
         JsonObject details = new JsonObject();
 
         meta.addProperty("service_code", serviceCode);
-        customer.addProperty("phone", order.getDelivery().getDeliveryContactPhone());
+        customer.addProperty("phone", this.contactNo);
         pickup.addProperty("name", order.getPickup().getPickupContactName());
         pickup.addProperty("phone", order.getPickup().getPickupContactPhone());
         pickup.addProperty("lat", order.getPickup().getLatitude());
