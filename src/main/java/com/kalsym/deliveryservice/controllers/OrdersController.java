@@ -656,7 +656,6 @@ public class OrdersController {
                 DeliveryOrder deliveryOrder = deliveryOrdersRepository.findByDeliveryProviderIdAndSpOrderId(spId, spOrderId);
                 if (deliveryOrder != null) {
                     LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
-                    deliveryOrder.setStatus(status);
                     String orderStatus = "";
                     String res;
                     // change from order status codes to delivery status codes.
@@ -674,16 +673,22 @@ public class OrdersController {
                         deliveryOrder.setDriverId(deliveryId);
                         orderStatus = "BEING_DELIVERED";
                         deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        if (!deliveryOrder.getStatus().equals(status)) {
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        }
                     } else if (status.equals("COMPLETED")) {
                         orderStatus = "DELIVERED_TO_CUSTOMER";
                         deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        if (!deliveryOrder.getStatus().equals(status)) {
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+                        }
                     } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
                         orderStatus = "FAILED_FIND_DRIVER";
                         deliveryOrder.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
                         res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
                     }
+
+                    deliveryOrder.setStatus(status);
                     deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                     DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
 
