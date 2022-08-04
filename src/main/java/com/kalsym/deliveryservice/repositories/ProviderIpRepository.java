@@ -13,4 +13,6 @@ import java.util.List;
 @Repository
 public interface ProviderIpRepository extends JpaRepository<ProviderIp, String> {
 
+    ProviderIp findByIp(String ip);
+
 }

@@ -494,7 +494,7 @@ public class OrdersController {
         String IP = request.getRemoteAddr();
         LogUtil.info(logprefix, location, "Get Provider List : ", IP);
         ProcessRequest process = new ProcessRequest(systemTransactionId, requestBody, providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, 10);
+        ProcessResult processResult = process.ProcessCallback(IP, providerIpRepository, null);
         LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
         if (processResult.resultCode == 0) {
@@ -636,6 +636,7 @@ public class OrdersController {
             String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 
             JSONObject bodyJson = new JSONObject(new Gson().toJson(json));
+            LogUtil.info(logprefix, location, "Callback Body: ", bodyJson.toString());
             LogUtil.info(logprefix, location, "data: ", bodyJson.get("data").toString());
 
 
