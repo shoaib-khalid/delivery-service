@@ -156,22 +156,51 @@ public class SubmitOrder extends SyncDispatcher {
     private JsonObject generateRequestBody() {
         String pickupContactNO;
         String deliveryContactNo;
+//        if (order.getPickup().getPickupContactPhone().startsWith("6")) {
+//            // national format
+//            pickupContactNO = "+" + order.getPickup().getPickupContactPhone();
+//            deliveryContactNo = "+" + order.getDelivery().getDeliveryContactPhone();
+//            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:"
+//                    + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+//        } else if (order.getPickup().getPickupContactPhone().startsWith("+6")) {
+//            pickupContactNO = order.getPickup().getPickupContactPhone();
+//            deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
+//            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:"
+//                    + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+//        } else {
+//            pickupContactNO = "+6" + order.getPickup().getPickupContactPhone();
+//            deliveryContactNo = "+6" + order.getDelivery().getDeliveryContactPhone();
+//            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:"
+//                    + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+//        }
+
         if (order.getPickup().getPickupContactPhone().startsWith("6")) {
             // national format
             pickupContactNO = "+" + order.getPickup().getPickupContactPhone();
-            deliveryContactNo = "+"+ order.getDelivery().getDeliveryContactPhone();
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:"
-                    + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+            LogUtil.info(logprefix, location,
+                    "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:" + pickupContactNO, "");
         } else if (order.getPickup().getPickupContactPhone().startsWith("+6")) {
             pickupContactNO = order.getPickup().getPickupContactPhone();
-            deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:"
-                    + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+            LogUtil.info(logprefix, location,
+                    "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO, "");
         } else {
             pickupContactNO = "+6" + order.getPickup().getPickupContactPhone();
+            LogUtil.info(logprefix, location,
+                    "[" + systemTransactionId + "] Remove is national format. New Msisdn:" + pickupContactNO, "");
+        }
+        if (order.getDelivery().getDeliveryContactPhone().startsWith("6")) {
+            // national format
+            deliveryContactNo = "+" + order.getDelivery().getDeliveryContactPhone();
+            LogUtil.info(logprefix, location, "[" + systemTransactionId
+                    + "] Msisdn is national format. New Msisdn: & Delivery : " + deliveryContactNo, "");
+        } else if (order.getDelivery().getDeliveryContactPhone().startsWith("+6")) {
+            deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
+            LogUtil.info(logprefix, location, "[" + systemTransactionId
+                    + "] Remove is national format. New Msisdn: & Delivery : " + deliveryContactNo, "");
+        } else {
             deliveryContactNo = "+6" + order.getDelivery().getDeliveryContactPhone();
-            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:"
-                    + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
+            LogUtil.info(logprefix, location, "[" + systemTransactionId
+                    + "] Remove is national format. New Msisdn: & Delivery : " + deliveryContactNo, "");
         }
 
 
