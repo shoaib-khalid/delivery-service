@@ -2,6 +2,7 @@ package com.kalsym.deliveryservice.models.daos;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.kalsym.deliveryservice.models.enums.OrderStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -69,6 +70,9 @@ public class StoreOrder implements Serializable {
     private String deliveryDiscountDescription ;
 
     private Boolean beingProcess;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus completionStatus;
 
 
     /*    @OneToMany(fetch = FetchType.LAZY, mappedBy = "orderMain")

@@ -674,75 +674,79 @@ public class OrdersController {
                     LogUtil.info(systemTransactionId, location, "DeliveryOrder found. Update status and updated datetime", "");
                     String orderStatus = "";
                     String res;
+                    List<DeliveryOrder> deliveries = deliveryOrdersRepository.findAllByDeliveryQuotationId(deliveryOrder.getDeliveryQuotationId());
                     // change from order status codes to delivery status codes.
-                    if (status.equals("ASSIGNING_DRIVER")) {
-                        deliveryOrder.setSystemStatus(ASSIGNING_RIDER.name());
-                    } else if (status.equals("ON_GOING")) {
-                        if (deliveryOrder.getDriverId() == null) {
-                            deliveryOrder.setDriverId(deliveryId);
-                        } else if (!deliveryOrder.getDriverId().equals(deliveryId)) {
-                            deliveryOrder.setDriverId(deliveryId);
-                            deliveryOrder.setRiderName(null);
+                    for (DeliveryOrder d : deliveries) {
+                        if (status.equals("ASSIGNING_DRIVER")) {
+                            d.setSystemStatus(ASSIGNING_RIDER.name());
+                        } else if (status.equals("ON_GOING")) {
+                            if (d.getDriverId() == null) {
+                                d.setDriverId(deliveryId);
+                            } else if (!deliveryOrder.getDriverId().equals(deliveryId)) {
+                                d.setDriverId(deliveryId);
+                                d.setRiderName(null);
+                            }
+                            d.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
+                        } else if (status.equals("PICKED_UP")) {
+                            d.setDriverId(deliveryId);
+                            orderStatus = "BEING_DELIVERED";
+                            d.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
+                            if (!d.getStatus().equals(status)) {
+                                res = symplifiedService.updateOrderStatus(d.getOrderId(), orderStatus);
+                            }
+                        } else if (status.equals("COMPLETED")) {
+                            orderStatus = "DELIVERED_TO_CUSTOMER";
+                            d.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
+                            if (!d.getStatus().equals(status)) {
+                                res = symplifiedService.updateOrderStatus(d.getOrderId(), orderStatus);
+                            }
+                        } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
+                            orderStatus = "FAILED_FIND_DRIVER";
+                            d.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
+                            res = symplifiedService.updateOrderStatus(d.getOrderId(), orderStatus);
                         }
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
-                    } else if (status.equals("PICKED_UP")) {
-                        deliveryOrder.setDriverId(deliveryId);
-                        orderStatus = "BEING_DELIVERED";
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
-                        if (!deliveryOrder.getStatus().equals(status)) {
-                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+
+                        d.setStatus(status);
+                        d.setUpdatedDate(DateTimeUtil.currentTimestamp());
+                        DeliveryOrder o = deliveryOrdersRepository.save(d);
+
+                        DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
+                        if (notExistStatus == null) {
+
+                            DeliveryOrderStatus order = new DeliveryOrderStatus();
+                            order.setOrder(o);
+                            order.setSpOrderId(o.getSpOrderId());
+                            order.setStatus(o.getStatus());
+                            order.setDeliveryCompletionStatus(o.getSystemStatus());
+                            order.setDescription(o.getStatusDescription());
+                            order.setUpdated(new Date());
+                            order.setSystemTransactionId(o.getSystemTransactionId());
+                            order.setOrderId(o.getOrderId());
+
+                            System.err.println("Get All the Record " + order.toString());
+
+
+                            orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
+                        } else {
+                            System.err.println("Get All the Record " + notExistStatus.toString());
+                            notExistStatus.setOrder(o);
+                            notExistStatus.setSpOrderId(o.getSpOrderId());
+                            notExistStatus.setStatus(o.getStatus());
+                            notExistStatus.setDeliveryCompletionStatus(o.getSystemStatus());
+                            notExistStatus.setDescription(o.getStatusDescription());
+                            notExistStatus.setUpdated(new Date());
+                            notExistStatus.setSystemTransactionId(o.getSystemTransactionId());
+                            notExistStatus.setOrderId(o.getOrderId());
+
+                            orderStatusRepository.save(notExistStatus); //SA
                         }
-                    } else if (status.equals("COMPLETED")) {
-                        orderStatus = "DELIVERED_TO_CUSTOMER";
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
-                        if (!deliveryOrder.getStatus().equals(status)) {
-                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
-                        }
-                    } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
-                        orderStatus = "FAILED_FIND_DRIVER";
-                        deliveryOrder.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
-                        res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus);
+
+                        getDeliveryRiderDetails(request, d.getOrderId());
                     }
-
-                    deliveryOrder.setStatus(status);
-                    deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
-                    DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrder);
-
-                    DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
-                    if (notExistStatus == null) {
-
-                        DeliveryOrderStatus order = new DeliveryOrderStatus();
-                        order.setOrder(o);
-                        order.setSpOrderId(o.getSpOrderId());
-                        order.setStatus(o.getStatus());
-                        order.setDeliveryCompletionStatus(o.getSystemStatus());
-                        order.setDescription(o.getStatusDescription());
-                        order.setUpdated(new Date());
-                        order.setSystemTransactionId(o.getSystemTransactionId());
-                        order.setOrderId(o.getOrderId());
-
-                        System.err.println("Get All the Record " + order.toString());
-
-
-                        orderStatusRepository.save(order); //SAVE ORDER STATUS LIST
-                    } else {
-                        System.err.println("Get All the Record " + notExistStatus.toString());
-                        notExistStatus.setOrder(o);
-                        notExistStatus.setSpOrderId(o.getSpOrderId());
-                        notExistStatus.setStatus(o.getStatus());
-                        notExistStatus.setDeliveryCompletionStatus(o.getSystemStatus());
-                        notExistStatus.setDescription(o.getStatusDescription());
-                        notExistStatus.setUpdated(new Date());
-                        notExistStatus.setSystemTransactionId(o.getSystemTransactionId());
-                        notExistStatus.setOrderId(o.getOrderId());
-
-                        orderStatusRepository.save(notExistStatus); //SA
-                    }
-
-                    getDeliveryRiderDetails(request, deliveryOrder.getOrderId());
                 } else {
                     LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for SpId:" + spId + " spOrderId:" + spOrderId, "");
                 }
+
                 response.setSuccessStatus(HttpStatus.OK);
                 response.setData(processResult.returnObject);
                 LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");

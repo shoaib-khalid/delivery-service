@@ -1,4 +1,15 @@
 ##############################################################################################
+# **Version v.3.2.0| 12-Aug-2022*
+###############################################################################################
+
+### Code Changes:
+1. Added New Feature - Get Price - Combined Shipping 
+2. Added New Feature - Submit Order - Combined Shipping 
+3. Added New Feature - Callback Provider - Combined Shipping 
+4. Self Delivery
+ALTER TABLE symplified.state_delivery_charges ADD distance decimal(15,3) DEFAULT 5 NULL;
+
+##############################################################################################
 # **Version v.3.1.1| 3-Aug-2022**
 ###############################################################################################
 

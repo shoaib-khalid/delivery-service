@@ -19,4 +19,5 @@ public interface StoreOrderRepository extends JpaRepository<StoreOrder, String> 
     @Query(value = "SELECT o.* FROM symplified.`order` o  WHERE o.id = :orderId", nativeQuery = true)
     Optional<StoreOrder> findById (@Param("orderId") String orderId);
 
+
 }

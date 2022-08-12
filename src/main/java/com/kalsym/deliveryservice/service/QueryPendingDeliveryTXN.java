@@ -110,40 +110,40 @@ public class QueryPendingDeliveryTXN {
     }
 
 
-    @Scheduled(cron = "${pending-transaction:0 0/02 * * * ?}")
-    public void QueryPendingTransaction() throws ParseException {
-        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+//    @Scheduled(cron = "${pending-transaction:0 0/02 * * * ?}")
+//    public void QueryPendingTransaction() throws ParseException {
+//        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+//
+//        LogUtil.info("QueryPendingTXN", location, "QUERY PENDING TXN", "");
+//        List<String> status = new ArrayList<>();
+//        status.add(DeliveryCompletionStatus.COMPLETED.name());
+//        status.add(DeliveryCompletionStatus.CANCELED.name());
+//        status.add(DeliveryCompletionStatus.EXPIRED.name());
+//        status.add(DeliveryCompletionStatus.REJECTED.name());
+//
+//        List<DeliveryOrder> deliveryOrders = deliveryOrdersRepository.findByStatusNotIn(status);
+//        for (DeliveryOrder order : deliveryOrders) {
+//            LogUtil.info("QueryPendingTXN", location, "Order Id : " + order.getOrderId(), "");
+//            System.err.println("Query Pending Transaction : " + order.getOrderId());
+//            deliveryService.queryOrder(order.getId(), "QueryPendingTransaction");
+//
+//            LogUtil.info("QueryPendingTXN Status ", location, "Order Id : " + order.getOrderId() + " Order Status : " + order.getSystemStatus(), "");
+//        }
+//    }
+//
 
-        LogUtil.info("QueryPendingTXN", location, "QUERY PENDING TXN", "");
-        List<String> status = new ArrayList<>();
-        status.add(DeliveryCompletionStatus.COMPLETED.name());
-        status.add(DeliveryCompletionStatus.CANCELED.name());
-        status.add(DeliveryCompletionStatus.EXPIRED.name());
-        status.add(DeliveryCompletionStatus.REJECTED.name());
-
-        List<DeliveryOrder> deliveryOrders = deliveryOrdersRepository.findByStatusNotIn(status);
-        for (DeliveryOrder order : deliveryOrders) {
-            LogUtil.info("QueryPendingTXN", location, "Order Id : " + order.getOrderId(), "");
-            System.err.println("Query Pending Transaction : " + order.getOrderId());
-            deliveryService.queryOrder(order.getId(), "QueryPendingTransaction");
-
-            LogUtil.info("QueryPendingTXN Status ", location, "Order Id : " + order.getOrderId() + " Order Status : " + order.getSystemStatus(), "");
-        }
-    }
-
-
-    @Scheduled(cron = "${pending-transaction:0 0/60 * * * ?}")
-    public void RemovePendingQuotation() throws ParseException {
-        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
-
-        LogUtil.info("QueryPendingTXN", location, "RemovePendingQuotation", "");
-
-        List<DeliveryQuotation> deliveryQuotations = deliveryQuotationRepository.findAllByUnusedQuotation();
-        for (DeliveryQuotation deliveryQuotation : deliveryQuotations) {
-            LogUtil.info("QueryPendingTXN", location, "deliveryQuotation Id : " + deliveryQuotation.getId(), "");
-            deliveryQuotationRepository.delete(deliveryQuotation);
-        }
-    }
+//    @Scheduled(cron = "${pending-transaction:0 0/60 * * * ?}")
+//    public void RemovePendingQuotation() throws ParseException {
+//        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+//
+//        LogUtil.info("QueryPendingTXN", location, "RemovePendingQuotation", "");
+//
+//        List<DeliveryQuotation> deliveryQuotations = deliveryQuotationRepository.findAllByUnusedQuotation();
+//        for (DeliveryQuotation deliveryQuotation : deliveryQuotations) {
+//            LogUtil.info("QueryPendingTXN", location, "deliveryQuotation Id : " + deliveryQuotation.getId(), "");
+//            deliveryQuotationRepository.delete(deliveryQuotation);
+//        }
+//    }
 
 }
 

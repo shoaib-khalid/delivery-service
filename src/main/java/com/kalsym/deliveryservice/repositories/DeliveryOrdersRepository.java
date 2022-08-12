@@ -16,6 +16,7 @@ import java.util.Optional;
 public interface DeliveryOrdersRepository extends JpaRepository<DeliveryOrder, Long> {
 
     public DeliveryOrder findByDeliveryProviderIdAndSpOrderId(Integer deliveryProviderId, String spOrderId);
+    public List<DeliveryOrder> findAllByDeliveryQuotationId(Long deliveryQuotationId);
 
     public DeliveryOrder findByOrderId(String orderId);
 

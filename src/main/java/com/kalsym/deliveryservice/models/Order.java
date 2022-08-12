@@ -4,6 +4,7 @@
  */
 package com.kalsym.deliveryservice.models;
 
+import com.kalsym.deliveryservice.controllers.DeliveryService;
 import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import lombok.ToString;
 
 import javax.validation.Valid;
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * @author user
@@ -56,6 +58,7 @@ public class Order {
     String deliveryStopId;
     String pickupStopId;
     Integer totalParcel;
-
+    boolean combinedShip;
+   String combinedShippingStoreId;
 
 }
