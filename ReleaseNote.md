@@ -1,4 +1,34 @@
 ##############################################################################################
+# **Version v.3.2.1| 15-Aug-2022*
+###############################################################################################
+
+1. Bug Fixed
+
+//Next Patch
+CREATE TABLE symplified.delivery_sp_status (
+provider_status varchar(100) NULL,
+status varchar(100) NULL,
+provider_status_description varchar(100) NULL
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8
+COLLATE=utf8_general_ci;
+
+
+-- 
+delivery_error_description
+
+CREATE TABLE symplified.delivery_error_description (
+error varchar(100) NULL,
+error_description varchar(100) NULL
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8
+COLLATE=utf8_general_ci;
+
+
+
+##############################################################################################
 # **Version v.3.2.0| 12-Aug-2022*
 ###############################################################################################
 
