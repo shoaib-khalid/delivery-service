@@ -13,6 +13,6 @@ public interface OrderPaymentDetailRepository extends PagingAndSortingRepository
 
     <S extends Object> Page<S> findByOrderId(@Param("orderId") String orderId, Pageable pgbl);
 
-    List<OrderPaymentDetail> findAllByDeliveryQuotationReferenceId(Long quotaionId);
+    List<OrderPaymentDetail> findAllByDeliveryQuotationReferenceId(String quotaionId);
 }
 

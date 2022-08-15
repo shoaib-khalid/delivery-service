@@ -100,6 +100,9 @@ public class DeliveryService {
     @Autowired
     OrderPaymentDetailRepository paymentDetailRepository;
 
+//    @Autowired
+//    DeliveryErrorDescriptionRepository errorDescriptionRepository;
+
     public HttpReponse getPrice(Order orderDetails, String url) {
         String logprefix = "DeliveryService GetPrice";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -218,9 +221,11 @@ public class DeliveryService {
             PriceResult priceResult = new PriceResult();
             Set<PriceResult> priceResultList = new HashSet<>();
             orderDetails.setItemType(ItemType.SELF);
+            DeliveryErrorDescription message;
 
             if (deliveryOptions == null) {
-                priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
+//                message = errorDescriptionRepository.getOne("ERR_OUT_OF_SERVICE_AREA");
+//                priceResult.message = message.getErrorDescription();
                 BigDecimal bd = new BigDecimal("0.00");
                 bd = bd.setScale(2, RoundingMode.HALF_UP);
                 priceResult.price = bd;
@@ -513,6 +518,8 @@ public class DeliveryService {
                     }
                     result.isError = list.isError;
                     result.providerId = list.providerId;
+//                    DeliveryErrorDescription message = errorDescriptionRepository.getOne( list.message);
+//                    result.message = message.getErrorDescription();
                     result.message = list.message;
                     if (list.fulfillment != null) {
                         Optional<DeliveryPeriod> deliveryPeriod = deliveryPeriodRepository.findById(list.fulfillment);
@@ -537,6 +544,8 @@ public class DeliveryService {
                 // fail to get price
                 Set<PriceResult> priceResultList = new HashSet<>();
                 PriceResult priceResult = new PriceResult();
+//                DeliveryErrorDescription message = errorDescriptionRepository.getOne("ERR_OUT_OF_SERVICE_AREA");
+//                priceResult.message = message.getErrorDescription();
                 priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
                 BigDecimal bd = new BigDecimal("0.00");
                 bd = bd.setScale(2, RoundingMode.HALF_UP);
@@ -568,7 +577,7 @@ public class DeliveryService {
             systemTransactionId = deliveryOrderOption.getSystemTransactionId();
         }
         Optional<StoreOrder> optProduct = storeOrderRepository.findById(orderId);
-        List<OrderPaymentDetail> orderList = paymentDetailRepository.findAllByDeliveryQuotationReferenceId(refId);
+        List<OrderPaymentDetail> orderList = paymentDetailRepository.findAllByDeliveryQuotationReferenceId(refId.toString());
         List<StoreOrder> verify = new ArrayList<>();
 
         boolean toProcess = false;
