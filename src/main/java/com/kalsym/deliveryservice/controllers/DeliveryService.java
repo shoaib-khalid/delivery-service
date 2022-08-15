@@ -568,7 +568,7 @@ public class DeliveryService {
             systemTransactionId = deliveryOrderOption.getSystemTransactionId();
         }
         Optional<StoreOrder> optProduct = storeOrderRepository.findById(orderId);
-        List<OrderPaymentDetail> orderList = paymentDetailRepository.findAllBydDeliveryQuotationReferenceId(refId);
+        List<OrderPaymentDetail> orderList = paymentDetailRepository.findAllByDeliveryQuotationReferenceId(refId);
         List<StoreOrder> verify = new ArrayList<>();
 
         boolean toProcess = false;
