@@ -221,7 +221,7 @@ public class DeliveryService {
             PriceResult priceResult = new PriceResult();
             Set<PriceResult> priceResultList = new HashSet<>();
             orderDetails.setItemType(ItemType.SELF);
-            DeliveryErrorDescription message;
+//            DeliveryErrorDescription message;
 
             if (deliveryOptions == null) {
 //                message = errorDescriptionRepository.getOne("ERR_OUT_OF_SERVICE_AREA");
