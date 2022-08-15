@@ -582,15 +582,15 @@ public class DeliveryService {
 
         boolean toProcess = false;
         for (OrderPaymentDetail orderPaymentDetail : orderList) {
-            StoreOrder storeOrder = storeOrderRepository.getOne(orderPaymentDetail.getOrderId());
-            if (storeOrder.getCompletionStatus().equals(OrderStatus.AWAITING_PICKUP)) {
-                verify.add(storeOrder);
+            Optional<StoreOrder> storeOrder = storeOrderRepository.findById(orderPaymentDetail.getOrderId());
+            if (storeOrder.get().getCompletionStatus().equals(OrderStatus.AWAITING_PICKUP)) {
+                verify.add(storeOrder.get());
                 toProcess = true;
-            } else if (storeOrder.getCompletionStatus().equals(OrderStatus.CANCELED_BY_MERCHANT) || storeOrder.getCompletionStatus().equals(OrderStatus.FAILED) || storeOrder.getCompletionStatus().equals(OrderStatus.REJECTED_BY_STORE)) {
-                verify.add(storeOrder);
+            } else if (storeOrder.get().getCompletionStatus().equals(OrderStatus.CANCELED_BY_MERCHANT) || storeOrder.get().getCompletionStatus().equals(OrderStatus.FAILED) || storeOrder.get().getCompletionStatus().equals(OrderStatus.REJECTED_BY_STORE)) {
+                verify.add(storeOrder.get());
                 toProcess = true;
-            } else if (storeOrder.getCompletionStatus().equals(OrderStatus.BEING_PREPARED) && verify.size() + 1 == orderList.size()) {
-                verify.add(storeOrder);
+            } else if (storeOrder.get().getCompletionStatus().equals(OrderStatus.BEING_PREPARED) && verify.size() + 1 == orderList.size()) {
+                verify.add(storeOrder.get());
                 toProcess = true;
             } else {
                 toProcess = false;
@@ -916,12 +916,12 @@ public class DeliveryService {
                 DeliveryOrder orderCreated = orderResult.orderCreated;
                 deliveryOrder.setCreatedDate(orderCreated.getCreatedDate());
                 deliveryOrder.setUpdatedDate(orderCreated.getCreatedDate());
-                deliveryOrder.setSpOrderId(orderCreated.getSpOrderId());
+                deliveryOrder.setSpOrderId("");
                 deliveryOrder.setSpOrderName(orderCreated.getSpOrderName());
                 deliveryOrder.setVehicleType(orderCreated.getVehicleType());
                 deliveryOrder.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
                 deliveryOrder.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
-                deliveryOrder.setStatus(orderCreated.getStatus());
+                deliveryOrder.setStatus("");
                 String deliveryType = stores.getType();
                 if (deliveryType.contains("ADHOC")) {
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
@@ -949,7 +949,8 @@ public class DeliveryService {
                 quotation.setSpOrderId(orderCreated.getSpOrderId());
                 quotation.setOrderId(orderId);
                 quotation.setUpdatedDate(new Date());
-
+                response.setData(orderResult);
+                response.setMessage("");
             }
 
             return response;
