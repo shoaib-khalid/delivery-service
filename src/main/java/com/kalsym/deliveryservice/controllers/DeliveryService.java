@@ -24,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DateFormat;
@@ -115,7 +116,7 @@ public class DeliveryService {
         c1.set(Calendar.AM_PM, Calendar.AM);
         c1.set(Calendar.MINUTE, 0);
 
-        Date dateOne = c1.getTime();
+        // Date dateOne = c1.getTime();
         DeliveryVehicleTypes deliveryVehicleTypes = null;
 
         StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(orderDetails.getStoreId());
@@ -1631,8 +1632,9 @@ public class DeliveryService {
                     .findAny();
             if (exist.isPresent()) {
                 o.setCombinedShip(true);
+                exist.ifPresent(order -> order.setMainCombinedShip(true));
                 if (exist.get().getVehicleType().number < (o.getVehicleType().number)) {
-                    exist.get().setVehicleType(o.getVehicleType());
+                    exist.ifPresent(order -> order.setVehicleType(cartDetails.getVehicleType()));
                 }
                 o.setCombinedShippingStoreId(exist.get().getStoreId());
             }
@@ -1642,8 +1644,8 @@ public class DeliveryService {
         orders.stream()
                 .sorted(Comparator.comparing(Order::isCombinedShip))
                 .collect(Collectors.toList());
-        System.err.println("orders : " + orders.toString());
 
+        LogUtil.info(logprefix, location, "Order With Combined Shipping : ", orders.toString());
 
         for (Order quotation : orders) { // Start Loop
 
@@ -1655,93 +1657,6 @@ public class DeliveryService {
 //            LogUtil.info(logprefix, location, "Store Delivery Details : ", stores.toString());
             //Get Store
             StoreResponseData store = symplifiedService.getStore(quotation.getStoreId());
-/*            quotation.setRegionCountry(store.getRegionCountryId()); //Set Store Region Country
-
-            Get Cart Details
-            CartDetails cartDetails = symplifiedService.getTotalWeight(quotation.getCartId());
-            if (cartDetails != null) {
-                LogUtil.info(logprefix, location, "Cart Details : ", cartDetails.toString());
-                quotation.setVehicleType(cartDetails.getVehicleType()); // Set Vehicle Type
-                if (cartDetails.getTotalWeight() == null) {
-                    quotation.setTotalWeightKg(null);
-                } else {
-                    quotation.setTotalWeightKg(cartDetails.getTotalWeight()); // Set Cart Weight
-                }
-                quotation.setPieces(cartDetails.getTotalPcs()); //Set Total Pieces
-            }
-
-
-            Pickup pickup = new Pickup();  // Set Pickup Information
-
-            // If Store Is PAKISTAN SEARCH DB
-            if (store.getRegionCountryId().equals("PAK")) {
-                DeliveryZoneCity zoneCity = deliveryZoneCityRepository.findByCityContains(store.getCity());
-                pickup.setPickupZone(zoneCity.getZone());
-                try {
-                    DeliveryZoneCity deliveryZone = deliveryZoneCityRepository.findByCityContains(quotation.getDelivery().getDeliveryCity());
-                    quotation.getDelivery().setDeliveryZone(deliveryZone.getZone());
-                } catch (Exception ex) {
-                    quotation.getDelivery().setDeliveryZone("null");
-                }
-            }
-
-            //If Vehicle Type Not Found In The Cart
-            if (quotation.getVehicleType() == null) {
-                if (stores.getMaxOrderQuantityForBike() <= 10) {
-                    pickup.setVehicleType(VehicleType.MOTORCYCLE);
-                    deliveryVehicleTypes = deliveryVehicleTypesRepository.findByVehicleType(pickup.getVehicleType().name());
-                    LogUtil.info(logprefix, location, "Vehicle Type less than 10 : ", pickup.getVehicleType().name());
-                } else if (stores.getMaxOrderQuantityForBike() >= 10) {
-                    pickup.setVehicleType(VehicleType.CAR);
-                    deliveryVehicleTypes = deliveryVehicleTypesRepository.findByVehicleType(pickup.getVehicleType().name());
-                    LogUtil.info(logprefix, location, "Vehicle Type more than 10 : ", pickup.getVehicleType().name());
-                } else if (stores.getMaxOrderQuantityForBike() >= 20) {
-                    pickup.setVehicleType(VehicleType.VAN);
-                    deliveryVehicleTypes = deliveryVehicleTypesRepository.findByVehicleType(pickup.getVehicleType().name());
-                    LogUtil.info(logprefix, location, "Vehicle Type more than 10 : ", pickup.getVehicleType().name());
-                }
-            } else {
-                pickup.setVehicleType(quotation.getVehicleType());
-                deliveryVehicleTypes = deliveryVehicleTypesRepository.findByVehicleType(quotation.getVehicleType().name());
-            }
-
-            if (deliveryVehicleTypes != null) {
-                quotation.setHeight(deliveryVehicleTypes.getHeight());
-                quotation.setWidth(deliveryVehicleTypes.getWidth());
-                quotation.setLength(deliveryVehicleTypes.getLength());
-                if (quotation.getTotalWeightKg() == null) {
-                    quotation.setTotalWeightKg(deliveryVehicleTypes.getWeight().doubleValue());
-                }
-            }
-
-            LogUtil.info(logprefix, location, "Vehicle Type: ", pickup.getVehicleType().name());
-
-//            RegionCity city = regionCityRepository.getOne(quotation.getDelivery().getDeliveryCity());
-            String pickupAddress;
-            if (store.getAddress().contains(store.getPostcode())) {
-                pickupAddress = store.getAddress();
-            } else {
-                pickupAddress = store.getAddress() + "," + store.getPostcode() + "," + store.getCity() + "," + store.getRegionCountryStateId();
-            }
-            pickup.setPickupAddress(pickupAddress);
-            pickup.setPickupCity(store.getCity());
-            pickup.setPickupContactName(store.getName());
-            pickup.setPickupContactPhone(store.getPhoneNumber());
-            pickup.setPickupContactEmail(store.getEmail());
-            pickup.setPickupState(store.getRegionCountryStateId());
-            pickup.setPickupPostcode(store.getPostcode());
-            try {
-                pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(store.getLongitude())));
-                pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(store.getLatitude())));
-
-            } catch (Exception ex) {
-
-                LogUtil.error(logprefix, location, "Exception " + ex.getMessage(), "Get Lat & Lang ", ex);
-
-            }
-            quotation.setPickup(pickup);
-            End Pickup Details
-             TODO : End here*/
 
             quotation.setInsurance(false); // Default Is False
             String deliveryAddress = quotation.getDelivery().getDeliveryAddress() + "," + quotation.getDelivery().getDeliveryPostcode() + "," + quotation.getDelivery().getDeliveryCity() + "," + quotation.getDelivery().getDeliveryState();
@@ -1817,6 +1732,7 @@ public class DeliveryService {
                                 deliveryOrder.setAmount(Double.parseDouble(price));
                                 deliveryOrder.setValidationPeriod(currentDate);
                                 deliveryOrder.setServiceFee(0.00);
+                                deliveryOrder.setCombinedDelivery(quotation.isMainCombinedShip());
                                 DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
 
                                 double dPrice = Double.parseDouble(price);
@@ -1885,6 +1801,7 @@ public class DeliveryService {
                             deliveryOrder.setAmount(Double.parseDouble(price));
                             deliveryOrder.setValidationPeriod(currentDate);
                             deliveryOrder.setServiceFee(0.00);
+                            deliveryOrder.setCombinedDelivery(quotation.isMainCombinedShip());
                             DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
 
                             double dPrice = Double.parseDouble(price);
@@ -2064,6 +1981,7 @@ public class DeliveryService {
                                 deliveryOrder.setStatus("FAILED");
                             }
                             deliveryOrder.setPickupTime(list.pickupDateTime);
+                            deliveryOrder.setCombinedDelivery(quotation.isMainCombinedShip());
                             DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
 
                             Integer providerId = res.getDeliveryProviderId();
@@ -2128,7 +2046,6 @@ public class DeliveryService {
                 }
             } else {
                 // TODO : Add the previous query for the order place add here
-                System.err.println("Order Store Is Combined Shipping : " + quotation.getStoreId());
 
                 GetQuotationPriceList query = qetQuotationPriceList.stream()
                         .filter(q -> q.getStoreId().equals(quotation.getCombinedShippingStoreId()))

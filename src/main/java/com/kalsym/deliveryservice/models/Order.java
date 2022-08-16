@@ -4,6 +4,8 @@
  */
 package com.kalsym.deliveryservice.models;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.kalsym.deliveryservice.controllers.DeliveryService;
 import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
@@ -59,6 +61,10 @@ public class Order {
     String pickupStopId;
     Integer totalParcel;
     boolean combinedShip;
-   String combinedShippingStoreId;
-
+    String combinedShippingStoreId;
+    boolean mainCombinedShip;
+    public String toString() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(this);
+    }
 }

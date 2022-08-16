@@ -70,4 +70,5 @@ public class DeliveryQuotation {
     private String quotationId;
     private String pickupStopId;
     private String deliveryStopId;
+    private boolean isCombinedDelivery;
 }
