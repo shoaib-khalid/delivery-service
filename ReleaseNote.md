@@ -1,8 +1,16 @@
 ##############################################################################################
+# **Version v.3.2.2| 16-Aug-2022*
+###############################################################################################
+1. Bug Fixed - added new field in delivery quotation
+2. Added New Error Message
+
+##############################################################################################
 # **Version v.3.2.1| 15-Aug-2022*
 ###############################################################################################
 
 1. Bug Fixed
+
+ALTER TABLE symplified.delivery_quotation ADD isCombinedDelivery TINYINT DEFAULT 0 NULL;
 
 //Next Patch
 CREATE TABLE symplified.delivery_sp_status (

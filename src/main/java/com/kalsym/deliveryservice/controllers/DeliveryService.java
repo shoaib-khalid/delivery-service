@@ -101,8 +101,8 @@ public class DeliveryService {
     @Autowired
     OrderPaymentDetailRepository paymentDetailRepository;
 
-//    @Autowired
-//    DeliveryErrorDescriptionRepository errorDescriptionRepository;
+    @Autowired
+    DeliveryErrorDescriptionRepository errorDescriptionRepository;
 
     public HttpReponse getPrice(Order orderDetails, String url) {
         String logprefix = "DeliveryService GetPrice";
@@ -222,11 +222,11 @@ public class DeliveryService {
             PriceResult priceResult = new PriceResult();
             Set<PriceResult> priceResultList = new HashSet<>();
             orderDetails.setItemType(ItemType.SELF);
-//            DeliveryErrorDescription message;
+            DeliveryErrorDescription message;
 
             if (deliveryOptions == null) {
-//                message = errorDescriptionRepository.getOne("ERR_OUT_OF_SERVICE_AREA");
-//                priceResult.message = message.getErrorDescription();
+                message = errorDescriptionRepository.getOne("ERR_OUT_OF_SERVICE_AREA");
+                priceResult.message = message.getErrorDescription();
                 BigDecimal bd = new BigDecimal("0.00");
                 bd = bd.setScale(2, RoundingMode.HALF_UP);
                 priceResult.price = bd;
@@ -519,9 +519,9 @@ public class DeliveryService {
                     }
                     result.isError = list.isError;
                     result.providerId = list.providerId;
-//                    DeliveryErrorDescription message = errorDescriptionRepository.getOne( list.message);
-//                    result.message = message.getErrorDescription();
-                    result.message = list.message;
+                    DeliveryErrorDescription message = errorDescriptionRepository.getOne( list.message);
+                    result.message = message.getErrorDescription();
+//                    result.message = list.message;
                     if (list.fulfillment != null) {
                         Optional<DeliveryPeriod> deliveryPeriod = deliveryPeriodRepository.findById(list.fulfillment);
                         result.deliveryPeriod = deliveryPeriod.get();
@@ -545,9 +545,9 @@ public class DeliveryService {
                 // fail to get price
                 Set<PriceResult> priceResultList = new HashSet<>();
                 PriceResult priceResult = new PriceResult();
-//                DeliveryErrorDescription message = errorDescriptionRepository.getOne("ERR_OUT_OF_SERVICE_AREA");
-//                priceResult.message = message.getErrorDescription();
-                priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
+                DeliveryErrorDescription message = errorDescriptionRepository.getOne("ERR_OUT_OF_SERVICE_AREA");
+                priceResult.message = message.getErrorDescription();
+//                priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
                 BigDecimal bd = new BigDecimal("0.00");
                 bd = bd.setScale(2, RoundingMode.HALF_UP);
                 priceResult.price = bd;
@@ -1272,105 +1272,111 @@ public class DeliveryService {
         LogUtil.info(systemTransactionId, location, " Find delivery order for orderId:" + orderId, "");
         Optional<DeliveryOrder> orderDetails = deliveryOrdersRepository.findById(orderId);
         if (orderDetails.isPresent()) {
+            if (!orderDetails.get().getSpOrderId().isEmpty()) {
+                // DeliveryOrder o = deliveryOrdersRepository.getOne(orderId);
+                ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails.get(), providerRatePlanRepository, providerConfigurationRepository, providerRepository);
+                ProcessResult processResult = process.QueryOrder();
+                LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
 
-            // DeliveryOrder o = deliveryOrdersRepository.getOne(orderId);
-            ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails.get(), providerRatePlanRepository, providerConfigurationRepository, providerRepository);
-            ProcessResult processResult = process.QueryOrder();
-            LogUtil.info(systemTransactionId, location, "ProcessRequest finish. resultCode:" + processResult.resultCode, "");
+                if (processResult.resultCode == 0) {
+                    // successfully get status from provider
+                    response.setSuccessStatus(HttpStatus.OK);
+                    QueryOrderResult queryOrderResult = (QueryOrderResult) processResult.returnObject;
+                    DeliveryOrder orderFound = queryOrderResult.orderFound;
+                    orderDetails.get().setStatus(orderFound.getStatus());
+                    orderDetails.get().setSystemStatus(orderFound.getSystemStatus());
+                    if (orderDetails.get().getCustomerTrackingUrl() == null) {
+                        orderDetails.get().setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
+                    }
+                    String orderStatus = "";
+                    String res;
+                    if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.ASSIGNING_RIDER.name())) {
+                        LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
+                    } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.AWAITING_PICKUP.name())) {
+                        // orderStatus = "AWAITING_PICKUP";
+                        orderDetails.get().setDriverId(orderFound.getDriverId());
 
-            if (processResult.resultCode == 0) {
-                // successfully get status from provider
-                response.setSuccessStatus(HttpStatus.OK);
-                QueryOrderResult queryOrderResult = (QueryOrderResult) processResult.returnObject;
-                DeliveryOrder orderFound = queryOrderResult.orderFound;
-                orderDetails.get().setStatus(orderFound.getStatus());
-                orderDetails.get().setSystemStatus(orderFound.getSystemStatus());
-                if (orderDetails.get().getCustomerTrackingUrl() == null) {
-                    orderDetails.get().setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
-                }
-                String orderStatus = "";
-                String res;
-                if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.ASSIGNING_RIDER.name())) {
-                    LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
-                } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.AWAITING_PICKUP.name())) {
-                    // orderStatus = "AWAITING_PICKUP";
-                    orderDetails.get().setDriverId(orderFound.getDriverId());
+                        // try {
+                        // res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(),
+                        // orderStatus);
+                        // } catch (Exception ex) {
+                        // LogUtil.info(systemTransactionId, location, "Response Update Status :" +
+                        // ex.getMessage(), "");
+                        // }
+                        LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
 
-                    // try {
-                    // res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(),
-                    // orderStatus);
-                    // } catch (Exception ex) {
-                    // LogUtil.info(systemTransactionId, location, "Response Update Status :" +
-                    // ex.getMessage(), "");
+                    } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.BEING_DELIVERED.name())) {
+                        orderStatus = "BEING_DELIVERED";
+                        orderDetails.get().setDriverId(orderFound.getDriverId());
+
+                        try {
+                            res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
+                        } catch (Exception ex) {
+                            LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
+                        }
+
+                    } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.COMPLETED.name())) {
+                        orderStatus = "DELIVERED_TO_CUSTOMER";
+                        LogUtil.info(systemTransactionId, location, "Print Here :" + orderFound.getSystemStatus(), "");
+
+                        try {
+                            res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
+                        } catch (Exception ex) {
+                            LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
+                        }
+                    } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.CANCELED.name()) || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.REJECTED.name()) || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.EXPIRED.name())) {
+                        orderStatus = "FAILED_FIND_DRIVER";
+                        try {
+                            res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
+                        } catch (Exception ex) {
+                            LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
+                        }
+                    }
+                    System.err.println("System Status :" + orderDetails.get().getSystemStatus());
+                    DeliveryOrder o = deliveryOrdersRepository.save(orderDetails.get());
+                    System.err.println("QUERY ORDER  : " + o);
+
+                    DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
+                    if (notExistStatus == null) {
+                        DeliveryOrderStatus s = new DeliveryOrderStatus();
+                        s.setOrder(o);
+                        s.setSpOrderId(o.getSpOrderId());
+                        s.setStatus(o.getStatus());
+                        s.setDeliveryCompletionStatus(o.getSystemStatus());
+                        s.setDescription(o.getStatusDescription());
+                        s.setUpdated(new Date());
+                        s.setSystemTransactionId(o.getSystemTransactionId());
+                        s.setOrderId(o.getOrderId());
+
+                        orderStatusRepository.save(s); //SAVE ORDER STATUS LIST
+                    } else {
+                        notExistStatus.setOrder(o);
+                        notExistStatus.setSpOrderId(o.getSpOrderId());
+                        notExistStatus.setStatus(o.getStatus());
+                        notExistStatus.setDeliveryCompletionStatus(o.getSystemStatus());
+                        notExistStatus.setDescription(o.getStatusDescription());
+                        notExistStatus.setSystemTransactionId(o.getSystemTransactionId());
+                        notExistStatus.setOrderId(o.getOrderId());
+
+                        orderStatusRepository.save(notExistStatus); //SA
+                    }
+
+                    getDeliveryRiderDetails(orderDetails.get().getOrderId());
+                    response.setStatus(HttpStatus.OK.value());
+                    LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
                     // }
-                    LogUtil.info(systemTransactionId, location, "Order Pickup :" + orderFound.getSystemStatus(), "");
 
-                } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.BEING_DELIVERED.name())) {
-                    orderStatus = "BEING_DELIVERED";
-                    orderDetails.get().setDriverId(orderFound.getDriverId());
-
-                    try {
-                        res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
-                    } catch (Exception ex) {
-                        LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
-                    }
-
-                } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.COMPLETED.name())) {
-                    orderStatus = "DELIVERED_TO_CUSTOMER";
-                    LogUtil.info(systemTransactionId, location, "Print Here :" + orderFound.getSystemStatus(), "");
-
-                    try {
-                        res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
-                    } catch (Exception ex) {
-                        LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
-                    }
-                } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.CANCELED.name()) || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.REJECTED.name()) || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.EXPIRED.name())) {
-                    orderStatus = "FAILED_FIND_DRIVER";
-                    try {
-                        res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus);
-                    } catch (Exception ex) {
-                        LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
-                    }
-                }
-                System.err.println("System Status :" + orderDetails.get().getSystemStatus());
-                DeliveryOrder o = deliveryOrdersRepository.save(orderDetails.get());
-                System.err.println("QUERY ORDER  : " + o);
-
-                DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
-                if (notExistStatus == null) {
-                    DeliveryOrderStatus s = new DeliveryOrderStatus();
-                    s.setOrder(o);
-                    s.setSpOrderId(o.getSpOrderId());
-                    s.setStatus(o.getStatus());
-                    s.setDeliveryCompletionStatus(o.getSystemStatus());
-                    s.setDescription(o.getStatusDescription());
-                    s.setUpdated(new Date());
-                    s.setSystemTransactionId(o.getSystemTransactionId());
-                    s.setOrderId(o.getOrderId());
-
-                    orderStatusRepository.save(s); //SAVE ORDER STATUS LIST
+                    response.setData(orderDetails.get());
+                    return response;
                 } else {
-                    notExistStatus.setOrder(o);
-                    notExistStatus.setSpOrderId(o.getSpOrderId());
-                    notExistStatus.setStatus(o.getStatus());
-                    notExistStatus.setDeliveryCompletionStatus(o.getSystemStatus());
-                    notExistStatus.setDescription(o.getStatusDescription());
-                    notExistStatus.setSystemTransactionId(o.getSystemTransactionId());
-                    notExistStatus.setOrderId(o.getOrderId());
-
-                    orderStatusRepository.save(notExistStatus); //SA
+                    // fail to get status
+                    response.setStatus(HttpStatus.NOT_ACCEPTABLE.value());
+                    return response;
                 }
-
-                getDeliveryRiderDetails(orderDetails.get().getOrderId());
+            } else {
                 response.setStatus(HttpStatus.OK.value());
                 LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
-                // }
-
                 response.setData(orderDetails.get());
-                return response;
-            } else {
-                // fail to get status
-                response.setStatus(HttpStatus.NOT_ACCEPTABLE.value());
                 return response;
             }
         } else {
@@ -1537,7 +1543,6 @@ public class DeliveryService {
         //Check Same Store Tag
         List<Order> orders = new ArrayList<>();
         for (Order o : orderDetails) {
-            List<CombinedShipping> combinedShippingList = new ArrayList<>();
 
             StoreResponseData store = symplifiedService.getStore(o.getStoreId());
             StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(o.getStoreId());
@@ -1627,9 +1632,7 @@ public class DeliveryService {
             }
             o.setPickup(pickup);
             o.setDeliveryType(stores.getType());
-            Optional<Order> exist = orders.stream()
-                    .filter(quote -> quote.getPickup().getLatitude().equals(BigDecimal.valueOf(Double.parseDouble(store.getLatitude()))))
-                    .findAny();
+            Optional<Order> exist = orders.stream().filter(quote -> quote.getPickup().getLatitude().equals(BigDecimal.valueOf(Double.parseDouble(store.getLatitude())))).findAny();
             if (exist.isPresent()) {
                 o.setCombinedShip(true);
                 exist.ifPresent(order -> order.setMainCombinedShip(true));
@@ -1641,9 +1644,7 @@ public class DeliveryService {
             orders.add(o);
         }
 
-        orders.stream()
-                .sorted(Comparator.comparing(Order::isCombinedShip))
-                .collect(Collectors.toList());
+        orders.stream().sorted(Comparator.comparing(Order::isCombinedShip)).collect(Collectors.toList());
 
         LogUtil.info(logprefix, location, "Order With Combined Shipping : ", orders.toString());
 
@@ -1654,7 +1655,6 @@ public class DeliveryService {
 
             //Get Store Delivery Details
             StoreDeliveryResponseData stores = symplifiedService.getStoreDeliveryDetails(quotation.getStoreId());
-//            LogUtil.info(logprefix, location, "Store Delivery Details : ", stores.toString());
             //Get Store
             StoreResponseData store = symplifiedService.getStore(quotation.getStoreId());
 
@@ -1684,7 +1684,8 @@ public class DeliveryService {
                     }
 
                     if (deliveryOptions == null) {
-                        priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
+                        DeliveryErrorDescription message = errorDescriptionRepository.getOne( "ERR_OUT_OF_SERVICE_AREA");
+                        priceResult.message = message.getErrorDescription();
                         BigDecimal bd = new BigDecimal("0.00");
                         bd = bd.setScale(2, RoundingMode.HALF_UP);
                         priceResult.price = bd;
@@ -1752,7 +1753,9 @@ public class DeliveryService {
                                 byCartId.setStoreId(quotation.getStoreId());
                                 qetQuotationPriceList.add(byCartId);
                             } else {
-                                priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
+                                DeliveryErrorDescription message = errorDescriptionRepository.getOne( "ERR_OUT_OF_SERVICE_AREA");
+                                priceResult.message = message.getErrorDescription();
+//                                priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
                                 BigDecimal bd = new BigDecimal("0.00");
                                 bd = bd.setScale(2, RoundingMode.HALF_UP);
                                 priceResult.price = bd;
@@ -2003,7 +2006,9 @@ public class DeliveryService {
                             }
                             result.isError = list.isError;
                             result.providerId = list.providerId;
-                            result.message = list.message;
+                            DeliveryErrorDescription message = errorDescriptionRepository.getOne( list.message);
+                            result.message = message.getErrorDescription();
+//                            result.message = list.message;
                             if (list.fulfillment != null) {
                                 Optional<DeliveryPeriod> deliveryPeriod = deliveryPeriodRepository.findById(list.fulfillment);
                                 result.deliveryPeriod = deliveryPeriod.get();
@@ -2029,7 +2034,10 @@ public class DeliveryService {
                         // fail to get price
                         Set<PriceResult> priceResultList = new HashSet<>();
                         PriceResult priceResult = new PriceResult();
-                        priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
+
+                        DeliveryErrorDescription message = errorDescriptionRepository.getOne("ERR_OUT_OF_SERVICE_AREA");
+                        priceResult.message = message.getErrorDescription();
+//                        priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
                         BigDecimal bd = new BigDecimal("0.00");
                         bd = bd.setScale(2, RoundingMode.HALF_UP);
                         priceResult.price = bd;
@@ -2047,10 +2055,7 @@ public class DeliveryService {
             } else {
                 // TODO : Add the previous query for the order place add here
 
-                GetQuotationPriceList query = qetQuotationPriceList.stream()
-                        .filter(q -> q.getStoreId().equals(quotation.getCombinedShippingStoreId()))
-                        .findAny()
-                        .orElse(null);
+                GetQuotationPriceList query = qetQuotationPriceList.stream().filter(q -> q.getStoreId().equals(quotation.getCombinedShippingStoreId())).findAny().orElse(null);
 
 //                assert query != null;
                 byCartId.setCartId(quotation.getCartId());
