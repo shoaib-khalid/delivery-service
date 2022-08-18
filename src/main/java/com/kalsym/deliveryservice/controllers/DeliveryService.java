@@ -519,7 +519,7 @@ public class DeliveryService {
                     }
                     result.isError = list.isError;
                     result.providerId = list.providerId;
-                    DeliveryErrorDescription message = errorDescriptionRepository.getOne( list.message);
+                    DeliveryErrorDescription message = errorDescriptionRepository.getOne(list.message);
                     result.message = message.getErrorDescription();
 //                    result.message = list.message;
                     if (list.fulfillment != null) {
@@ -580,6 +580,7 @@ public class DeliveryService {
         Optional<StoreOrder> optProduct = storeOrderRepository.findById(orderId);
         List<OrderPaymentDetail> orderList = paymentDetailRepository.findAllByDeliveryQuotationReferenceId(refId.toString());
         List<StoreOrder> verify = new ArrayList<>();
+        List<Store> s = new ArrayList<>();
 
         boolean toProcess = false;
         for (OrderPaymentDetail orderPaymentDetail : orderList) {
@@ -596,6 +597,7 @@ public class DeliveryService {
             } else {
                 toProcess = false;
             }
+            s.add(storeRepository.getOne(storeOrder.get().getStoreId()));
         }
         LogUtil.info(logprefix, location, "", "");
         DeliveryQuotation quotation = deliveryQuotationRepository.getOne(refId);
@@ -692,7 +694,10 @@ public class DeliveryService {
             orderDetails.setWidth(deliveryVehicleTypes.getWidth());
             orderDetails.setLength(deliveryVehicleTypes.getLength());
         }
-
+        orderDetails.setCombinedShip(quotation.isCombinedDelivery());
+        if (quotation.isCombinedDelivery()) {
+            orderDetails.setStoreList(s);
+        }
         if (toProcess) {
 
             // generate transaction id
@@ -1684,7 +1689,7 @@ public class DeliveryService {
                     }
 
                     if (deliveryOptions == null) {
-                        DeliveryErrorDescription message = errorDescriptionRepository.getOne( "ERR_OUT_OF_SERVICE_AREA");
+                        DeliveryErrorDescription message = errorDescriptionRepository.getOne("ERR_OUT_OF_SERVICE_AREA");
                         priceResult.message = message.getErrorDescription();
                         BigDecimal bd = new BigDecimal("0.00");
                         bd = bd.setScale(2, RoundingMode.HALF_UP);
@@ -1753,7 +1758,7 @@ public class DeliveryService {
                                 byCartId.setStoreId(quotation.getStoreId());
                                 qetQuotationPriceList.add(byCartId);
                             } else {
-                                DeliveryErrorDescription message = errorDescriptionRepository.getOne( "ERR_OUT_OF_SERVICE_AREA");
+                                DeliveryErrorDescription message = errorDescriptionRepository.getOne("ERR_OUT_OF_SERVICE_AREA");
                                 priceResult.message = message.getErrorDescription();
 //                                priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
                                 BigDecimal bd = new BigDecimal("0.00");
@@ -2006,7 +2011,7 @@ public class DeliveryService {
                             }
                             result.isError = list.isError;
                             result.providerId = list.providerId;
-                            DeliveryErrorDescription message = errorDescriptionRepository.getOne( list.message);
+                            DeliveryErrorDescription message = errorDescriptionRepository.getOne(list.message);
                             result.message = message.getErrorDescription();
 //                            result.message = list.message;
                             if (list.fulfillment != null) {

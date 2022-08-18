@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.kalsym.deliveryservice.models.Order;
 import com.kalsym.deliveryservice.models.RequestBodies.lalamoveGetPrice.*;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
+import com.kalsym.deliveryservice.models.daos.Store;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SubmitOrderResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
@@ -156,23 +157,6 @@ public class SubmitOrder extends SyncDispatcher {
     private JsonObject generateRequestBody() {
         String pickupContactNO;
         String deliveryContactNo;
-//        if (order.getPickup().getPickupContactPhone().startsWith("6")) {
-//            // national format
-//            pickupContactNO = "+" + order.getPickup().getPickupContactPhone();
-//            deliveryContactNo = "+" + order.getDelivery().getDeliveryContactPhone();
-//            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Msisdn is national format. New Msisdn:"
-//                    + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
-//        } else if (order.getPickup().getPickupContactPhone().startsWith("+6")) {
-//            pickupContactNO = order.getPickup().getPickupContactPhone();
-//            deliveryContactNo = order.getDelivery().getDeliveryContactPhone();
-//            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:"
-//                    + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
-//        } else {
-//            pickupContactNO = "+6" + order.getPickup().getPickupContactPhone();
-//            deliveryContactNo = "+6" + order.getDelivery().getDeliveryContactPhone();
-//            LogUtil.info(logprefix, location, "[" + systemTransactionId + "] Remove is national format. New Msisdn:"
-//                    + pickupContactNO + " & Delivery : " + deliveryContactNo, "");
-//        }
 
         if (order.getPickup().getPickupContactPhone().startsWith("6")) {
             // national format
@@ -225,6 +209,15 @@ public class SubmitOrder extends SyncDispatcher {
         data.add("recipients", recipients);
         data.addProperty("isPODEnabled", true);
         data.addProperty("isRecipientSMSEnabled", true);
+        if (order.isCombinedShip()) {
+            metadata.addProperty("restaurantOrderId", order.getOrderId());
+            List<String> restaurantName = new ArrayList<>();
+            for (Store store : order.getStoreList()) {
+                restaurantName.add(store.getName());
+            }
+            metadata.addProperty("restaurantName", restaurantName.toString());
+            data.add("metadata", metadata);
+        }
         requestBody.add("data", data);
 
         LogUtil.info(logprefix, location, "Place Order Request : " + requestBody.toString(), "");

@@ -106,10 +106,6 @@ public class OrdersController {
     @Autowired
     StoreDeliverySpRepository storeDeliverySpRepository;
 
-
-    @Autowired
-    DeliveryPeriodRepository deliveryPeriodRepository;
-
     @Autowired
     DeliveryVehicleTypesRepository deliveryVehicleTypesRepository;
 
