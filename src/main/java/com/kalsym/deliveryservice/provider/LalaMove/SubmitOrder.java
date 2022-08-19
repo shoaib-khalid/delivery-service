@@ -231,6 +231,8 @@ public class SubmitOrder extends SyncDispatcher {
             JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
             LogUtil.info(logprefix, location, "the json resp for submitOrder " + jsonResp, "");
             LogUtil.info(logprefix, location, "OrderNumber:" + spOrderId, "");
+            shareLink = jsonResp.get("data").getAsJsonObject().get("shareLink").getAsString();
+            status = jsonResp.get("data").getAsJsonObject().get("status").getAsString();
 
             // extract order create
             DeliveryOrder orderCreated = new DeliveryOrder();
