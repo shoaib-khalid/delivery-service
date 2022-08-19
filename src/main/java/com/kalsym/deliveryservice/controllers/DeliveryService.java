@@ -1207,6 +1207,21 @@ public class DeliveryService {
 
                 orderStatusRepository.save(orderStatus); //SAVE ORDER STATUS LIST
 
+                List<DeliveryOrder> combinedOrder = deliveryOrdersRepository.findAllByDeliveryQuotationId(quotation.getId());
+                for(DeliveryOrder c : combinedOrder){
+                    c.setCreatedDate(orderCreated.getCreatedDate());
+                    c.setUpdatedDate(orderCreated.getCreatedDate());
+                    c.setSpOrderId(orderCreated.getSpOrderId());
+                    c.setSpOrderName(orderCreated.getSpOrderName());
+                    c.setVehicleType(orderCreated.getVehicleType());
+                    c.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
+                    c.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
+                    c.setStatus(orderCreated.getStatus());
+                    deliveryOrdersRepository.save(c);
+
+                }
+
+
 
                 quotation.setSpOrderId(orderCreated.getSpOrderId());
                 quotation.setOrderId(orderId);
