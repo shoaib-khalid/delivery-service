@@ -150,7 +150,7 @@ public class OrdersController {
         String systemTransactionId = StringUtility.CreateRefID("DL");
 
 
-        response = deliveryService.getQuotaion(id, request.getRequestURI());
+        response = deliveryService.getQuotation(id, request.getRequestURI());
         LogUtil.info(logprefix, location, "Quotation ", response.getData().toString());
 
 
@@ -975,7 +975,7 @@ public class OrdersController {
 
         BigDecimal priorityFee = BigDecimal.valueOf(5.00);
         LogUtil.info(logprefix, location, "Priority Fee: ", priorityFee.toString());
-        deliveryService.addPriorityFee(id, priorityFee);
+        response = deliveryService.addPriorityFee(id, priorityFee);
         return ResponseEntity.status(HttpStatus.OK).body(response);
 
     }

@@ -1002,7 +1002,7 @@ public class DeliveryService {
 
     }
 
-    public HttpReponse getQuotaion(Long id, String url) {
+    public HttpReponse getQuotation(Long id, String url) {
 
         String logprefix = " Delivery Service getQuotaion Order";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -2011,9 +2011,10 @@ public class DeliveryService {
                             }
                             result.isError = list.isError;
                             result.providerId = list.providerId;
-                            DeliveryErrorDescription message = errorDescriptionRepository.getOne(list.message);
-                            result.message = message.getErrorDescription();
-//                            result.message = list.message;
+//                            System.err.println("Error Message " + list.message);
+//                            DeliveryErrorDescription message = errorDescriptionRepository.getOne(list.message);
+//                            result.message = message.getErrorDescription();
+                            result.message = list.message;
                             if (list.fulfillment != null) {
                                 Optional<DeliveryPeriod> deliveryPeriod = deliveryPeriodRepository.findById(list.fulfillment);
                                 result.deliveryPeriod = deliveryPeriod.get();
