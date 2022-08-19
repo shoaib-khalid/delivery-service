@@ -764,7 +764,22 @@ public class DeliveryService {
                     orderStatus.setSystemTransactionId(o.getSystemTransactionId());
                     orderStatus.setOrderId(o.getOrderId());
 
-                    orderStatusRepository.save(orderStatus); //SAVE ORDER STATUS LIST
+                    orderStatusRepository.save(orderStatus);
+                    //SAVE ORDER STATUS LIST
+                    //Combined Shipping
+                    List<DeliveryOrder> combinedOrder = deliveryOrdersRepository.findAllByDeliveryQuotationId(quotation.getId());
+                    for(DeliveryOrder c : combinedOrder){
+                        c.setCreatedDate(orderCreated.getCreatedDate());
+                        c.setUpdatedDate(orderCreated.getCreatedDate());
+                        c.setSpOrderId(orderCreated.getSpOrderId());
+                        c.setSpOrderName(orderCreated.getSpOrderName());
+                        c.setVehicleType(orderCreated.getVehicleType());
+                        c.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
+                        c.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
+                        c.setStatus(orderCreated.getStatus());
+                        deliveryOrdersRepository.save(c);
+
+                    }
 
                     quotation.setSpOrderId(orderCreated.getSpOrderId());
                     quotation.setOrderId(orderId);
@@ -2016,7 +2031,11 @@ public class DeliveryService {
                             result.providerId = list.providerId;
                             if (list.message != null) {
                                 Optional<DeliveryErrorDescription> message = errorDescriptionRepository.findById(list.message);
-                                result.message = message.map(DeliveryErrorDescription::getErrorDescription).orElseGet(() -> list.message);
+                                if(message.isPresent()){
+                                    result.message = message.get().getErrorDescription();
+                                }else{
+                                    result.message = list.message;
+                                }
                             } else {
                                 result.message = list.message;
                             }
