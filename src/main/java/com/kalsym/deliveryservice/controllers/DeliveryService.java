@@ -519,9 +519,12 @@ public class DeliveryService {
                     }
                     result.isError = list.isError;
                     result.providerId = list.providerId;
-                    DeliveryErrorDescription message = errorDescriptionRepository.getOne(list.message);
-                    result.message = message.getErrorDescription();
-//                    result.message = list.message;
+                    if (list.message != null) {
+                        DeliveryErrorDescription message = errorDescriptionRepository.getOne(list.message);
+                        result.message = message.getErrorDescription();
+                    } else {
+                        result.message = list.message;
+                    }
                     if (list.fulfillment != null) {
                         Optional<DeliveryPeriod> deliveryPeriod = deliveryPeriodRepository.findById(list.fulfillment);
                         result.deliveryPeriod = deliveryPeriod.get();
@@ -2011,10 +2014,12 @@ public class DeliveryService {
                             }
                             result.isError = list.isError;
                             result.providerId = list.providerId;
-//                            System.err.println("Error Message " + list.message);
-//                            DeliveryErrorDescription message = errorDescriptionRepository.getOne(list.message);
-//                            result.message = message.getErrorDescription();
-                            result.message = list.message;
+                            if (list.message != null) {
+                                Optional<DeliveryErrorDescription> message = errorDescriptionRepository.findById(list.message);
+                                result.message = message.map(DeliveryErrorDescription::getErrorDescription).orElseGet(() -> list.message);
+                            } else {
+                                result.message = list.message;
+                            }
                             if (list.fulfillment != null) {
                                 Optional<DeliveryPeriod> deliveryPeriod = deliveryPeriodRepository.findById(list.fulfillment);
                                 result.deliveryPeriod = deliveryPeriod.get();
