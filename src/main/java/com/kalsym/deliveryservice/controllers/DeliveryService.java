@@ -580,7 +580,7 @@ public class DeliveryService {
         } else {
             systemTransactionId = deliveryOrderOption.getSystemTransactionId();
         }
-        Optional<StoreOrder> optProduct = storeOrderRepository.findById(orderId);
+        Optional<StoreOrder> optStoreOrder = storeOrderRepository.findById(orderId);
         List<OrderPaymentDetail> orderList = paymentDetailRepository.findAllByDeliveryQuotationReferenceId(refId.toString());
         List<StoreOrder> verify = new ArrayList<>();
         List<Store> s = new ArrayList<>();
@@ -608,11 +608,11 @@ public class DeliveryService {
         LogUtil.info(systemTransactionId, location, "Quotation : ", quotation.toString());
         LogUtil.info(systemTransactionId, location, "schedule : ", submitDelivery.toString());
         Order orderDetails = new Order();
-        orderDetails.setPaymentType(optProduct.get().getPaymentType());
+        orderDetails.setPaymentType(optStoreOrder.get().getPaymentType());
         orderDetails.setPieces(quotation.getTotalPieces());
         orderDetails.setTotalParcel(1);
-        LogUtil.info(systemTransactionId, location, "Order Amount : ", String.valueOf(optProduct.get().getTotal() - quotation.getAmount()));
-        orderDetails.setOrderAmount(optProduct.get().getTotal() - quotation.getAmount());
+        LogUtil.info(systemTransactionId, location, "Order Amount : ", String.valueOf(optStoreOrder.get().getTotal() - quotation.getAmount()));
+        orderDetails.setOrderAmount(optStoreOrder.get().getTotal() - quotation.getAmount());
         orderDetails.setCustomerId(quotation.getCustomerId());
         orderDetails.setCustomerId(quotation.getCustomerId());
         if (!quotation.getItemType().isEmpty()) {
@@ -635,8 +635,10 @@ public class DeliveryService {
 
         Delivery delivery = new Delivery();
 
-        pickup.setPickupContactName(quotation.getPickupContactName());
-        pickup.setPickupContactPhone(quotation.getPickupContactPhone());
+//        pickup.setPickupContactName(quotation.getPickupContactName()); //TODO : CHANGE TO STORE NAME
+//        pickup.setPickupContactPhone(quotation.getPickupContactPhone());
+        pickup.setPickupContactName(optStoreOrder.get().getStore().getName()); //TODO : CHANGE TO STORE NAME
+        pickup.setPickupContactPhone(optStoreOrder.get().getStore().getPhoneNumber());
         pickup.setPickupAddress(quotation.getPickupAddress());
         pickup.setPickupPostcode(quotation.getPickupPostcode());
         pickup.setVehicleType(VehicleType.valueOf(quotation.getVehicleType()));
@@ -661,7 +663,7 @@ public class DeliveryService {
             if (deliveryStoreCenters != null) {
                 pickup.setCostCenterCode(deliveryStoreCenters.getCenterId());
             }
-            orderDetails.setCodAmount(BigDecimal.valueOf(optProduct.get().getTotal()));
+            orderDetails.setCodAmount(BigDecimal.valueOf(optStoreOrder.get().getTotal()));
         }
 
         orderDetails.setPickup(pickup);

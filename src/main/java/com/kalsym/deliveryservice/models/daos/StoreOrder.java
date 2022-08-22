@@ -74,6 +74,10 @@ public class StoreOrder implements Serializable {
     @Enumerated(EnumType.STRING)
     private OrderStatus completionStatus;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "storeId", insertable = false, updatable = false)
+    private Store store;
+
 
     /*    @OneToMany(fetch = FetchType.LAZY, mappedBy = "orderMain")
     private List<OrderItem> orderItem;
