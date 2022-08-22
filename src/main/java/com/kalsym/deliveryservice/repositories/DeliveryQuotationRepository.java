@@ -16,7 +16,7 @@ public interface DeliveryQuotationRepository extends JpaRepository<DeliveryQuota
     @Query(value ="SELECT * FROM symplified.delivery_quotation WHERE id = :referenceId ", nativeQuery = true)
     List<Object> findAllOrderId( );
 
-    @Query(value ="SELECT * FROM symplified.delivery_quotation LEFT JOIN order_payment_detail opd ON opd.deliveryQuotationReferenceId = dq.id WHERE deliveryQuotationReferenceId IS NULL ", nativeQuery = true)
+    @Query(value ="SELECT * FROM symplified.delivery_quotation dq LEFT JOIN order_payment_detail opd ON opd.deliveryQuotationReferenceId = dq.id WHERE deliveryQuotationReferenceId IS NULL ", nativeQuery = true)
     List<DeliveryQuotation> findAllByUnusedQuotation();
 
 
