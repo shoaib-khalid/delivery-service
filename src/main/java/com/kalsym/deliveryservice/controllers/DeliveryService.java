@@ -768,7 +768,7 @@ public class DeliveryService {
                     //SAVE ORDER STATUS LIST
                     //Combined Shipping
                     List<DeliveryOrder> combinedOrder = deliveryOrdersRepository.findAllByDeliveryQuotationId(quotation.getId());
-                    for(DeliveryOrder c : combinedOrder){
+                    for (DeliveryOrder c : combinedOrder) {
                         c.setCreatedDate(orderCreated.getCreatedDate());
                         c.setUpdatedDate(orderCreated.getCreatedDate());
                         c.setSpOrderId(orderCreated.getSpOrderId());
@@ -1038,7 +1038,7 @@ public class DeliveryService {
         return response;
     }
 
-    public HttpReponse placeOrder(String orderId, DeliveryQuotation quotation, SubmitDelivery submitDelivery) {
+    public HttpReponse placeOrder(String orderId, DeliveryQuotation quotation, SubmitDelivery submitDelivery, Long oldQuotationId) {
 
         String logprefix = "Delivery Service Place Order";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -1207,8 +1207,8 @@ public class DeliveryService {
 
                 orderStatusRepository.save(orderStatus); //SAVE ORDER STATUS LIST
 
-                List<DeliveryOrder> combinedOrder = deliveryOrdersRepository.findAllByDeliveryQuotationId(quotation.getId());
-                for(DeliveryOrder c : combinedOrder){
+                List<DeliveryOrder> combinedOrder = deliveryOrdersRepository.findAllByDeliveryQuotationId(oldQuotationId);
+                for (DeliveryOrder c : combinedOrder) {
                     c.setCreatedDate(orderCreated.getCreatedDate());
                     c.setUpdatedDate(orderCreated.getCreatedDate());
                     c.setSpOrderId(orderCreated.getSpOrderId());
@@ -1218,10 +1218,7 @@ public class DeliveryService {
                     c.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
                     c.setStatus(orderCreated.getStatus());
                     deliveryOrdersRepository.save(c);
-
                 }
-
-
 
                 quotation.setSpOrderId(orderCreated.getSpOrderId());
                 quotation.setOrderId(orderId);
@@ -1480,7 +1477,7 @@ public class DeliveryService {
         }
         Optional<DeliveryQuotation> request = deliveryQuotationRepository.findById(refId);
         LogUtil.info("QueryPendingDeliveryTXN", location, "Request Submit Order", quotation.get().getOrderId());
-        HttpReponse response = deliveryService.placeOrder(quotation.get().getOrderId(), request.get(), submitDelivery);
+        HttpReponse response = deliveryService.placeOrder(quotation.get().getOrderId(), request.get(), submitDelivery, id);
         String orderStatus = "";
         if (response.getStatus() == 200) {
             orderStatus = "ASSIGNING_DRIVER";
@@ -2046,9 +2043,9 @@ public class DeliveryService {
                             result.providerId = list.providerId;
                             if (list.message != null) {
                                 Optional<DeliveryErrorDescription> message = errorDescriptionRepository.findById(list.message);
-                                if(message.isPresent()){
+                                if (message.isPresent()) {
                                     result.message = message.get().getErrorDescription();
-                                }else{
+                                } else {
                                     result.message = list.message;
                                 }
                             } else {
