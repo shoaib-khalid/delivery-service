@@ -31,7 +31,13 @@ public class DeliveryOrderStatus {
     Long id;
     String orderId;
     String spOrderId;
+
     String status;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "status", insertable = false, updatable = false)
+    DeliverySpStatus deliverySpStatus;
+
     String description;
     @UpdateTimestamp
     @Temporal(TemporalType.TIMESTAMP)

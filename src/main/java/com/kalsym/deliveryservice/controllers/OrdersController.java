@@ -492,6 +492,9 @@ public class OrdersController {
 
         LogUtil.info(logprefix, location, "", "");
 
+        LogUtil.info(logprefix, location, "Callback Body", requestBody.toString());
+
+
         //generate transaction id
         String systemTransactionId = StringUtility.CreateRefID("CB");
         String IP = request.getRemoteAddr();
@@ -1145,6 +1148,10 @@ public class OrdersController {
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
         Date updated;
         String systemTransactionId;
+
+        @ManyToOne(fetch = FetchType.EAGER)
+        @JoinColumn(name = "status", insertable = false, updatable = false)
+        DeliverySpStatus deliverySpStatus;
         DeliveryCompletionStatus deliveryCompletionStatus;
 
         @JsonIgnore
@@ -1159,11 +1166,6 @@ public class OrdersController {
             super();
         }
 
-        public SortedDeliveryOrderStatus(DeliveryCompletionStatus deliveryCompletionStatus) {
-            super();
-            this.deliveryCompletionStatus = deliveryCompletionStatus;
-        }
-
         void bindFromOrder(DeliveryOrderStatus o) {
             this.setId(o.getId());
             this.setDeliveryCompletionStatus(DeliveryCompletionStatus.valueOf(o.getDeliveryCompletionStatus()));
@@ -1175,6 +1177,11 @@ public class OrdersController {
             this.setUpdated(o.getUpdated());
             this.setSystemTransactionId(o.getSystemTransactionId());
             this.setOrderTimeConverted(o.getOrderTimeConverted());
+            this.deliverySpStatus(o.getDeliverySpStatus());
+        }
+
+        private void deliverySpStatus(DeliverySpStatus deliverySpStatus) {
+            this.deliverySpStatus = deliverySpStatus;
         }
     }
 }
