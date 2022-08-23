@@ -786,6 +786,8 @@ public class DeliveryService {
                     quotation.setSpOrderId(orderCreated.getSpOrderId());
                     quotation.setOrderId(orderId);
                     quotation.setUpdatedDate(new Date());
+                    LogUtil.info(systemTransactionId, location, "Delivery Order :  ", deliveryOrder.toString());
+
                     submitOrderResult.orderCreated = deliveryOrder;
                     submitOrderResult.status = deliveryOrder.getStatus();
                     submitOrderResult.message = processResult.resultString;
@@ -843,6 +845,8 @@ public class DeliveryService {
                     quotation.setSpOrderId(orderCreated.getSpOrderId());
                     quotation.setOrderId(orderId);
                     quotation.setUpdatedDate(new Date());
+                    LogUtil.info(systemTransactionId, location, "Delivery Order If Exist :  ", deliveryOrderOption.toString());
+
                     submitOrderResult.orderCreated = deliveryOrderOption;
                     submitOrderResult.status = orderCreated.getStatus();
                     submitOrderResult.message = processResult.resultString;
@@ -855,7 +859,7 @@ public class DeliveryService {
                 submitOrderResult.isSuccess = true;
                 response.setSuccessStatus(HttpStatus.OK);
                 response.setData(submitOrderResult);
-                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, " Response Body : "+ submitOrderResult.toString());
+                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, " Response Body : " + submitOrderResult.toString());
                 return response;
             } else if (processResult.resultCode == 2) {
                 LogUtil.info(systemTransactionId, location, "Response with Pending Status  : " + processResult.resultCode, processResult.resultString);
@@ -1348,7 +1352,7 @@ public class DeliveryService {
                         orderDetails.get().setDriverId(orderFound.getDriverId());
 
                         try {
-                            res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus,"","");
+                            res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus, "", "");
                         } catch (Exception ex) {
                             LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
                         }
@@ -1358,14 +1362,14 @@ public class DeliveryService {
                         LogUtil.info(systemTransactionId, location, "Print Here :" + orderFound.getSystemStatus(), "");
 
                         try {
-                            res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus,"","");
+                            res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus, "", "");
                         } catch (Exception ex) {
                             LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
                         }
                     } else if (orderFound.getSystemStatus().equals(DeliveryCompletionStatus.CANCELED.name()) || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.REJECTED.name()) || orderFound.getSystemStatus().equals(DeliveryCompletionStatus.EXPIRED.name())) {
                         orderStatus = "FAILED_FIND_DRIVER";
                         try {
-                            res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus,"","");
+                            res = symplifiedService.updateOrderStatus(orderDetails.get().getOrderId(), orderStatus, "", "");
                         } catch (Exception ex) {
                             LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
                         }
