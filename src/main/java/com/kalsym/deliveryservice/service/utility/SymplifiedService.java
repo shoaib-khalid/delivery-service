@@ -130,7 +130,7 @@ public class SymplifiedService {
     }
 
 
-    public String updateOrderStatus(String orderId, String status) {
+    public String updateOrderStatus(String orderId, String status, String trackingUrl, String spOrderId) {
         String url = order + "orders/" + orderId + "/completion-status-updates";
         try {
             RestTemplate restTemplate = new RestTemplate();
@@ -146,6 +146,8 @@ public class SymplifiedService {
             orders.setModifiedBy("");
             orders.setOrderId(orderId);
             orders.setStatus(status);
+            orders.setTrackingUrl(trackingUrl);
+            orders.setSpOrderId(spOrderId);
             logger.info("orderDeliveryConfirmationURL : " + orders.toString());
 
             HttpEntity<OrderUpdate> httpEntity;

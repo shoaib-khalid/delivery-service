@@ -1,6 +1,6 @@
 /*
  * Here comes the text of your license
- * Each line should be prefixed with  * 
+ * Each line should be prefixed with  *
  */
 package com.kalsym.deliveryservice.models.daos;
 
@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.persistence.*;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,19 +18,20 @@ import lombok.ToString;
 import java.math.BigDecimal;
 
 /**
- *
  * @author user
  */
 @Entity
 @Table(name = "delivery_orders")
 @Getter
 @Setter
-@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ToString
 public class DeliveryOrder {
-    
-    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+    public DeliveryOrder() {
+    }
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String customerId;
     String productCode;
@@ -68,4 +71,12 @@ public class DeliveryOrder {
     BigDecimal deliveryFee;
 
     BigDecimal codAmount;
+
+    public DeliveryOrder(Object data) {
+    }
+
+    public String toString() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(this);
+    }
 }

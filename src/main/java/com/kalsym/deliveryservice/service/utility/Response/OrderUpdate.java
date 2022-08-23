@@ -14,4 +14,6 @@ public class OrderUpdate {
     String orderId;
 
     String status;
+    String trackingUrl;
+    String spOrderId;
 }
