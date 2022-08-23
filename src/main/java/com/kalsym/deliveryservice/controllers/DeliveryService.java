@@ -807,6 +807,7 @@ public class DeliveryService {
                     deliveryOrderOption.setTotalRequest(deliveryOrderOption.getTotalRequest() + 1);
                     deliveryOrderOption.setDeliveryFee(BigDecimal.valueOf(quotation.getAmount()));
                     deliveryOrderOption.setStoreId(quotation.getStoreId());
+                    deliveryOrderOption.setVehicleType(quotation.getVehicleType());
                     deliveryOrderOption.setTotalWeightKg(quotation.getTotalWeightKg());
                     DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrderOption);
 
@@ -947,7 +948,7 @@ public class DeliveryService {
                 deliveryOrder.setVehicleType(orderCreated.getVehicleType());
                 deliveryOrder.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
                 deliveryOrder.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
-                deliveryOrder.setStatus("");
+                deliveryOrder.setStatus("ASSIGNING_DRIVER");
                 String deliveryType = stores.getType();
                 if (deliveryType.contains("ADHOC")) {
                     deliveryOrder.setSystemStatus(DeliveryCompletionStatus.ASSIGNING_RIDER.name());
@@ -1054,7 +1055,7 @@ public class DeliveryService {
         } else {
             systemTransactionId = deliveryOrderOption.getSystemTransactionId();
         }
-        Optional<StoreOrder> optProduct = storeOrderRepository.findById(orderId);
+        Optional<StoreOrder> optStoreOrder = storeOrderRepository.findById(orderId);
 
         LogUtil.info(logprefix, location, "", "");
         // Optional<DeliveryQuotation> quotation =
@@ -1062,9 +1063,9 @@ public class DeliveryService {
         LogUtil.info(systemTransactionId, location, "Quotation : ", quotation.toString());
         LogUtil.info(systemTransactionId, location, "schedule : ", submitDelivery.toString());
         Order orderDetails = new Order();
-        orderDetails.setPaymentType(optProduct.get().getPaymentType());
-        LogUtil.info(systemTransactionId, location, "Order Amount : ", String.valueOf(optProduct.get().getTotal() - quotation.getAmount()));
-        orderDetails.setOrderAmount(optProduct.get().getTotal() - quotation.getAmount());
+        orderDetails.setPaymentType(optStoreOrder.get().getPaymentType());
+        LogUtil.info(systemTransactionId, location, "Order Amount : ", String.valueOf(optStoreOrder.get().getTotal() - quotation.getAmount()));
+        orderDetails.setOrderAmount(optStoreOrder.get().getTotal() - quotation.getAmount());
         orderDetails.setTotalParcel(1);
         orderDetails.setPieces(quotation.getTotalPieces());
         // orderDetails.setSignature(quotation.getSignature()); //TODO:ADD BACK
@@ -1090,8 +1091,8 @@ public class DeliveryService {
 
         Delivery delivery = new Delivery();
 
-        pickup.setPickupContactName(quotation.getPickupContactName());
-        pickup.setPickupContactPhone(quotation.getPickupContactPhone());
+        pickup.setPickupContactName(optStoreOrder.get().getStore().getName()); //TODO : CHANGE TO STORE NAME
+        pickup.setPickupContactPhone(optStoreOrder.get().getStore().getPhoneNumber());
         pickup.setPickupAddress(quotation.getPickupAddress());
         pickup.setPickupPostcode(quotation.getPickupPostcode());
         pickup.setVehicleType(VehicleType.valueOf(quotation.getVehicleType()));
@@ -1107,7 +1108,7 @@ public class DeliveryService {
             pickup.setLongitude(null);
             pickup.setLatitude(null);
         }
-        Optional<Store> store = storeRepository.findById(quotation.getStoreId());
+        Optional<Store> store = storeRepository.findById(optStoreOrder.get().getStore().getId());
 
         if (store.get().getRegionCountryId().equals("PAK")) {
             if (store.get().getCostCenterCode() != null) {
@@ -1172,10 +1173,10 @@ public class DeliveryService {
                 deliveryOrder.setPickupContactPhone(orderDetails.getPickup().getPickupContactPhone());
                 deliveryOrder.setItemType(orderDetails.getItemType().name());
                 deliveryOrder.setDeliveryProviderId(orderDetails.getDeliveryProviderId());
-                deliveryOrder.setTotalWeightKg(orderDetails.getTotalWeightKg());
+                deliveryOrder.setTotalWeightKg(quotation.getTotalWeightKg());
                 deliveryOrder.setProductCode(orderDetails.getProductCode());
                 deliveryOrder.setDeliveryProviderId(orderDetails.getDeliveryProviderId());
-                deliveryOrder.setStoreId(orderDetails.getStoreId());
+                deliveryOrder.setStoreId(quotation.getStoreId());
                 deliveryOrder.setSystemTransactionId(systemTransactionId);
                 deliveryOrder.setOrderId(orderId);
                 deliveryOrder.setDeliveryQuotationId(quotation.getId());
