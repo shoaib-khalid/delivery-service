@@ -855,7 +855,7 @@ public class DeliveryService {
                 submitOrderResult.isSuccess = true;
                 response.setSuccessStatus(HttpStatus.OK);
                 response.setData(submitOrderResult);
-                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, "");
+                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, " Response Body : "+ submitOrderResult.toString());
                 return response;
             } else if (processResult.resultCode == 2) {
                 LogUtil.info(systemTransactionId, location, "Response with Pending Status  : " + processResult.resultCode, processResult.resultString);
