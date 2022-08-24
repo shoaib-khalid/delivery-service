@@ -629,7 +629,21 @@ public class DeliveryService {
         } else {
             orderDetails.setShipmentValue(quotation.getAmount());
         }
-        orderDetails.setOrderId(orderId);
+        Optional<StoreOrder> so = storeOrderRepository.findById(orderId);
+
+        if (so.get().getCompletionStatus().equals(OrderStatus.CANCELED_BY_MERCHANT) || so.get().getCompletionStatus().equals(OrderStatus.FAILED) || so.get().getCompletionStatus().equals(OrderStatus.REJECTED_BY_STORE)) {
+            List<OrderPaymentDetail> opd = paymentDetailRepository.findAllByDeliveryQuotationReferenceId(refId.toString());
+            Optional<OrderPaymentDetail> exist = opd.stream().filter(quote -> quote.getOrder().getCompletionStatus().equals(OrderStatus.AWAITING_PICKUP)).findFirst();
+            if (exist.isPresent()) {
+                System.err.println("Store Order ID  :::::::: " + exist.get().getOrderId());
+
+                orderDetails.setOrderId(exist.get().getOrderId());
+            } else {
+                orderDetails.setOrderId(orderId);
+            }
+        } else {
+            orderDetails.setOrderId(orderId);
+        }
 
         Pickup pickup = new Pickup();
 
@@ -732,7 +746,7 @@ public class DeliveryService {
                     deliveryOrder.setStoreId(quotation.getStoreId());
                     deliveryOrder.setTotalWeightKg(quotation.getTotalWeightKg());
                     deliveryOrder.setSystemTransactionId(systemTransactionId);
-                    deliveryOrder.setOrderId(orderId);
+                    deliveryOrder.setOrderId(orderDetails.getOrderId());
                     deliveryOrder.setDeliveryQuotationId(quotation.getId());
 
                     DeliveryOrder orderCreated = submitOrderResult.orderCreated;
@@ -784,7 +798,7 @@ public class DeliveryService {
                     }
 
                     quotation.setSpOrderId(orderCreated.getSpOrderId());
-                    quotation.setOrderId(orderId);
+                    quotation.setOrderId(orderDetails.getOrderId());
                     quotation.setUpdatedDate(new Date());
                     LogUtil.info(systemTransactionId, location, "Delivery Order :  ", deliveryOrder.toString());
 
@@ -792,7 +806,7 @@ public class DeliveryService {
                     submitOrderResult.status = deliveryOrder.getStatus();
                     submitOrderResult.message = processResult.resultString;
                     submitOrderResult.systemTransactionId = systemTransactionId;
-                    submitOrderResult.orderId = orderId;
+                    submitOrderResult.orderId = orderDetails.getOrderId();
 
                 } else {
                     DeliveryOrder orderCreated = submitOrderResult.orderCreated;
@@ -843,7 +857,7 @@ public class DeliveryService {
                     }
 
                     quotation.setSpOrderId(orderCreated.getSpOrderId());
-                    quotation.setOrderId(orderId);
+                    quotation.setOrderId(orderDetails.getOrderId());
                     quotation.setUpdatedDate(new Date());
                     LogUtil.info(systemTransactionId, location, "Delivery Order If Exist :  ", deliveryOrderOption.toString());
 
@@ -851,7 +865,7 @@ public class DeliveryService {
                     submitOrderResult.status = orderCreated.getStatus();
                     submitOrderResult.message = processResult.resultString;
                     submitOrderResult.systemTransactionId = systemTransactionId;
-                    submitOrderResult.orderId = orderId;
+                    submitOrderResult.orderId = orderDetails.getOrderId();
 
                 }
                 deliveryQuotationRepository.save(quotation);
@@ -864,7 +878,7 @@ public class DeliveryService {
             } else if (processResult.resultCode == 2) {
                 LogUtil.info(systemTransactionId, location, "Response with Pending Status  : " + processResult.resultCode, processResult.resultString);
 
-                quotation.setOrderId(orderId);
+                quotation.setOrderId(orderDetails.getOrderId());
                 quotation.setUpdatedDate(new Date());
                 deliveryQuotationRepository.save(quotation);
                 SubmitOrderResult orderResult = (SubmitOrderResult) processResult.returnObject;
@@ -873,7 +887,7 @@ public class DeliveryService {
                 orderResult.message = processResult.resultString;
                 orderResult.status = "PENDING";
                 orderResult.systemTransactionId = systemTransactionId;
-                orderResult.orderId = orderId;
+                orderResult.orderId = orderDetails.getOrderId();
                 orderResult.orderCreated = null;
 
                 response.setData(orderResult);
@@ -886,7 +900,7 @@ public class DeliveryService {
 
             } else {
                 LogUtil.info(systemTransactionId, location, "Response with Failed Status  : " + processResult.resultCode, processResult.resultString);
-                quotation.setOrderId(orderId);
+                quotation.setOrderId(orderDetails.getOrderId());
                 quotation.setUpdatedDate(new Date());
                 deliveryQuotationRepository.save(quotation);
       /*      SubmitOrderResult orderResult = (SubmitOrderResult) processResult.returnObject;
@@ -904,7 +918,7 @@ public class DeliveryService {
                 orderResult.message = processResult.resultString;
                 orderResult.status = "PENDING";
                 orderResult.systemTransactionId = systemTransactionId;
-                orderResult.orderId = orderId;
+                orderResult.orderId = orderDetails.getOrderId();
                 orderResult.orderCreated = null;
 
                 response.setData(orderResult);
@@ -933,7 +947,7 @@ public class DeliveryService {
                 deliveryOrder.setStoreId(quotation.getStoreId());
                 deliveryOrder.setTotalWeightKg(quotation.getTotalWeightKg());
                 deliveryOrder.setSystemTransactionId(systemTransactionId);
-                deliveryOrder.setOrderId(orderId);
+                deliveryOrder.setOrderId(orderDetails.getOrderId());
                 deliveryOrder.setDeliveryQuotationId(quotation.getId());
 
                 SubmitOrderResult orderResult = new SubmitOrderResult();
@@ -978,7 +992,7 @@ public class DeliveryService {
                 orderStatusRepository.save(orderStatus); //SAVE ORDER STATUS LIST
 
                 quotation.setSpOrderId(orderCreated.getSpOrderId());
-                quotation.setOrderId(orderId);
+                quotation.setOrderId(orderDetails.getOrderId());
                 quotation.setUpdatedDate(new Date());
                 response.setData(orderResult);
                 response.setMessage("");

@@ -2,6 +2,8 @@ package com.kalsym.deliveryservice.models.daos;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.kalsym.deliveryservice.models.enums.OrderStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -65,9 +67,9 @@ public class StoreOrder implements Serializable {
     @Column(nullable = true)
     private Double deliveryDiscount;
 
-    private String appliedDiscountDescription ;
+    private String appliedDiscountDescription;
 
-    private String deliveryDiscountDescription ;
+    private String deliveryDiscountDescription;
 
     private Boolean beingProcess;
 
@@ -97,4 +99,10 @@ public class StoreOrder implements Serializable {
         //created = order.getCreated();
         //updated = order.getUpdated();
     }
+
+    public String toString() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(this);
+    }
 }
+
