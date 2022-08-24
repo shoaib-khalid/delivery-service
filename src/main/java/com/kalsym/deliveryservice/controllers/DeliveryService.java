@@ -649,10 +649,13 @@ public class DeliveryService {
 
         Delivery delivery = new Delivery();
 
+        Optional<StoreOrder> getStoreDetails = storeOrderRepository.findById(orderDetails.getOrderId());
+
+
 //        pickup.setPickupContactName(quotation.getPickupContactName()); //TODO : CHANGE TO STORE NAME
 //        pickup.setPickupContactPhone(quotation.getPickupContactPhone());
-        pickup.setPickupContactName(optStoreOrder.get().getStore().getName()); //TODO : CHANGE TO STORE NAME
-        pickup.setPickupContactPhone(optStoreOrder.get().getStore().getPhoneNumber());
+        pickup.setPickupContactName(getStoreDetails.get().getStore().getName()); //TODO : CHANGE TO STORE NAME
+        pickup.setPickupContactPhone(getStoreDetails.get().getStore().getPhoneNumber());
         pickup.setPickupAddress(quotation.getPickupAddress());
         pickup.setPickupPostcode(quotation.getPickupPostcode());
         pickup.setVehicleType(VehicleType.valueOf(quotation.getVehicleType()));
@@ -729,8 +732,9 @@ public class DeliveryService {
                 // successfully submit order to provider
                 // store result in delivery order
                 SubmitOrderResult submitOrderResult = (SubmitOrderResult) processResult.returnObject;
+                DeliveryOrder exist = deliveryOrdersRepository.findByOrderId(orderDetails.getOrderId());
 
-                if (deliveryOrderOption == null) {
+                if (exist == null) {
                     DeliveryOrder deliveryOrder = new DeliveryOrder();
                     deliveryOrder.setCustomerId(orderDetails.getCustomerId());
                     deliveryOrder.setPickupAddress(orderDetails.getPickup().getPickupAddress());
