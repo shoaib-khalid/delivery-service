@@ -1492,11 +1492,14 @@ public class DeliveryService {
             orderStatus = "REQUESTING_DELIVERY_FAILED";
         }
 
-        DeliveryOrder orderCreated = new DeliveryOrder(response.getData());
-        LogUtil.info("Retry Place Order", location, "Delivery Order : ", orderCreated.toString());
+        SubmitOrderResult orderCreated = (SubmitOrderResult) response.getData();
+        DeliveryOrder o = orderCreated.orderCreated;
+
+        LogUtil.info("Retry Place Order", location, "SubmitOrderResult : ", orderCreated.toString());
+        LogUtil.info("Retry Place Order", location, "Delivery Order : ", o.toString());
 
 
-        String res = symplifiedService.updateOrderStatus(quotation.get().getOrderId(), orderStatus, orderCreated.getCustomerTrackingUrl(), orderCreated.getSpOrderId());
+        String res = symplifiedService.updateOrderStatus(quotation.get().getOrderId(), orderStatus, o.getCustomerTrackingUrl(), o.getSpOrderId());
     }
 
     public ResponseEntity<HttpReponse> getDeliveryRiderDetails(String orderId) {
