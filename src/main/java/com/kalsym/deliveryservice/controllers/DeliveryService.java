@@ -963,11 +963,11 @@ public class DeliveryService {
                 response.setMessage("Rider Will Contact You");
 
                 DeliveryOrder orderCreated = orderResult.orderCreated;
-                deliveryOrder.setCreatedDate(orderCreated.getCreatedDate());
+                deliveryOrder.setCreatedDate(String.valueOf(new Date()));
                 deliveryOrder.setUpdatedDate(orderCreated.getCreatedDate());
                 deliveryOrder.setSpOrderId("");
                 deliveryOrder.setSpOrderName(orderCreated.getSpOrderName());
-                deliveryOrder.setVehicleType(orderCreated.getVehicleType());
+                deliveryOrder.setVehicleType(quotation.getVehicleType());
                 deliveryOrder.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
                 deliveryOrder.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
                 deliveryOrder.setStatus("ASSIGNING_DRIVER");
@@ -1170,6 +1170,19 @@ public class DeliveryService {
             orderDetails.setHeight(deliveryVehicleTypes.getHeight());
             orderDetails.setWidth(deliveryVehicleTypes.getWidth());
             orderDetails.setLength(deliveryVehicleTypes.getLength());
+        }
+
+        List<OrderPaymentDetail> orderList = paymentDetailRepository.findAllByDeliveryQuotationReferenceId(String.valueOf(oldQuotationId));
+        List<Store> s = new ArrayList<>();
+
+        for (OrderPaymentDetail orderPaymentDetail : orderList) {
+            Optional<StoreOrder> storeOrder = storeOrderRepository.findById(orderPaymentDetail.getOrderId());
+            storeOrder.ifPresent(order -> s.add(storeRepository.getOne(order.getStoreId())));
+        }
+
+        orderDetails.setCombinedShip(quotation.isCombinedDelivery());
+        if (quotation.isCombinedDelivery()) {
+            orderDetails.setStoreList(s);
         }
 
         System.err.println("COST CENTER CODE : " + orderDetails.getPickup().getCostCenterCode() + " STORE ID " + orderDetails.getStoreId());

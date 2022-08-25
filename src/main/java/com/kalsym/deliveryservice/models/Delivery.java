@@ -36,8 +36,8 @@ public class Delivery {
     String deliveryContactEmail;
     String deliveryZone;
 
-    @NotBlank(message = "Enter address to deliver your food.")
+//    @NotBlank(message = "Enter address to deliver your food.")
     BigDecimal latitude;
-    @NotBlank(message = "Enter address to deliver your food.")
+//    @NotBlank(message = "Enter address to deliver your food.")
     BigDecimal longitude;
 }
