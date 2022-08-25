@@ -519,9 +519,10 @@ public class DeliveryService {
                     }
                     result.isError = list.isError;
                     result.providerId = list.providerId;
+                    System.err.println("Error Message :::::  " + list.message);
                     if (list.message != null) {
-                        DeliveryErrorDescription message = errorDescriptionRepository.getOne(list.message);
-                        result.message = message.getErrorDescription();
+                        Optional<DeliveryErrorDescription> message = errorDescriptionRepository.findByError(list.message);
+                        result.message = message.map(DeliveryErrorDescription::getErrorDescription).orElseGet(() -> list.message);
                     } else {
                         result.message = list.message;
                     }
