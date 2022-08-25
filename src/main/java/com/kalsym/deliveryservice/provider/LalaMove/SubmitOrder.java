@@ -50,6 +50,7 @@ public class SubmitOrder extends SyncDispatcher {
     private String shareLink;
     private String status;
     private String partner;
+    private String contactNameForCombinedDelivery;
 
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId,
                        SequenceNumberRepository sequenceNumberRepository) {
@@ -67,6 +68,7 @@ public class SubmitOrder extends SyncDispatcher {
         this.waitTimeout = Integer.parseInt((String) config.get("submitorder_wait_timeout"));
         this.partner = (String) config.get("partner");
         this.order = order;
+        this.contactNameForCombinedDelivery = (String) config.get("contactNameForCombinedDelivery");
     }
 
     @Override
@@ -198,25 +200,34 @@ public class SubmitOrder extends SyncDispatcher {
         JsonArray stop = new JsonArray();
         data.addProperty("quotationId", order.getQuotationId());
         sender.addProperty("stopId", order.getPickupStopId());
-        sender.addProperty("name", order.getPickup().getPickupContactName());
+        if (order.isCombinedShip()) {
+            sender.addProperty("name", this.contactNameForCombinedDelivery);
+            recipient.addProperty("remarks", order.getRemarks());
+            metadata.addProperty("restaurantOrderId", order.getOrderId());
+            List<String> restaurantName = new ArrayList<>();
+            StringBuilder restaurant = new StringBuilder();
+            for (Store store : order.getStoreList()) {
+//                restaurantName.add(store.getName());
+                restaurant.append(store.getName());
+            }
+            metadata.addProperty("restaurantName", restaurant.toString());
+            data.add("metadata", metadata);
+        } else {
+            sender.addProperty("name", order.getPickup().getPickupContactName());
+            recipient.addProperty("remarks", order.getRemarks());
+
+        }
         sender.addProperty("phone", pickupContactNO);
         recipient.addProperty("stopId", order.getDeliveryStopId());
         recipient.addProperty("name", order.getDelivery().getDeliveryContactName());
         recipient.addProperty("phone", deliveryContactNo);
-        recipient.addProperty("remarks", order.getRemarks());
         recipients.add(recipient);
         data.add("sender", sender);
         data.add("recipients", recipients);
         data.addProperty("isPODEnabled", true);
         data.addProperty("isRecipientSMSEnabled", true);
         if (order.isCombinedShip()) {
-            metadata.addProperty("restaurantOrderId", order.getOrderId());
-            List<String> restaurantName = new ArrayList<>();
-            for (Store store : order.getStoreList()) {
-                restaurantName.add(store.getName());
-            }
-            metadata.addProperty("restaurantName", restaurantName.toString());
-            data.add("metadata", metadata);
+
         }
         requestBody.add("data", data);
 

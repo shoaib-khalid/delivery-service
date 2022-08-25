@@ -1618,8 +1618,14 @@ public class DeliveryService {
             o.setRegionCountry(store.getRegionCountryId());
             Pickup pickup = new Pickup();
             System.err.println("STORE  :::: " + store.getId());
-            pickup.setLongitude(new BigDecimal(store.getLongitude().replaceAll(" ", "")));
-            pickup.setLatitude(new BigDecimal(store.getLatitude().replaceAll(" ", "")));
+            try {
+                pickup.setLongitude(new BigDecimal(store.getLongitude().replaceAll(" ", "")));
+                pickup.setLatitude(new BigDecimal(store.getLatitude().replaceAll(" ", "")));
+            } catch (Exception ex) {
+                LogUtil.error(logprefix, location, "Exception " + ex.getMessage(), "StoreId  ::: " + store.getId() + " :::: Get Lat & Lang ", ex);
+            }
+
+
             o.setPickup(pickup);
             CartDetails cartDetails = symplifiedService.getTotalWeight(o.getCartId());
             if (cartDetails != null) {
