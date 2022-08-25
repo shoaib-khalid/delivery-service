@@ -190,8 +190,8 @@ public class DeliveryService {
         pickup.setPickupState(store.getRegionCountryStateId());
         pickup.setPickupPostcode(store.getPostcode());
         try {
-            pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(store.getLongitude())));
-            pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(store.getLatitude())));
+            pickup.setLongitude(BigDecimal.valueOf(Double.parseDouble(store.getLongitude().replaceAll(" ", ""))));
+            pickup.setLatitude(BigDecimal.valueOf(Double.parseDouble(store.getLatitude().replaceAll(" ", ""))));
 
         } catch (Exception ex) {
 
@@ -1617,8 +1617,9 @@ public class DeliveryService {
 
             o.setRegionCountry(store.getRegionCountryId());
             Pickup pickup = new Pickup();
-            pickup.setLongitude(new BigDecimal(store.getLongitude()));
-            pickup.setLatitude(new BigDecimal(store.getLatitude()));
+            System.err.println("STORE  :::: " + store.getId());
+            pickup.setLongitude(new BigDecimal(store.getLongitude().replaceAll(" ", "")));
+            pickup.setLatitude(new BigDecimal(store.getLatitude().replaceAll(" ", "")));
             o.setPickup(pickup);
             CartDetails cartDetails = symplifiedService.getTotalWeight(o.getCartId());
             if (cartDetails != null) {
@@ -2079,8 +2080,7 @@ public class DeliveryService {
                                     if (quotation.getDelivery().getLongitude() == null) {
                                         Optional<DeliveryErrorDescription> message = errorDescriptionRepository.findById("ERR_REVERSE_GEOCODE_FAILURE");
                                         result.message = message.get().getErrorDescription();
-                                    }
-                                    else{
+                                    } else {
                                         Optional<DeliveryErrorDescription> message = errorDescriptionRepository.findById(list.message);
                                         if (message.isPresent()) {
                                             result.message = message.get().getErrorDescription();
