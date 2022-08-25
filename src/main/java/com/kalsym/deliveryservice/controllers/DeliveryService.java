@@ -2075,11 +2075,26 @@ public class DeliveryService {
                             result.isError = list.isError;
                             result.providerId = list.providerId;
                             if (list.message != null) {
-                                Optional<DeliveryErrorDescription> message = errorDescriptionRepository.findById(list.message);
-                                if (message.isPresent()) {
-                                    result.message = message.get().getErrorDescription();
+                                if (list.isError) {
+                                    if (quotation.getDelivery().getLongitude() == null) {
+                                        Optional<DeliveryErrorDescription> message = errorDescriptionRepository.findById("ERR_REVERSE_GEOCODE_FAILURE");
+                                        result.message = message.get().getErrorDescription();
+                                    }
+                                    else{
+                                        Optional<DeliveryErrorDescription> message = errorDescriptionRepository.findById(list.message);
+                                        if (message.isPresent()) {
+                                            result.message = message.get().getErrorDescription();
+                                        } else {
+                                            result.message = list.message;
+                                        }
+                                    }
                                 } else {
-                                    result.message = list.message;
+                                    Optional<DeliveryErrorDescription> message = errorDescriptionRepository.findById(list.message);
+                                    if (message.isPresent()) {
+                                        result.message = message.get().getErrorDescription();
+                                    } else {
+                                        result.message = list.message;
+                                    }
                                 }
                             } else {
                                 result.message = list.message;
