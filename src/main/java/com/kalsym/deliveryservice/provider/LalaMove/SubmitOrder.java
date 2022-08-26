@@ -51,6 +51,8 @@ public class SubmitOrder extends SyncDispatcher {
     private String status;
     private String partner;
     private String contactNameForCombinedDelivery;
+    private String contactPhoneForCombinedDelivery;
+
 
     public SubmitOrder(CountDownLatch latch, HashMap config, Order order, String systemTransactionId,
                        SequenceNumberRepository sequenceNumberRepository) {
@@ -69,6 +71,7 @@ public class SubmitOrder extends SyncDispatcher {
         this.partner = (String) config.get("partner");
         this.order = order;
         this.contactNameForCombinedDelivery = (String) config.get("contactNameForCombinedDelivery");
+        this.contactPhoneForCombinedDelivery = (String) config.get("contactNo");
     }
 
     @Override
@@ -212,12 +215,15 @@ public class SubmitOrder extends SyncDispatcher {
             }
             metadata.addProperty("restaurantName", restaurant.toString());
             data.add("metadata", metadata);
+            sender.addProperty("phone", contactPhoneForCombinedDelivery);
+
         } else {
             sender.addProperty("name", order.getPickup().getPickupContactName());
             recipient.addProperty("remarks", order.getRemarks());
+            sender.addProperty("phone", pickupContactNO);
+
 
         }
-        sender.addProperty("phone", pickupContactNO);
         recipient.addProperty("stopId", order.getDeliveryStopId());
         recipient.addProperty("name", order.getDelivery().getDeliveryContactName());
         recipient.addProperty("phone", deliveryContactNo);
