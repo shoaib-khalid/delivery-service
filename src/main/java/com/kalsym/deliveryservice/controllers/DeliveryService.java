@@ -14,6 +14,7 @@ import com.kalsym.deliveryservice.service.utility.Response.StoreDeliveryResponse
 import com.kalsym.deliveryservice.service.utility.Response.StoreResponseData;
 import com.kalsym.deliveryservice.service.utility.SymplifiedService;
 import com.kalsym.deliveryservice.utils.Area;
+import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import com.kalsym.deliveryservice.utils.StringUtility;
 import lombok.Getter;
@@ -964,8 +965,8 @@ public class DeliveryService {
                 response.setMessage("Rider Will Contact You");
 
                 DeliveryOrder orderCreated = orderResult.orderCreated;
-                deliveryOrder.setCreatedDate(String.valueOf(new Date()));
-                deliveryOrder.setUpdatedDate(orderCreated.getCreatedDate());
+                deliveryOrder.setCreatedDate(DateTimeUtil.currentTimestamp());
+                deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                 deliveryOrder.setSpOrderId("");
                 deliveryOrder.setSpOrderName(orderCreated.getSpOrderName());
                 deliveryOrder.setVehicleType(quotation.getVehicleType());
