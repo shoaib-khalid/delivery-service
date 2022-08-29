@@ -475,7 +475,8 @@ public class ProcessRequest {
                 //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
             }
 
-            response.resultCode = 0;
+
+            response.resultCode =spCallbackResult.resultCode;
             response.returnObject = spCallbackResult;
         } else if (id != null) {
 
@@ -504,7 +505,8 @@ public class ProcessRequest {
                 //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
             }
 
-            response.resultCode = 0;
+            System.err.println("CALLBACK :::: " + spCallbackResult);
+            response.resultCode =spCallbackResult.resultCode;
             response.returnObject = spCallbackResult;
 
         } else {

@@ -16,7 +16,7 @@ public class OrderCallback extends SyncDispatcher {
     private String spOrderId;
     private final HashMap productMap;
     private final String logprefix;
-    private final String location="LalamoveOrderCallback";
+    private final String location = "LalamoveOrderCallback";
     private final String systemTransactionId;
     private final JsonObject jsonBody;
 
@@ -28,7 +28,7 @@ public class OrderCallback extends SyncDispatcher {
         productMap = (HashMap) config.get("productCodeMapping");
         Gson gson = new Gson();
         String jsonString = jsonBody.toString();
-        LogUtil.info(logprefix, location, "Request Body:"+jsonString, "");
+        LogUtil.info(logprefix, location, "Request Body:" + jsonString, "");
         this.jsonBody = new Gson().fromJson(jsonString, JsonObject.class);
     }
 
@@ -37,8 +37,9 @@ public class OrderCallback extends SyncDispatcher {
         LogUtil.info(logprefix, location, "Process start", "");
         LogUtil.info(logprefix, location, "Process start", "");
         ProcessResult response = new ProcessResult();
-        SpCallbackResult callbackResult =extractResponseBody();
-        response.returnObject=callbackResult;
+        SpCallbackResult callbackResult = extractResponseBody();
+        response.returnObject = callbackResult;
+        response.resultCode = -1;
         LogUtil.info(logprefix, location, "Process finish", "");
         return response;
     }
@@ -49,12 +50,14 @@ public class OrderCallback extends SyncDispatcher {
         try {
             String status = jsonBody.get("data").getAsJsonObject().get("order").getAsJsonObject().get("status").getAsString();
             String spOrderId = jsonBody.get("data").getAsJsonObject().get("order").getAsJsonObject().get("orderId").getAsString();
-            String spDriverId =  jsonBody.get("data").getAsJsonObject().get("order").getAsJsonObject().get("driverId").getAsString();
-            callbackResult.spOrderId=spOrderId;
-            callbackResult.status=status;
-            callbackResult.driverId =spDriverId;
-            LogUtil.info(logprefix, location, "SpOrderId:"+spOrderId+" Status:"+status, "");
+            String spDriverId = jsonBody.get("data").getAsJsonObject().get("order").getAsJsonObject().get("driverId").getAsString();
+            callbackResult.spOrderId = spOrderId;
+            callbackResult.status = status;
+            callbackResult.driverId = spDriverId;
+            callbackResult.resultCode = 0;
+            LogUtil.info(logprefix, location, "SpOrderId:" + spOrderId + " Status:" + status, "");
         } catch (Exception ex) {
+            callbackResult.resultCode = -1;
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
         }
         return callbackResult;
