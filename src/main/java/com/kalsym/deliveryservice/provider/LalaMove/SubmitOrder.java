@@ -205,14 +205,15 @@ public class SubmitOrder extends SyncDispatcher {
         sender.addProperty("stopId", order.getPickupStopId());
         if (order.isCombinedShip()) {
             sender.addProperty("name", this.contactNameForCombinedDelivery);
-            recipient.addProperty("remarks", order.getRemarks());
             metadata.addProperty("restaurantOrderId", order.getOrderId());
             List<String> restaurantName = new ArrayList<>();
             StringBuilder restaurant = new StringBuilder();
             for (Store store : order.getStoreList()) {
-//                restaurantName.add(store.getName());
+                restaurantName.add(store.getName());
                 restaurant.append(store.getName());
             }
+            recipient.addProperty("remarks", restaurantName.toString());
+
             metadata.addProperty("restaurantName", restaurant.toString());
             data.add("metadata", metadata);
             sender.addProperty("phone", contactPhoneForCombinedDelivery);
@@ -285,7 +286,7 @@ public class SubmitOrder extends SyncDispatcher {
 
         String url = this.queryOrder_url + orderRef;
         String timeStamp = String.valueOf(System.currentTimeMillis());
-        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v2/orders/" + orderRef + "\r\n\r\n";
+        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v3/orders/" + orderRef + "\r\n\r\n";
 
         byte[] byteSig = mac.doFinal(rawSignature.getBytes());
         String signature = DatatypeConverter.printHexBinary(byteSig);
@@ -298,6 +299,7 @@ public class SubmitOrder extends SyncDispatcher {
         headers.set("Content-Type", "application/json");
         headers.set("Authorization", "hmac " + token);
         headers.set("X-LLM-Country", "MY_KUL");
+        headers.set("Market", "MY");
         headers.set("X-Request-ID", transactionId);
         HttpEntity<String> request = new HttpEntity(headers);
         LogUtil.info(logprefix, location, "orderDetails url: " + url, "");
