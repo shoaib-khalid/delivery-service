@@ -25,7 +25,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DateFormat;
@@ -436,7 +435,6 @@ public class DeliveryService {
                                     deliveryOrder.setAmount(totalPrice);
                                     deliveryOrder.setStatus("PENDING");
                                     deliveryOrder.setServiceFee(d.getServiceFee().doubleValue());
-                                    DecimalFormat decimalFormat = new DecimalFormat("##.00");
                                     double dPrice = totalPrice;
                                     bd = new BigDecimal(dPrice);
                                     bd = bd.setScale(2, RoundingMode.HALF_UP);
@@ -447,7 +445,6 @@ public class DeliveryService {
 
                                         deliveryOrder.setAmount(totalPrice);
                                         deliveryOrder.setServiceFee(totalPrice - Double.parseDouble(list.price.toString()));
-                                        DecimalFormat decimalFormat = new DecimalFormat("##.00");
                                         double dPrice = totalPrice;
                                         bd = new BigDecimal(dPrice);
                                         bd = bd.setScale(2, RoundingMode.HALF_UP);
@@ -879,7 +876,7 @@ public class DeliveryService {
                 submitOrderResult.isSuccess = true;
                 response.setSuccessStatus(HttpStatus.OK);
                 response.setData(submitOrderResult);
-                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, " Response Body : " + submitOrderResult.toString());
+                LogUtil.info(systemTransactionId, location, "Response with " + HttpStatus.OK, " Response Body : " + submitOrderResult);
                 return response;
             } else if (processResult.resultCode == 2) {
                 LogUtil.info(systemTransactionId, location, "Response with Pending Status  : " + processResult.resultCode, processResult.resultString);
@@ -967,7 +964,7 @@ public class DeliveryService {
                 DeliveryOrder orderCreated = orderResult.orderCreated;
                 deliveryOrder.setCreatedDate(DateTimeUtil.currentTimestamp());
                 deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
-                deliveryOrder.setSpOrderId("");
+                deliveryOrder.setSpOrderId(null);
                 deliveryOrder.setSpOrderName(orderCreated.getSpOrderName());
                 deliveryOrder.setVehicleType(quotation.getVehicleType());
                 deliveryOrder.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
@@ -987,7 +984,7 @@ public class DeliveryService {
                 DeliveryOrderStatus orderStatus = new DeliveryOrderStatus();
 
                 orderStatus.setOrder(o);
-                orderStatus.setSpOrderId(orderCreated.getSpOrderId());
+                orderStatus.setSpOrderId("");
                 orderStatus.setStatus(o.getStatus());
                 orderStatus.setDeliveryCompletionStatus(o.getSystemStatus());
                 orderStatus.setDescription(o.getStatusDescription());
@@ -1041,7 +1038,7 @@ public class DeliveryService {
                 return response;
             }
         } else {
-            LogUtil.info(systemTransactionId, location, "DeliveyOrder not found for orderId:" + id, "");
+            LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for orderId:" + id, "");
             return response;
         }
 
@@ -1049,7 +1046,7 @@ public class DeliveryService {
 
     public HttpReponse getQuotation(Long id, String url) {
 
-        String logprefix = " Delivery Service getQuotaion Order";
+        String logprefix = " Delivery Service getQuotation Order";
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
         DeliveryQuotation quotation = deliveryQuotationRepository.getOne(id);
         LogUtil.info(logprefix, location, "Quotation ", quotation.toString());
@@ -1347,7 +1344,7 @@ public class DeliveryService {
         LogUtil.info(systemTransactionId, location, " Find delivery order for orderId:" + orderId, "");
         Optional<DeliveryOrder> orderDetails = deliveryOrdersRepository.findById(orderId);
         if (orderDetails.isPresent()) {
-            if (!orderDetails.get().getSpOrderId().isEmpty()) {
+            if (orderDetails.get().getSpOrderId() != null) {
                 // DeliveryOrder o = deliveryOrdersRepository.getOne(orderId);
                 ProcessRequest process = new ProcessRequest(systemTransactionId, orderDetails.get(), providerRatePlanRepository, providerConfigurationRepository, providerRepository);
                 ProcessResult processResult = process.QueryOrder();
@@ -1770,7 +1767,7 @@ public class DeliveryService {
                         distance = Area.distance(Double.parseDouble(quotation.getDelivery().getLatitude().toString()), Double.parseDouble(quotation.getPickup().getLatitude().toString()), Double.parseDouble(quotation.getDelivery().getLongitude().toString()), Double.parseDouble(quotation.getPickup().getLongitude().toString()), 0.00, 0.00);
 
                     } catch (Exception ex) {
-                        LogUtil.info(logprefix, location, "Location Execption :", ex.getMessage());
+                        LogUtil.info(logprefix, location, "Location Exception :", ex.getMessage());
                     }
 
                     if (deliveryOptions == null) {

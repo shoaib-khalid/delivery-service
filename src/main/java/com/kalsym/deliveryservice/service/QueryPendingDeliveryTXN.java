@@ -40,7 +40,7 @@ public class QueryPendingDeliveryTXN {
     @Autowired
     SymplifiedService symplifiedService;
 
-    @Scheduled(cron = "${delivery-service:0 0/05 * * * ?}")
+        @Scheduled(cron = "${delivery-service:0 0/05 * * * ?}")
     public void dailyScheduler() throws ParseException {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 
@@ -111,7 +111,7 @@ public class QueryPendingDeliveryTXN {
     }
 
 
-    @Scheduled(cron = "${pending-transaction:0 0/05 * * * ?}")
+        @Scheduled(cron = "${pending-transaction:0 0/05 * * * ?}")
     public void QueryPendingTransaction() throws ParseException {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 
@@ -133,7 +133,7 @@ public class QueryPendingDeliveryTXN {
     }
 
 
-    @Scheduled(cron = "${pending-transaction:0 0/60 * * * ?}")
+    @Scheduled(cron = "${pending-transaction:0 0 23 * * ?}")
     public void RemovePendingQuotation() throws ParseException {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 
@@ -141,8 +141,15 @@ public class QueryPendingDeliveryTXN {
 
         List<DeliveryQuotation> deliveryQuotations = deliveryQuotationRepository.findAllByUnusedQuotation();
         for (DeliveryQuotation deliveryQuotation : deliveryQuotations) {
-            LogUtil.info("QueryPendingTXN", location, "deliveryQuotation Id : " + deliveryQuotation.getId(), "");
-            deliveryQuotationRepository.delete(deliveryQuotation);
+            long day30 = 30L * 24 * 60 * 60 * 1000;
+            boolean olderThan30 = new Date().after(new Date(deliveryQuotation.getCreatedDate().getTime() + day30));
+            if (olderThan30) {
+                deliveryQuotationRepository.delete(deliveryQuotation);
+                LogUtil.info("QueryUnusedQuotation", location, "After 30 Days deliveryQuotation Id : " + deliveryQuotation.getId(), "");
+            } else
+                LogUtil.info("QueryUnusedQuotation", location, "Before 30 Days deliveryQuotation Id : " + deliveryQuotation.getId(), "");
+
+//            deliveryQuotationRepository.delete(deliveryQuotation);
         }
     }
 
