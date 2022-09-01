@@ -74,7 +74,7 @@ public class QueryOrder extends SyncDispatcher {
         }
 
 //        String url = this.queryOrder_url + spOrderId;
-        String url = "https://rest.sandbox.lalamove.com/v3/orders/" + spOrderId;
+        String url = queryOrder_url + spOrderId;
         String timeStamp = String.valueOf(System.currentTimeMillis());
         String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v3/orders/" + spOrderId + "\r\n\r\n";
         byte[] byteSig = mac.doFinal(rawSignature.getBytes());
