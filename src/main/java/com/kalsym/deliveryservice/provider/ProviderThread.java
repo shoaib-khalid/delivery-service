@@ -459,7 +459,7 @@ public class ProviderThread extends Thread implements Runnable {
                         try {
                             process = mapper.readValue(value.toString(), ProcessResult.class);
                             LogUtil.info(logprefix, location, "process : ", process.getReturnObject().toString());
-                            orderCreated = new Gson().fromJson(process.getReturnObject().toString(), JsonObject.class);
+                            orderCreated = new Gson().fromJson(mapper.writeValueAsString(process.getReturnObject()), JsonObject.class);
 
                             result = mapper.readValue(orderCreated.toString(), SubmitOrderResult.class);
                             LogUtil.info(logprefix, location, "result : ", result.toString());
