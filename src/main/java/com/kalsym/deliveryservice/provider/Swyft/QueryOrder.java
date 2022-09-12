@@ -97,6 +97,7 @@ public class QueryOrder extends SyncDispatcher {
             DeliveryOrder orderFound = new DeliveryOrder();
             orderFound.setSpOrderId(spOrderId);
             orderFound.setStatus(status);
+            orderFound.setCustomerTrackingUrl("");
 //            Awaiting Pickup
 //            Picked Up
 //            At Swyft's Warehouse

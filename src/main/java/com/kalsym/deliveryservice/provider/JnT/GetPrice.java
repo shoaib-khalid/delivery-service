@@ -40,8 +40,7 @@ public class GetPrice extends SyncDispatcher {
     private DeliveryZonePriceRepository deliveryZonePriceRepository;
 
 
-
-    public GetPrice(CountDownLatch latch, Integer providerId, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository,Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
+    public GetPrice(CountDownLatch latch, Integer providerId, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
 
         super(latch);
         this.systemTransactionId = systemTransactionId;
@@ -143,13 +142,10 @@ public class GetPrice extends SyncDispatcher {
             priceResult.resultCode = 0;
             priceResult.interval = null;
             priceResult.fulfillment = fulfillment.getFulfillment();
-
-
+            priceResult.quotationId = "";
         } else {
-
             priceResult.resultCode = -1;
             priceResult.message = jsonResp.get("msg").getAsString();
-
         }
         return priceResult;
     }

@@ -8,6 +8,9 @@ import com.kalsym.deliveryservice.provider.DriverDetailsResult;
 import com.kalsym.deliveryservice.provider.ProcessResult;
 import com.kalsym.deliveryservice.provider.SyncDispatcher;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
+import com.kalsym.deliveryservice.utils.HttpResult;
+import com.kalsym.deliveryservice.utils.HttpsGetConn;
+import com.kalsym.deliveryservice.utils.HttpsPostConn;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -76,9 +79,10 @@ public class DriverDetails extends SyncDispatcher {
             e.printStackTrace();
         }
 
-        String url = queryRiderDetails_url + order.getSpOrderId() + "/drivers/" + order.getDriverId();
+//        String url = queryRiderDetails_url + order.getSpOrderId() + "/drivers/" + order.getDriverId();
+        String url = queryRiderDetails_url + order.getSpOrderId() + "/drivers/" + order.getDriverId(); //TODO: update the url
         String timeStamp = String.valueOf(System.currentTimeMillis());
-        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v2/orders/" + order.getSpOrderId() + "/drivers/" + order.getDriverId() + "\r\n\r\n";
+        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v3/orders/" + order.getSpOrderId() + "/drivers/" + order.getDriverId() + "\r\n\r\n";
         byte[] byteSig = mac.doFinal(rawSignature.getBytes());
         String signature = DatatypeConverter.printHexBinary(byteSig);
         signature = signature.toLowerCase();
@@ -90,13 +94,23 @@ public class DriverDetails extends SyncDispatcher {
         headers.set("Content-Type", "application/json");
         headers.set("Authorization", "hmac " + token);
         headers.set("X-LLM-Country", "MY_KUL");
-        headers.set("X-Request-ID", transactionId);
+        headers.set("Market", "MY");
         HttpEntity<String> request = new HttpEntity(headers);
         System.err.println("url for orderDetails" + url);
         try {
             ResponseEntity<String> responses = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+//
+//        HashMap httpHeader = new HashMap();
+//        httpHeader.put("Content-Type", "application/json");
+//        httpHeader.put("Authorization", "hmac " + token);
+//        httpHeader.put("X-LLM-Country", "MY_KUL");
+//        httpHeader.put("Market", "MY");
+//
+//        try {
+//            HttpResult httpResult = HttpsGetConn.SendHttpsRequest("GET", this.systemTransactionId,
+//                    url, httpHeader, this.connectTimeout, this.waitTimeout);
             int statusCode = responses.getStatusCode().value();
-            LogUtil.info(logprefix, location, "Responses for driver details: ", responses.toString());
+            LogUtil.info(logprefix, location, "Responses for driver details: ", responses.getBody());
 
             if (statusCode == 200) {
                 LogUtil.info(logprefix, location, "Request successful", "");
@@ -121,14 +135,15 @@ public class DriverDetails extends SyncDispatcher {
         DriverDetailsResult driverDetailsResult = new DriverDetailsResult();
         try {
             JsonObject jsonResp = new Gson().fromJson(respString, JsonObject.class);
+            JsonObject data = jsonResp.getAsJsonObject("data");
             LogUtil.info(logprefix, location, "JsonResp from Driver Details: " + jsonResp, "");
             boolean isSuccess = true;
 //            JsonArray pod = jsonResp.get("pod").getAsJsonArray();
             LogUtil.info(logprefix, location, "isSuccess:" + isSuccess, "");
 
-            String driverName = jsonResp.get("name").getAsString();
-            String driverPhoneNo = jsonResp.get("phone").getAsString();
-            String driverCarPlateNo = jsonResp.get("plateNumber").getAsString();
+            String driverName = data.get("name").getAsString();
+            String driverPhoneNo = data.get("phone").getAsString();
+            String driverCarPlateNo = data.get("plateNumber").getAsString();
 
             RiderDetails driverDetails = new RiderDetails();
             driverDetails.setName(driverName);

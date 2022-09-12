@@ -10,7 +10,6 @@ import com.kalsym.deliveryservice.models.daos.*;
 import com.kalsym.deliveryservice.provider.*;
 import com.kalsym.deliveryservice.repositories.*;
 import com.kalsym.deliveryservice.utils.LogUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -440,15 +439,18 @@ public class ProcessRequest {
         }
     }
 
-    public ProcessResult ProcessCallback(String spIP, ProviderIpRepository providerIpRepository, int id) {
+    public ProcessResult ProcessCallback(String spIP, ProviderIpRepository providerIpRepository, Integer id) {
         //get provider rate plan  
         LogUtil.info(logPrefix, location, "Caller IP:" + spIP, "");
         //get provider based on IP
-        Optional<ProviderIp> spId = providerIpRepository.findById(spIP);
+        ProviderIp spId = null;
+        if (id == null) {
+            spId = providerIpRepository.findByIp(spIP);
+        }
 
         ProcessResult response = new ProcessResult();
-        if (spId.isPresent()) {
-            int providerId = spId.get().getSpId();
+        if (spId != null) {
+            int providerId = spId.getSpId();
             LogUtil.info(logPrefix, location, "Provider found. SpId:" + providerId, "");
             Optional<Provider> provider = providerRepository.findById(providerId);
             List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(providerId);
@@ -474,9 +476,10 @@ public class ProcessRequest {
                 //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
             }
 
-            response.resultCode = 0;
+
+            response.resultCode =spCallbackResult.resultCode;
             response.returnObject = spCallbackResult;
-        } else if (id != 0) {
+        } else if (id != null) {
 
             LogUtil.info(logPrefix, location, "Provider found. SpId:" + id, "");
             Optional<Provider> provider = providerRepository.findById(id);
@@ -503,7 +506,8 @@ public class ProcessRequest {
                 //LogUtil.info(logprefix, location, "Current ProviderThread running:"+providerThreadRunning, "");
             }
 
-            response.resultCode = 0;
+            System.err.println("CALLBACK :::: " + spCallbackResult);
+            response.resultCode =spCallbackResult.resultCode;
             response.returnObject = spCallbackResult;
 
         } else {
@@ -837,7 +841,6 @@ public class ProcessRequest {
     public synchronized void addAdditionalInfoResults(AdditionalInfoResult additionalInfoResult) {
         additionalInfoResults.add(additionalInfoResult);
     }
-
 
 
 }

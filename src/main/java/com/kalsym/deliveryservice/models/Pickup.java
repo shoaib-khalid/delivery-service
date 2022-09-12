@@ -7,6 +7,7 @@ package com.kalsym.deliveryservice.models;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
  */
 @Getter
 @Setter
+@ToString
 public class Pickup {
     String parcelReadyTime;
     String pickupDate;

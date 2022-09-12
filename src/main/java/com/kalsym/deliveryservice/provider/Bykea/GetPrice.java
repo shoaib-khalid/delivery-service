@@ -38,6 +38,9 @@ public class GetPrice extends SyncDispatcher {
     private String userAgent;
     private DeliveryZonePriceRepository deliveryZonePriceRepository;
 
+    private final String contactNo;
+
+
 
     public GetPrice(CountDownLatch latch, Integer providerId, HashMap config, Order order, String systemTransactionId, SequenceNumberRepository sequenceNumberRepository, Fulfillment fulfillment, DeliveryZonePriceRepository deliveryZonePriceRepository) {
         super(latch);
@@ -49,6 +52,9 @@ public class GetPrice extends SyncDispatcher {
         this.username = (String) config.get("username");
         this.password = (String) config.get("password");
         this.userAgent = (String) config.get("userAgent");
+
+        this.contactNo = (String) config.get("contactNo");
+
 
         this.connectTimeout = Integer.parseInt((String) config.get("getprice_connect_timeout"));
         this.waitTimeout = Integer.parseInt((String) config.get("getprice_wait_timeout"));
@@ -114,7 +120,7 @@ public class GetPrice extends SyncDispatcher {
         JsonObject dropoff = new JsonObject();
 
         requestBody.addProperty("service_code", 22);
-        phone.addProperty("phone", order.getDelivery().getDeliveryContactPhone());
+        phone.addProperty("phone", this.contactNo);
         requestBody.add("customer", phone);
         pickup.addProperty("lat", order.getPickup().getLatitude());
         pickup.addProperty("lng", order.getPickup().getLongitude());
@@ -175,6 +181,7 @@ public class GetPrice extends SyncDispatcher {
                 priceResult.resultCode = 0;
                 priceResult.interval = null;
                 priceResult.fulfillment = fulfillment.getFulfillment();
+                priceResult.quotationId = "";
             } else {
 
                 priceResult.resultCode = -1;

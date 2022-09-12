@@ -4,6 +4,10 @@
  */
 package com.kalsym.deliveryservice.models;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.kalsym.deliveryservice.controllers.DeliveryService;
+import com.kalsym.deliveryservice.models.daos.Store;
 import com.kalsym.deliveryservice.models.enums.ItemType;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
 import lombok.Getter;
@@ -12,6 +16,7 @@ import lombok.ToString;
 
 import javax.validation.Valid;
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * @author user
@@ -52,7 +57,20 @@ public class Order {
     String pickupTime;
     String signature;
     BigDecimal codAmount;
+<<<<<<< HEAD
 
+=======
+    String quotationId;
+    String deliveryStopId;
+    String pickupStopId;
+>>>>>>> staging
     Integer totalParcel;
-
+    boolean combinedShip;
+    String combinedShippingStoreId;
+    List<Store> storeList;
+    boolean mainCombinedShip;
+    public String toString() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(this);
+    }
 }

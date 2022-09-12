@@ -6,11 +6,13 @@ package com.kalsym.deliveryservice.provider;
 
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
+import lombok.ToString;
 
 /**
  *
  * @author user
  */
+@ToString
 public class SpCallbackResult {
     public int providerId;
     public String spOrderId;
@@ -21,5 +23,6 @@ public class SpCallbackResult {
     public String systemStatus;
     public String trackingUrl;
     public String driveNoPlate;
+    public int resultCode;
 
 }

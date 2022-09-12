@@ -10,11 +10,11 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor
 public class Stop{
-    public Location location;
-    public Addresses addresses;
+    public Coordinates coordinates;
+    public String address;
 
-    public Stop(Location location, Addresses addresses) {
-        this.location = location;
-        this.addresses = addresses;
+    public Stop(Coordinates coordinates, String address) {
+        this.coordinates = coordinates;
+        this.address = address;
     }
 }

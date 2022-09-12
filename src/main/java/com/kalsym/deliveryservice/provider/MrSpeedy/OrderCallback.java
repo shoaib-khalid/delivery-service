@@ -91,8 +91,10 @@ public class OrderCallback extends SyncDispatcher {
             callbackResult.riderName = riderName;
             callbackResult.riderPhone = riderPhone;
             callbackResult.driveNoPlate = carNoPlate;
+            callbackResult.resultCode=0;
             LogUtil.info(logprefix, location, "SpOrderId: " + spOrderId + " Status: " + status + " Rider Id : " + driverId, "");
         } catch (Exception ex) {
+            callbackResult.resultCode =-1;
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
         }
         return callbackResult;

@@ -68,10 +68,12 @@ public class OrderCallback extends SyncDispatcher {
                 callbackResult.status = status;
             }
             callbackResult.spOrderId = spOrderId;
+            callbackResult.resultCode =0;
 //            callbackResult.status = status;
 
             LogUtil.info(logprefix, location, "SpOrderId:" + spOrderId + " Status:" + status, "");
         } catch (Exception ex) {
+            callbackResult.resultCode=-1;
             LogUtil.error(logprefix, location, "Error extracting result", "", ex);
         }
         return callbackResult;

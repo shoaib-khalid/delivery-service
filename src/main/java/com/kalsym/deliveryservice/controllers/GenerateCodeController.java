@@ -51,7 +51,7 @@ public class GenerateCodeController {
 
 
     @PostMapping(path = {"/createCentreCode/{storeId}"}, name = "generate-cost-center-code")
-    @PreAuthorize("hasAnyAuthority('generate-cost-center-code', 'all')")
+//    @PreAuthorize("hasAnyAuthority('generate-cost-center-code', 'all')")
     public ResponseEntity<HttpReponse> getPrice(HttpServletRequest request,
                                                 @PathVariable("storeId") String storeId) {
         String systemTransactionId = StringUtility.CreateRefID("CC");

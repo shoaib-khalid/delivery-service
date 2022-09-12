@@ -27,4 +27,5 @@ public class DeliveryOptions {
     String toState;
     @Column(name = "delivery_charges")
     Float deliveryPrice;
+    Double diameter;
 }

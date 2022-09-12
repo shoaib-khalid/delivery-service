@@ -16,26 +16,28 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class Delivery {
-    @NotBlank(message = "deliveryAddress is mandatory")
+    @NotBlank(message = "Address is mandatory")
     String deliveryAddress;
-    @NotBlank(message = "deliveryPostcode is mandatory")
+    @NotBlank(message = "Postcode is mandatory")
     String deliveryPostcode;
-    @NotBlank(message = "deliveryState is mandatory")
+    @NotBlank(message = "State is mandatory")
     String deliveryState;
-    @NotBlank(message = "deliveryCity is mandatory")
+    @NotBlank(message = "City is mandatory")
     String deliveryCity;
 
-    @NotBlank(message = "deliveryCountry is mandatory")
+    @NotBlank(message = "Country is mandatory")
     String deliveryCountry;
 
-    @NotBlank(message = "deliveryContactName is mandatory")
+    @NotBlank(message = "Contact Name is mandatory")
     String deliveryContactName;
-    @NotBlank(message = "deliveryContactPhone is mandatory")
+    @NotBlank(message = "ContactPhone is mandatory")
     String deliveryContactPhone;
-    @NotBlank(message = "deliveryContactEmail is mandatory")
+    @NotBlank(message = "Contact Email is mandatory")
     String deliveryContactEmail;
     String deliveryZone;
 
+//    @NotBlank(message = "Enter address to deliver your food.")
     BigDecimal latitude;
+//    @NotBlank(message = "Enter address to deliver your food.")
     BigDecimal longitude;
 }

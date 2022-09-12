@@ -96,6 +96,7 @@ public class QueryOrder extends SyncDispatcher {
             orderFound.setSpOrderId(spOrderId);
             orderFound.setStatus(status);
 
+            orderFound.setDriverId("");
             if (status.equals("accepted")) {
                 orderFound.setSystemStatus(DeliveryCompletionStatus.AWAITING_PICKUP.name());
             } else if (status.equals("tracking_available") || status.equals("arrived") || status.equals("started")) {

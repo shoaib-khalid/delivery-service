@@ -73,9 +73,10 @@ public class QueryOrder extends SyncDispatcher {
             e.printStackTrace();
         }
 
-        String url = this.queryOrder_url + spOrderId;
+//        String url = this.queryOrder_url + spOrderId;
+        String url = queryOrder_url + spOrderId;
         String timeStamp = String.valueOf(System.currentTimeMillis());
-        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v2/orders/" + spOrderId + "\r\n\r\n";
+        String rawSignature = timeStamp + "\r\n" + METHOD + "\r\n" + "/v3/orders/" + spOrderId + "\r\n\r\n";
         byte[] byteSig = mac.doFinal(rawSignature.getBytes());
         String signature = DatatypeConverter.printHexBinary(byteSig);
         signature = signature.toLowerCase();
@@ -87,6 +88,7 @@ public class QueryOrder extends SyncDispatcher {
         headers.set("Content-Type", "application/json");
         headers.set("Authorization", "hmac " + token);
         headers.set("X-LLM-Country", "MY_KUL");
+        headers.set("Market", "MY");
         headers.set("X-Request-ID", transactionId);
         HttpEntity<String> request = new HttpEntity(headers);
         LogUtil.info(logprefix, location, "Url for orderDetails", url);
@@ -116,12 +118,13 @@ public class QueryOrder extends SyncDispatcher {
             LogUtil.info(logprefix, location, "Response: ", jsonResp.toString());
             boolean isSuccess = true;
 //            JsonArray pod = jsonResp.get("pod").getAsJsonArray();
+            JsonObject data= jsonResp.getAsJsonObject("data");
             LogUtil.info(logprefix, location, "isSuccess:" + isSuccess, "");
             queryOrderResult.isSuccess = isSuccess;
 
-            String driverId = jsonResp.get("driverId").getAsString();
-            String shareLink = jsonResp.get("shareLink").getAsString();
-            String status = jsonResp.get("status").getAsString();
+            String driverId = data.get("driverId").getAsString();
+            String shareLink = data.get("shareLink").getAsString();
+            String status = data.get("status").getAsString();
 
             DeliveryOrder orderFound = new DeliveryOrder();
             orderFound.setSpOrderId(spOrderId);
