@@ -529,15 +529,15 @@ public class OrdersController {
                         case "BEING_DELIVERED":
                             deliveryOrder.setDriverId(deliveryId);
                             orderStatus = "BEING_DELIVERED";
-                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus,"","");
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus, "", "");
                             break;
                         case "COMPLETED":
                             orderStatus = "DELIVERED_TO_CUSTOMER";
-                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus,"","");
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus, "", "");
                             break;
                         case "REJECTED":
                             orderStatus = "FAILED_FIND_DRIVER";
-                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus,"","");
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus, "", "");
                             break;
                         default:
                             deliveryOrder.setStatus(status);
@@ -564,7 +564,9 @@ public class OrdersController {
                         LogUtil.info(systemTransactionId, location, "Delivery Rider Phone No ", spCallbackResult.riderPhone);
                         deliveryOrder.setRiderPhoneNo(spCallbackResult.riderPhone);
                     }
-                    if (deliveryOrder.getCustomerTrackingUrl().isEmpty() || deliveryOrder.getCustomerTrackingUrl() == null) {
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", deliveryOrder.getCustomerTrackingUrl());
+
+                    if (deliveryOrder.getCustomerTrackingUrl() == null || deliveryOrder.getCustomerTrackingUrl().isEmpty()) {
                         LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", spCallbackResult.trackingUrl);
                         deliveryOrder.setCustomerTrackingUrl(spCallbackResult.trackingUrl);
                     }
@@ -683,18 +685,18 @@ public class OrdersController {
                             orderStatus = "BEING_DELIVERED";
                             deliveryOrder.setSystemStatus(DeliveryCompletionStatus.BEING_DELIVERED.name());
                             if (!deliveryOrder.getStatus().equals(status)) {
-                                res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus,"","");
+                                res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus, "", "");
                             }
                         } else if (status.equals("COMPLETED")) {
                             orderStatus = "DELIVERED_TO_CUSTOMER";
                             deliveryOrder.setSystemStatus(DeliveryCompletionStatus.COMPLETED.name());
                             if (!deliveryOrder.getStatus().equals(status)) {
-                                res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus,"","");
+                                res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus, "", "");
                             }
                         } else if (status.equals("CANCELED") || status.equals("REJECTED") || status.equals("EXPIRED")) {
                             orderStatus = "FAILED_FIND_DRIVER";
                             deliveryOrder.setSystemStatus(DeliveryCompletionStatus.CANCELED.name());
-                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus,"","");
+                            res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus, "", "");
                         }
 
                         deliveryOrder.setStatus(status);

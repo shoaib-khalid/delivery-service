@@ -299,24 +299,33 @@ public class ProviderThread extends Thread implements Runnable {
                     if (provider.isExternalRequest()) {
                         LogUtil.info(logprefix, location, "Load the file location: ", provider.getClassLoaderName());
 
-                        URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
+                        Class<?> beanClass = null;
+                        Object beanObj = new Object();
+                        try {
+                            URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
 
-                        // Create a new URLClassLoader
-                        URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
+                            // Create a new URLClassLoader
+                            URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
 
-                        // Load the target class
-                        Class<?> beanClass = urlClassLoader.loadClass(provider.getAdditionalQueryClassName());
+                            LogUtil.info(logprefix, location, "Load Class Here: ", provider.getAdditionalQueryClassName());
 
-                        // Create a new instance from the loaded class
-                        Constructor<?> constructor = beanClass.getConstructor();
-                        Object beanObj = constructor.newInstance();
+                            // Load the target class
+                            beanClass = urlClassLoader.loadClass(provider.getAdditionalQueryClassName());
 
+                            // Create a new instance from the loaded class
+                            Constructor<?> constructor = beanClass.getConstructor();
+                            beanObj = constructor.newInstance();
+                        } catch (Exception ex) {
+                            LogUtil.info(logprefix, location, "Exception ", ex.getMessage());
+
+                        }
 
                         ObjectMapper mapper = new ObjectMapper();
 
                         Gson gson = new Gson();
                         Method method = beanClass.getMethod(functionName, String.class, Object.class, String.class);
                         Object value = method.invoke(beanObj, gson.toJson(providerConfig), requestBody, this.sysTransactionId);
+
 
                         JsonObject jsonObject = null;
 
@@ -425,8 +434,8 @@ public class ProviderThread extends Thread implements Runnable {
 //                            processResult.setResultCode(-1);
 //                        }
 
-                            processResult.setReturnObject(priceResult);
-                            processResult.setResultCode(process.getResultCode());
+                        processResult.setReturnObject(priceResult);
+                        processResult.setResultCode(process.getResultCode());
 
                         LogUtil.info(logprefix, location, "Response From The Class ", value.toString());
                     } else {
