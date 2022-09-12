@@ -390,13 +390,13 @@ public class ProcessRequest {
     public ProcessResult QueryOrder() {
         //get provider rate plan  
         LogUtil.info(logPrefix, location, "ProviderId:" + deliveryOrder.getDeliveryProviderId() + " SpOrderId:" + deliveryOrder.getSpOrderId(), "");
-//        Optional<Provider> provider = providerRepository.findById(deliveryOrder.getDeliveryProviderId());
-        Optional<Provider> provider = providerRepository.findByIdAndQueryOrderClassnameIsNotNull(deliveryOrder.getDeliveryProviderId());
+        Optional<Provider> provider = providerRepository.findById(deliveryOrder.getDeliveryProviderId());
+//        Optional<Provider> provider = providerRepository.findByIdAndQueryOrderClassnameIsNotNull(deliveryOrder.getDeliveryProviderId());
         if (provider.isPresent()) {
             List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(deliveryOrder.getDeliveryProviderId());
-            if (provider.get().getQueryOrderClassname().equals(null)) {
-                System.err.println("PRINT HERE IF NULL");
-            }
+//            if (provider.get().getQueryOrderClassname().equals(null)) {
+//                System.err.println("PRINT HERE IF NULL");
+//            }
             HashMap config = new HashMap();
             for (int j = 0; j < providerConfigList.size(); j++) {
                 String fieldName = providerConfigList.get(j).getId().getConfigField();

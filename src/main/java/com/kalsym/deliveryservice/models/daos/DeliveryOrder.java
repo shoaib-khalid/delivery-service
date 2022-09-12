@@ -4,10 +4,12 @@
  */
 package com.kalsym.deliveryservice.models.daos;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.Getter;
@@ -25,10 +27,8 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@ToString
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DeliveryOrder {
-    public DeliveryOrder() {
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,11 +45,14 @@ public class DeliveryOrder {
     String deliveryContactName;
     String deliveryContactPhone;
     Integer deliveryProviderId;
+    @JsonProperty("spOrderId")
     String spOrderId;
     String spOrderName;
     String vehicleType;
     String createdDate;
+    @JsonProperty("status")
     String status;
+    @JsonProperty("systemStatus")
     String systemStatus;
     String statusDescription;
     String updatedDate;
@@ -57,6 +60,7 @@ public class DeliveryOrder {
     String storeId;
     Double totalWeightKg;
     String merchantTrackingUrl;
+    @JsonProperty("customerTrackingUrl")
     String customerTrackingUrl;
     String driverId;
     String riderName;
@@ -72,8 +76,8 @@ public class DeliveryOrder {
 
     BigDecimal codAmount;
 
-    public DeliveryOrder(Object data) {
-    }
+    public DeliveryOrder() {}
+    public DeliveryOrder(Object data) {}
 
     public String toString() {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();

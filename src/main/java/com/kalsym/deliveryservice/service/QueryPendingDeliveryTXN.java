@@ -40,7 +40,7 @@ public class QueryPendingDeliveryTXN {
     @Autowired
     SymplifiedService symplifiedService;
 
-        @Scheduled(cron = "${delivery-service:0 0/05 * * * ?}")
+//    @Scheduled(cron = "${delivery-service:0 0/05 * * * ?}")
     public void dailyScheduler() throws ParseException {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 
@@ -64,6 +64,8 @@ public class QueryPendingDeliveryTXN {
                     LogUtil.info("QueryPendingDeliveryTXN", location, "Exception = " + e.getMessage(), "");
                 }
                 assert parsedDate != null;
+                LogUtil.info("QueryPendingDeliveryTXN", location, "QuotationID = " + o.getId(), "");
+
                 long searchTimestamp = parsedDate.getTime();// this also gives me back timestamp in 13 digit (1425506040493)
 
                 long difference = Math.abs(currentTimestamp - searchTimestamp);
@@ -111,7 +113,7 @@ public class QueryPendingDeliveryTXN {
     }
 
 
-        @Scheduled(cron = "${pending-transaction:0 0/05 * * * ?}")
+//    @Scheduled(cron = "${pending-transaction:0 0/05 * * * ?}")
     public void QueryPendingTransaction() throws ParseException {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 
@@ -133,7 +135,7 @@ public class QueryPendingDeliveryTXN {
     }
 
 
-    @Scheduled(cron = "${pending-transaction:0 0 23 * * ?}")
+//    @Scheduled(cron = "${pending-transaction:0 0 23 * * ?}")
     public void RemovePendingQuotation() throws ParseException {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 

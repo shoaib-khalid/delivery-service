@@ -1,18 +1,18 @@
 /*
  * Here comes the text of your license
- * Each line should be prefixed with  * 
+ * Each line should be prefixed with  *
  */
 package com.kalsym.deliveryservice.provider;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
 import lombok.ToString;
 
 /**
- *
  * @author user
  */
-@ToString
 public class SpCallbackResult {
     public int providerId;
     public String spOrderId;
@@ -24,5 +24,10 @@ public class SpCallbackResult {
     public String trackingUrl;
     public String driveNoPlate;
     public int resultCode;
+
+    public String toString() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(this);
+    }
 
 }

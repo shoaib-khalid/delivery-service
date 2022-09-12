@@ -719,6 +719,8 @@ public class DeliveryService {
         if (quotation.isCombinedDelivery()) {
             orderDetails.setStoreList(s);
         }
+        System.err.println("SIZE-toProcess ::::: " + toProcess);
+
         if (toProcess) {
 
             // generate transaction id
@@ -753,8 +755,14 @@ public class DeliveryService {
                     deliveryOrder.setDeliveryQuotationId(quotation.getId());
 
                     DeliveryOrder orderCreated = submitOrderResult.orderCreated;
-                    deliveryOrder.setCreatedDate(orderCreated.getCreatedDate());
-                    deliveryOrder.setUpdatedDate(orderCreated.getCreatedDate());
+                    if (orderCreated.getCreatedDate() != null) {
+                        deliveryOrder.setCreatedDate(orderCreated.getCreatedDate());
+                        deliveryOrder.setUpdatedDate(orderCreated.getCreatedDate());
+                    }else{
+                        deliveryOrder.setCreatedDate(DateTimeUtil.currentTimestamp());
+                        deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
+                    }
+
                     deliveryOrder.setSpOrderId(orderCreated.getSpOrderId());
                     deliveryOrder.setSpOrderName(orderCreated.getSpOrderName());
                     deliveryOrder.setVehicleType(orderCreated.getVehicleType());
@@ -783,7 +791,7 @@ public class DeliveryService {
                     orderStatus.setSystemTransactionId(o.getSystemTransactionId());
                     orderStatus.setOrderId(o.getOrderId());
 
-                    orderStatusRepository.save(orderStatus);
+//                    orderStatusRepository.save(orderStatus);
                     //SAVE ORDER STATUS LIST
                     //Combined Shipping
                     List<DeliveryOrder> combinedOrder = deliveryOrdersRepository.findAllByDeliveryQuotationId(quotation.getId());
@@ -796,7 +804,7 @@ public class DeliveryService {
                         c.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
                         c.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
                         c.setStatus(orderCreated.getStatus());
-                        deliveryOrdersRepository.save(c);
+//                        deliveryOrdersRepository.save(c);
 
                     }
 
@@ -814,8 +822,14 @@ public class DeliveryService {
                 } else {
                     DeliveryOrder orderCreated = submitOrderResult.orderCreated;
                     deliveryOrderOption.setDeliveryQuotationId(quotation.getId());
-                    deliveryOrderOption.setCreatedDate(orderCreated.getCreatedDate());
-                    deliveryOrderOption.setUpdatedDate(orderCreated.getCreatedDate());
+                    if (orderCreated.getCreatedDate() != null) {
+                        deliveryOrderOption.setCreatedDate(orderCreated.getCreatedDate());
+                        deliveryOrderOption.setUpdatedDate(orderCreated.getCreatedDate());
+                    }else{
+                        deliveryOrderOption.setCreatedDate(DateTimeUtil.currentTimestamp());
+                        deliveryOrderOption.setUpdatedDate(DateTimeUtil.currentTimestamp());
+                    }
+
                     deliveryOrderOption.setSpOrderId(orderCreated.getSpOrderId());
                     deliveryOrderOption.setSpOrderName(orderCreated.getSpOrderName());
                     deliveryOrderOption.setVehicleType(orderCreated.getVehicleType());
@@ -1404,9 +1418,7 @@ public class DeliveryService {
                             LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
                         }
                     }
-                    System.err.println("System Status :" + orderDetails.get().getSystemStatus());
                     DeliveryOrder o = deliveryOrdersRepository.save(orderDetails.get());
-                    System.err.println("QUERY ORDER  : " + o);
 
                     DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
                     if (notExistStatus == null) {

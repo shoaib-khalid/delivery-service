@@ -479,7 +479,7 @@ public class OrdersController {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
         } else {
-            LogUtil.info(systemTransactionId, location, "DeliveyOrder not found for orderId:" + orderId, "");
+            LogUtil.info(systemTransactionId, location, "DeliveryOrder not found for orderId:" + orderId, "");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
