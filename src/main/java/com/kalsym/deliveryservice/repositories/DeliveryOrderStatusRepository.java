@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DeliveryOrderStatusRepository extends JpaRepository<DeliveryOrderStatus, Long> {
@@ -15,6 +16,6 @@ public interface DeliveryOrderStatusRepository extends JpaRepository<DeliveryOrd
 
     List<DeliveryOrderStatus> findAllByOrderId(String orderId);
 
-    DeliveryOrderStatus findByOrderAndStatusAndDeliveryCompletionStatus(DeliveryOrder deliveryOrder, String status, String deliveryCompletionStatus);
+    Optional<DeliveryOrderStatus> findByOrderAndStatusAndDeliveryCompletionStatus(DeliveryOrder deliveryOrder, String status, String deliveryCompletionStatus);
 
 }

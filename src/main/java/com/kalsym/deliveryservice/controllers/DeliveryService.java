@@ -843,20 +843,20 @@ public class DeliveryService {
                     deliveryOrderOption.setTotalWeightKg(quotation.getTotalWeightKg());
                     DeliveryOrder o = deliveryOrdersRepository.save(deliveryOrderOption);
 
-                    DeliveryOrderStatus existStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
-                    if (existStatus != null) {
-                        existStatus.setOrder(o);
-                        existStatus.setSpOrderId(orderCreated.getSpOrderId());
-                        existStatus.setStatus(o.getStatus());
-                        existStatus.setDeliveryCompletionStatus(o.getSystemStatus());
-                        existStatus.setDescription(o.getStatusDescription());
-                        existStatus.setUpdated(new Date());
-                        existStatus.setSystemTransactionId(o.getSystemTransactionId());
-                        existStatus.setOrderId(o.getOrderId());
-                        existStatus.setSpOrderId(o.getSpOrderId());
+                    Optional<DeliveryOrderStatus> existStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
+                    if (existStatus.isPresent()) {
+                        existStatus.get().setOrder(o);
+                        existStatus.get().setSpOrderId(orderCreated.getSpOrderId());
+                        existStatus.get().setStatus(o.getStatus());
+                        existStatus.get().setDeliveryCompletionStatus(o.getSystemStatus());
+                        existStatus.get().setDescription(o.getStatusDescription());
+                        existStatus.get().setUpdated(new Date());
+                        existStatus.get().setSystemTransactionId(o.getSystemTransactionId());
+                        existStatus.get().setOrderId(o.getOrderId());
+                        existStatus.get().setSpOrderId(o.getSpOrderId());
 
 
-                        orderStatusRepository.save(existStatus); //SAVE ORDER STATUS LIST
+                        orderStatusRepository.save(existStatus.get()); //SAVE ORDER STATUS LIST
                     } else {
                         DeliveryOrderStatus orderStatus = new DeliveryOrderStatus();
 
@@ -1419,8 +1419,8 @@ public class DeliveryService {
                     }
                     DeliveryOrder o = deliveryOrdersRepository.save(orderDetails.get());
 
-                    DeliveryOrderStatus notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
-                    if (notExistStatus == null) {
+                    Optional<DeliveryOrderStatus> notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());
+                    if (!notExistStatus.isPresent()) {
                         DeliveryOrderStatus s = new DeliveryOrderStatus();
                         s.setOrder(o);
                         s.setSpOrderId(o.getSpOrderId());
@@ -1433,15 +1433,15 @@ public class DeliveryService {
 
                         orderStatusRepository.save(s); //SAVE ORDER STATUS LIST
                     } else {
-                        notExistStatus.setOrder(o);
-                        notExistStatus.setSpOrderId(o.getSpOrderId());
-                        notExistStatus.setStatus(o.getStatus());
-                        notExistStatus.setDeliveryCompletionStatus(o.getSystemStatus());
-                        notExistStatus.setDescription(o.getStatusDescription());
-                        notExistStatus.setSystemTransactionId(o.getSystemTransactionId());
-                        notExistStatus.setOrderId(o.getOrderId());
+                        notExistStatus.get().setOrder(o);
+                        notExistStatus.get().setSpOrderId(o.getSpOrderId());
+                        notExistStatus.get().setStatus(o.getStatus());
+                        notExistStatus.get().setDeliveryCompletionStatus(o.getSystemStatus());
+                        notExistStatus.get().setDescription(o.getStatusDescription());
+                        notExistStatus.get().setSystemTransactionId(o.getSystemTransactionId());
+                        notExistStatus.get().setOrderId(o.getOrderId());
 
-                        orderStatusRepository.save(notExistStatus); //SA
+                        orderStatusRepository.save(notExistStatus.get()); //SA
                     }
 
                     getDeliveryRiderDetails(orderDetails.get().getOrderId());
