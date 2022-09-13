@@ -804,8 +804,7 @@ public class DeliveryService {
                         c.setMerchantTrackingUrl(orderCreated.getMerchantTrackingUrl());
                         c.setCustomerTrackingUrl(orderCreated.getCustomerTrackingUrl());
                         c.setStatus(orderCreated.getStatus());
-//                        deliveryOrdersRepository.save(c);
-
+                        deliveryOrdersRepository.save(c);
                     }
 
                     quotation.setSpOrderId(orderCreated.getSpOrderId());

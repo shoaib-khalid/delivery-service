@@ -301,6 +301,9 @@ public class ProviderThread extends Thread implements Runnable {
 
                         Class<?> beanClass = null;
                         Object beanObj = new Object();
+                        Object value = null;
+                        ObjectMapper mapper = new ObjectMapper();
+
                         try {
                             URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
 
@@ -315,18 +318,16 @@ public class ProviderThread extends Thread implements Runnable {
                             // Create a new instance from the loaded class
                             Constructor<?> constructor = beanClass.getConstructor();
                             beanObj = constructor.newInstance();
+
+
+                            Gson gson = new Gson();
+                            Method method = beanClass.getMethod(functionName, String.class, Object.class, String.class);
+                            value = method.invoke(beanObj, gson.toJson(providerConfig), requestBody, this.sysTransactionId);
+
                         } catch (Exception ex) {
                             LogUtil.info(logprefix, location, "Exception ", ex.getMessage());
 
                         }
-
-                        ObjectMapper mapper = new ObjectMapper();
-
-                        Gson gson = new Gson();
-                        Method method = beanClass.getMethod(functionName, String.class, Object.class, String.class);
-                        Object value = method.invoke(beanObj, gson.toJson(providerConfig), requestBody, this.sysTransactionId);
-
-
                         JsonObject jsonObject = null;
 
                         ProcessResult process = null;
