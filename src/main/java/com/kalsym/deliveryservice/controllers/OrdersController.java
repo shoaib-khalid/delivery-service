@@ -518,15 +518,17 @@ public class OrdersController {
                     deliveryOrder.setStatus(status);
                     String orderStatus = "";
                     String res;
-                    String deliveryId = spCallbackResult.driverId;
+                    String deliveryId = null;
                     // change from order status codes to delivery status codes.
                     switch (systemStatus) {
                         case "ASSIGNING_RIDER":
                             break;
                         case "AWAITING_PICKUP":
+                            deliveryId = spCallbackResult.driverId;
                             deliveryOrder.setDriverId(deliveryId);
                             break;
                         case "BEING_DELIVERED":
+                            deliveryId = spCallbackResult.driverId;
                             deliveryOrder.setDriverId(deliveryId);
                             orderStatus = "BEING_DELIVERED";
                             res = symplifiedService.updateOrderStatus(deliveryOrder.getOrderId(), orderStatus, "", "");
