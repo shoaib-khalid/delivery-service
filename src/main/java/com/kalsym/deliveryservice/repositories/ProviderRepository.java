@@ -13,8 +13,11 @@ import java.util.Optional;
 @Repository
 public interface ProviderRepository extends JpaRepository<Provider, Integer> {
     public Provider findOneById(Integer id);
+
     public Optional<Provider> findByIdAndQueryOrderClassnameIsNotNull(Integer id);
-    public List<Provider> findByRegionCountryIdAndAdditionalQueryClassNameIsNotNull(String id);
+    public List<Provider> findByRegionCountryIdAndAdditionalQueryClassNameIsNotNull(String regionCountryId);
+
+    public List<Provider> findByRegionCountryIdAndAdditionalQueryClassNameIsNotNullAndIdNotIn(String regionId, List<Integer> id);
 
 //    public List<Provider> findAllByRegionCountryId(String regionCountry);
 }

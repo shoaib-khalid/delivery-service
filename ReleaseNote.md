@@ -2,6 +2,12 @@
 # **Version v.3.3.1| 04-Oct-2022*
 ###############################################################################################
 1. Added New Provider PandaGo- New Api - Create Client Vendor Id
+2. Change Datatype for Provider Id 
+please update the alter table 
+   1. delivery_sp
+   2. store_delivery_sp
+   3. 
+                              
 
 
 ##############################################################################################

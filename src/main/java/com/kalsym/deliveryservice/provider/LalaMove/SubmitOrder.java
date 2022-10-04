@@ -123,6 +123,10 @@ public class SubmitOrder extends SyncDispatcher {
                     this.waitTimeout);
             int statusCode = httpResult.httpResponseCode;
 
+            LogUtil.info(logprefix, location, "Response Code ::: ", String.valueOf(statusCode));
+            LogUtil.info(logprefix, location, "Response ::: ", httpResult.responseString);
+
+
             if (statusCode == 201) {
                 response.resultCode = 0;
                 JsonObject jsonResp = new Gson().fromJson(httpResult.responseString, JsonObject.class);

@@ -16,6 +16,7 @@ import com.kalsym.deliveryservice.repositories.DeliveryZonePriceRepository;
 import com.kalsym.deliveryservice.repositories.SequenceNumberRepository;
 import com.kalsym.deliveryservice.utils.DateTimeUtil;
 import com.kalsym.deliveryservice.utils.LogUtil;
+import lombok.extern.java.Log;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -361,6 +362,7 @@ public class ProviderThread extends Thread implements Runnable {
                 } else if (functionName.equalsIgnoreCase("GetAirwayBill")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
                 } else if (functionName.equalsIgnoreCase("GetAdditionalInfo")) {
+
                     if (provider.isExternalRequest()) {
 
                         LogUtil.info(logprefix, location, "Load the file location: ", provider.getClassLoaderName());
@@ -386,14 +388,17 @@ public class ProviderThread extends Thread implements Runnable {
 
                         }
                         ObjectMapper mapper = new ObjectMapper();
-
-                        Gson gson = new Gson();
-                        assert beanClass != null;
-                        Method method = beanClass.getMethod(functionName, String.class, String.class, String.class, String.class);
-                        Object value = method.invoke(beanObj, gson.toJson(providerConfig), gson.toJson(order), this.sysTransactionId, gson.toJson(fulfillment));
-                        LogUtil.info(logprefix, location, "Response FROM CLASS : ", value.toString());
                         JsonObject response = null;
-                        ProcessResult process = new ProcessResult();
+                        ProcessResult process = null;
+                        Gson gson = new Gson();
+                        System.err.println("Store Config ::::   " +store.toString());
+
+                        assert beanClass != null;
+                        Method method = beanClass.getMethod("GenerateClientId", String.class, String.class, String.class);
+                        Object value = method.invoke(beanObj, gson.toJson(providerConfig),  store.toString(), this.sysTransactionId);
+                        LogUtil.info(logprefix, location, "Response FROM CLASS : ", value.toString());
+                        response = null;
+                        process = new ProcessResult();
 
                         try {
                             process = mapper.readValue(value.toString(), ProcessResult.class);
@@ -410,8 +415,8 @@ public class ProviderThread extends Thread implements Runnable {
 
                     } else {
 
-                    reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, store, this.sysTransactionId, this.sequenceNumberRepository);
-                }
+                        reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, store, this.sysTransactionId, this.sequenceNumberRepository);
+                    }
                 } else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
                 } else if (functionName.equalsIgnoreCase("GetPrice")) {
@@ -441,6 +446,7 @@ public class ProviderThread extends Thread implements Runnable {
 
                         }
                         ObjectMapper mapper = new ObjectMapper();
+
 
                         Gson gson = new Gson();
                         assert beanClass != null;

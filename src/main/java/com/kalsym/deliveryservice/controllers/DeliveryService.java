@@ -484,10 +484,10 @@ public class DeliveryService {
                             deliveryOrder.setServiceFee(0.00);
                         }
                         deliveryOrder.setDeliveryContactEmail(orderDetails.getDelivery().getDeliveryContactEmail());
-                        deliveryOrder.setPickupLatitude(String.valueOf(orderDetails.getPickup().getLatitude()));
-                        deliveryOrder.setPickupLongitude(String.valueOf(orderDetails.getPickup().getLongitude()));
-                        deliveryOrder.setDeliveryLongitude(String.valueOf(orderDetails.getDelivery().getLongitude()));
-                        deliveryOrder.setDeliveryLatitude(String.valueOf(orderDetails.getDelivery().getLatitude()));
+                        deliveryOrder.setPickupLatitude(String.valueOf(orderDetails.getPickup().getLatitude().setScale(7, RoundingMode.UP)));
+                        deliveryOrder.setPickupLongitude(String.valueOf(orderDetails.getPickup().getLongitude().setScale(7, RoundingMode.UP)));
+                        deliveryOrder.setDeliveryLongitude(String.valueOf(orderDetails.getDelivery().getLongitude().setScale(7, RoundingMode.UP)));
+                        deliveryOrder.setDeliveryLatitude(String.valueOf(orderDetails.getDelivery().getLatitude().setScale(7, RoundingMode.UP)));
                         deliveryOrder.setTotalPieces(orderDetails.getPieces());
 
                     } else {
@@ -675,7 +675,7 @@ public class DeliveryService {
         Store store = storeRepository.getOne(quotation.getStoreId());
 
         if (store.getRegionCountryId().equals("PAK")) {
-            DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCenterRepository.findByDeliveryProviderIdAndStoreId(quotation.getDeliveryProviderId().toString(), quotation.getStoreId());
+            DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCenterRepository.findByDeliveryProviderIdAndStoreId(quotation.getDeliveryProviderId(), quotation.getStoreId());
             if (deliveryStoreCenters != null) {
                 pickup.setCostCenterCode(deliveryStoreCenters.getCenterId());
             }
@@ -1819,8 +1819,8 @@ public class DeliveryService {
                                 deliveryOrder.setDeliveryContactEmail(quotation.getDelivery().getDeliveryContactEmail());
                                 deliveryOrder.setPickupLatitude(String.valueOf(quotation.getPickup().getLatitude()));
                                 deliveryOrder.setPickupLongitude(String.valueOf(quotation.getPickup().getLongitude()));
-                                deliveryOrder.setDeliveryLongitude(String.valueOf(quotation.getDelivery().getLongitude()));
-                                deliveryOrder.setDeliveryLatitude(String.valueOf(quotation.getDelivery().getLatitude()));
+                                deliveryOrder.setDeliveryLongitude(String.valueOf(quotation.getDelivery().getLongitude().setScale(7, RoundingMode.UP)));
+                                deliveryOrder.setDeliveryLatitude(String.valueOf(quotation.getDelivery().getLatitude().setScale(7, RoundingMode.UP)));
                                 deliveryOrder.setVehicleType(quotation.getPickup().getVehicleType().name());
                                 deliveryOrder.setStatus("PENDING");
                                 deliveryOrder.setCartId(quotation.getCartId());
@@ -1890,8 +1890,8 @@ public class DeliveryService {
                             deliveryOrder.setDeliveryContactEmail(quotation.getDelivery().getDeliveryContactEmail());
                             deliveryOrder.setPickupLatitude(String.valueOf(quotation.getPickup().getLatitude()));
                             deliveryOrder.setPickupLongitude(String.valueOf(quotation.getPickup().getLongitude()));
-                            deliveryOrder.setDeliveryLongitude(String.valueOf(quotation.getDelivery().getLongitude()));
-                            deliveryOrder.setDeliveryLatitude(String.valueOf(quotation.getDelivery().getLatitude()));
+                            deliveryOrder.setDeliveryLongitude(String.valueOf(quotation.getDelivery().getLongitude().setScale(7, RoundingMode.UP)));
+                            deliveryOrder.setDeliveryLatitude(String.valueOf(quotation.getDelivery().getLatitude().setScale(7, RoundingMode.UP)));
                             deliveryOrder.setVehicleType(quotation.getPickup().getVehicleType().name());
                             deliveryOrder.setStatus("PENDING");
                             deliveryOrder.setCartId(quotation.getCartId());

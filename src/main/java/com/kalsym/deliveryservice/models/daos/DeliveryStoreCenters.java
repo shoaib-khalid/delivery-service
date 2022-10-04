@@ -20,5 +20,5 @@ public class DeliveryStoreCenters {
     Long id;
     String storeId;
     String centerId;
-    String deliveryProviderId;
+    Integer deliveryProviderId;
 }

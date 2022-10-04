@@ -166,7 +166,7 @@ public class ProcessRequest {
                 for (int i = 0; i < deliverySpTypes.size(); i++) {
                     LogUtil.info(logPrefix, location, "Get Price The Provider ID IS NULL  : " + sysTransactionId + " FulfillmentType : " + deliverySpTypes.get(i).getFulfilment(), "");
 
-                    DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCentersRepository.findByDeliveryProviderIdAndStoreId(deliverySpTypes.get(i).getProvider().getId().toString(), order.getStoreId());
+                    DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCentersRepository.findByDeliveryProviderIdAndStoreId(deliverySpTypes.get(i).getProvider().getId(), order.getStoreId());
                     if (deliveryStoreCenters != null) {
                         order.getPickup().setCostCenterCode(deliveryStoreCenters.getCenterId());
                         LogUtil.info(logPrefix, location, "Store Center Code Based On the Provider : " + order.getPickup().getCostCenterCode(), "Provider Id : " + deliverySpTypes.get(i).getProvider().getId().toString());
@@ -198,7 +198,7 @@ public class ProcessRequest {
                 for (DeliverySpType deliverySpType : deliverySpTypes) {
                     LogUtil.info(logPrefix, location, "Get Price The Store DeliverySP is Empty : " + sysTransactionId + " FulfillmentType : " + deliverySpType.getFulfilment(), "");
 
-                    DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCentersRepository.findByDeliveryProviderIdAndStoreId(provider.getId().toString(), order.getStoreId());
+                    DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCentersRepository.findByDeliveryProviderIdAndStoreId(provider.getId(), order.getStoreId());
                     if (deliveryStoreCenters != null) {
                         order.getPickup().setCostCenterCode(deliveryStoreCenters.getCenterId());
                     }
@@ -223,7 +223,7 @@ public class ProcessRequest {
                 for (StoreDeliverySp storeDeliverySp : storeDeliverySps) {
                     LogUtil.info(logPrefix, location, "Get Price The Store DeliverySP : " + storeDeliverySp.getStoreId() + " FulfillmentType : " + storeDeliverySp.getFulfilment(), "");
                     LogUtil.info(logPrefix, location, "Store Id : " + order.getStoreId() + " Provider Id : " + provider.getId(), "");
-                    DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCentersRepository.findByDeliveryProviderIdAndStoreId(String.valueOf(provider.getId()), order.getStoreId());
+                    DeliveryStoreCenters deliveryStoreCenters = deliveryStoreCentersRepository.findByDeliveryProviderIdAndStoreId(provider.getId(), order.getStoreId());
                     if (deliveryStoreCenters != null) {
                         order.getPickup().setCostCenterCode(deliveryStoreCenters.getCenterId());
                     }
@@ -476,7 +476,7 @@ public class ProcessRequest {
             }
 
 
-            response.resultCode =spCallbackResult.resultCode;
+            response.resultCode = spCallbackResult.resultCode;
             response.returnObject = spCallbackResult;
         } else if (id != null) {
 
@@ -506,7 +506,7 @@ public class ProcessRequest {
             }
 
             System.err.println("CALLBACK :::: " + spCallbackResult);
-            response.resultCode =spCallbackResult.resultCode;
+            response.resultCode = spCallbackResult.resultCode;
             response.returnObject = spCallbackResult;
 
         } else {
@@ -700,19 +700,21 @@ public class ProcessRequest {
     public ProcessResult GetAdditionalInfo() {
         //get provider rate plan
 //        LogUtil.info(logprefix, location, "Find provider rate plan for productCode:" + order.getProductCode(), "");
-        List<Provider> provider = providerRepository.findByRegionCountryIdAndAdditionalQueryClassNameIsNotNull(store.getRegionCountryId());
-        for (Provider p : provider) {
-            List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(p.getId());
-            HashMap config = new HashMap();
-            for (int j = 0; j < providerConfigList.size(); j++) {
-                String fieldName = providerConfigList.get(j).getId().getConfigField();
-                String fieldValue = providerConfigList.get(j).getConfigValue();
-                config.put(fieldName, fieldValue);
-            }
-            ProviderThread dthread = new ProviderThread(this, sysTransactionId, p, config, store, "GetAdditionalInfo", sequenceNumberRepository);
-            dthread.start();
 
+//        List<Provider> provider = providerRepository.findByRegionCountryIdAndAdditionalQueryClassNameIsNotNull(store.getRegionCountryId());
+        Provider p = providerRepository.getOne(store.getProviderId());
+//        for (Provider p : provider) {
+        List<ProviderConfiguration> providerConfigList = providerConfigurationRepository.findByIdSpId(store.getProviderId());
+        HashMap config = new HashMap();
+        for (int j = 0; j < providerConfigList.size(); j++) {
+            String fieldName = providerConfigList.get(j).getId().getConfigField();
+            String fieldValue = providerConfigList.get(j).getConfigValue();
+            config.put(fieldName, fieldValue);
         }
+        ProviderThread dthread = new ProviderThread(this, sysTransactionId, p, config, store, "GetAdditionalInfo", sequenceNumberRepository);
+        dthread.start();
+
+//        }
 
 
         try {
