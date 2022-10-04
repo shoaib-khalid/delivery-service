@@ -6,7 +6,7 @@
 please update the alter table 
    1. delivery_sp
    2. store_delivery_sp
-   3. 
+   3. delivery_Store_Sp
                               
 
 
