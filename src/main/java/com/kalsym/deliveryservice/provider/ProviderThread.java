@@ -361,7 +361,57 @@ public class ProviderThread extends Thread implements Runnable {
                 } else if (functionName.equalsIgnoreCase("GetAirwayBill")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
                 } else if (functionName.equalsIgnoreCase("GetAdditionalInfo")) {
+                    if (provider.isExternalRequest()) {
+
+                        LogUtil.info(logprefix, location, "Load the file location: ", provider.getClassLoaderName());
+                        Class<?> beanClass = null;
+                        Object beanObj = new Object();
+                        try {
+                            URL[] classLoaderUrls = new URL[]{new URL(provider.getClassLoaderName())};
+
+                            // Create a new URLClassLoader
+                            URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
+
+                            // Load the target class
+                            beanClass = urlClassLoader.loadClass(provider.getAdditionalQueryClassName());
+                            LogUtil.info(logprefix, location, "Load the file Class: ", provider.getAdditionalQueryClassName());
+
+
+                            // Create a new instance from the loaded class
+                            Constructor<?> constructor = beanClass.getConstructor();
+                            beanObj = constructor.newInstance();
+
+                        } catch (Exception ex) {
+                            LogUtil.info(logprefix, location, "Exception ", ex.getMessage());
+
+                        }
+                        ObjectMapper mapper = new ObjectMapper();
+
+                        Gson gson = new Gson();
+                        assert beanClass != null;
+                        Method method = beanClass.getMethod(functionName, String.class, String.class, String.class, String.class);
+                        Object value = method.invoke(beanObj, gson.toJson(providerConfig), gson.toJson(order), this.sysTransactionId, gson.toJson(fulfillment));
+                        LogUtil.info(logprefix, location, "Response FROM CLASS : ", value.toString());
+                        JsonObject response = null;
+                        ProcessResult process = new ProcessResult();
+
+                        try {
+                            process = mapper.readValue(value.toString(), ProcessResult.class);
+                            response = new Gson().fromJson(mapper.writeValueAsString(process.getReturnObject()), JsonObject.class);
+
+                        } catch (Exception ex) {
+                            LogUtil.info(logprefix, location, "Exception FROM CLASS : ", ex.getMessage());
+                        }
+
+                        AdditionalInfoResult additionalInfoResult = new AdditionalInfoResult();
+                        additionalInfoResult = mapper.readValue(response.toString(), AdditionalInfoResult.class);
+                        processResult.setReturnObject(additionalInfoResult);
+                        processResult.setResultCode(process.getResultCode());
+
+                    } else {
+
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, store, this.sysTransactionId, this.sequenceNumberRepository);
+                }
                 } else if (functionName.equalsIgnoreCase("AddPriorityFee")) {
                     reqFactoryObj = (DispatchRequest) cons[0].newInstance(latch, providerConfig, deliveryOrder, this.sysTransactionId, this.sequenceNumberRepository);
                 } else if (functionName.equalsIgnoreCase("GetPrice")) {
