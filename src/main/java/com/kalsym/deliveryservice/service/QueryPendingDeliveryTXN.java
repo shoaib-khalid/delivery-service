@@ -129,6 +129,7 @@ public class QueryPendingDeliveryTXN {
         status.add(DeliveryCompletionStatus.CANCELED.name());
         status.add(DeliveryCompletionStatus.EXPIRED.name());
         status.add(DeliveryCompletionStatus.REJECTED.name());
+        status.add(DeliveryCompletionStatus.FAILED.name());
 
         List<DeliveryOrder> deliveryOrders = deliveryOrdersRepository.findByStatusNotIn(status);
         for (DeliveryOrder order : deliveryOrders) {
@@ -161,18 +162,19 @@ public class QueryPendingDeliveryTXN {
         }
     }
 
+//        @Scheduled(cron = "${generate-vendor-id:0 0 00 02 * ?}")
 
-//    public void GenerateClientVendorId() throws ParseException {
-//        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
-//
-//        LogUtil.info("QueryPendingTXN", location, "GenerateClientVendorId", "");
-//        List<Store> storeList = storeRepository.findAllByRegionCountryId("PAK");
-//        for (Store s : storeList) {
-//            generateCodeController.createCentreCode(null, s.getId());
-//
-//        }
-//
-//    }
+    public void GenerateClientVendorId() throws ParseException {
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+
+        LogUtil.info("QueryPendingTXN", location, "GenerateClientVendorId", "");
+        List<Store> storeList = storeRepository.findAllByRegionCountryId("PAK");
+        for (Store s : storeList) {
+            generateCodeController.createCentreCode(null, s.getId());
+
+        }
+
+    }
 
 }
 

@@ -758,7 +758,7 @@ public class DeliveryService {
                     if (orderCreated.getCreatedDate() != null) {
                         deliveryOrder.setCreatedDate(orderCreated.getCreatedDate());
                         deliveryOrder.setUpdatedDate(orderCreated.getCreatedDate());
-                    }else{
+                    } else {
                         deliveryOrder.setCreatedDate(DateTimeUtil.currentTimestamp());
                         deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                     }
@@ -824,7 +824,7 @@ public class DeliveryService {
                     if (orderCreated.getCreatedDate() != null) {
                         deliveryOrderOption.setCreatedDate(orderCreated.getCreatedDate());
                         deliveryOrderOption.setUpdatedDate(orderCreated.getCreatedDate());
-                    }else{
+                    } else {
                         deliveryOrderOption.setCreatedDate(DateTimeUtil.currentTimestamp());
                         deliveryOrderOption.setUpdatedDate(DateTimeUtil.currentTimestamp());
                     }
@@ -1865,57 +1865,70 @@ public class DeliveryService {
                             }
 
                         } else {
+                            if (quotation.getDelivery().getLongitude() != null) {
 
-                            String price = deliveryOptions.getDeliveryPrice().toString();
-                            Calendar date = Calendar.getInstance();
-                            long t = date.getTimeInMillis();
-                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                            Date currentDate = new Date((t + (10 * 60000)));
-                            String currentTimeStamp = sdf.format(currentDate);
+                                String price = deliveryOptions.getDeliveryPrice().toString();
+                                Calendar date = Calendar.getInstance();
+                                long t = date.getTimeInMillis();
+                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                                Date currentDate = new Date((t + (10 * 60000)));
+                                String currentTimeStamp = sdf.format(currentDate);
 
-                            DeliveryQuotation deliveryOrder = new DeliveryQuotation();
-                            deliveryOrder.setCustomerId(quotation.getCustomerId());
-                            deliveryOrder.setPickupAddress(quotation.getPickup().getPickupAddress());
-                            deliveryOrder.setDeliveryAddress(deliveryAddress);
-                            deliveryOrder.setDeliveryPostcode(quotation.getDelivery().getDeliveryPostcode());
-                            deliveryOrder.setDeliveryContactName(quotation.getDelivery().getDeliveryContactName());
-                            deliveryOrder.setDeliveryContactPhone(quotation.getDelivery().getDeliveryContactPhone());
+                                DeliveryQuotation deliveryOrder = new DeliveryQuotation();
+                                deliveryOrder.setCustomerId(quotation.getCustomerId());
+                                deliveryOrder.setPickupAddress(quotation.getPickup().getPickupAddress());
+                                deliveryOrder.setDeliveryAddress(deliveryAddress);
+                                deliveryOrder.setDeliveryPostcode(quotation.getDelivery().getDeliveryPostcode());
+                                deliveryOrder.setDeliveryContactName(quotation.getDelivery().getDeliveryContactName());
+                                deliveryOrder.setDeliveryContactPhone(quotation.getDelivery().getDeliveryContactPhone());
 
-                            deliveryOrder.setPickupContactName(quotation.getPickup().getPickupContactName());
-                            deliveryOrder.setPickupContactPhone(quotation.getPickup().getPickupContactPhone());
-                            deliveryOrder.setPickupPostcode(quotation.getPickup().getPickupPostcode());
-                            deliveryOrder.setType(quotation.getDeliveryType()); // remove itemType not for self delivery
-                            deliveryOrder.setTotalWeightKg(quotation.getTotalWeightKg());
-                            deliveryOrder.setTotalPieces(quotation.getPieces());
-                            deliveryOrder.setDeliveryContactEmail(quotation.getDelivery().getDeliveryContactEmail());
-                            deliveryOrder.setPickupLatitude(String.valueOf(quotation.getPickup().getLatitude()));
-                            deliveryOrder.setPickupLongitude(String.valueOf(quotation.getPickup().getLongitude()));
-                            deliveryOrder.setDeliveryLongitude(String.valueOf(quotation.getDelivery().getLongitude().setScale(7, RoundingMode.UP)));
-                            deliveryOrder.setDeliveryLatitude(String.valueOf(quotation.getDelivery().getLatitude().setScale(7, RoundingMode.UP)));
-                            deliveryOrder.setVehicleType(quotation.getPickup().getVehicleType().name());
-                            deliveryOrder.setStatus("PENDING");
-                            deliveryOrder.setCartId(quotation.getCartId());
-                            deliveryOrder.setCreatedDate(new Date());
-                            deliveryOrder.setStoreId(quotation.getStoreId());
+                                deliveryOrder.setPickupContactName(quotation.getPickup().getPickupContactName());
+                                deliveryOrder.setPickupContactPhone(quotation.getPickup().getPickupContactPhone());
+                                deliveryOrder.setPickupPostcode(quotation.getPickup().getPickupPostcode());
+                                deliveryOrder.setType(quotation.getDeliveryType()); // remove itemType not for self delivery
+                                deliveryOrder.setTotalWeightKg(quotation.getTotalWeightKg());
+                                deliveryOrder.setTotalPieces(quotation.getPieces());
+                                deliveryOrder.setDeliveryContactEmail(quotation.getDelivery().getDeliveryContactEmail());
+                                deliveryOrder.setPickupLatitude(String.valueOf(quotation.getPickup().getLatitude()));
+                                deliveryOrder.setPickupLongitude(String.valueOf(quotation.getPickup().getLongitude()));
+                                if (quotation.getDelivery().getLongitude() != null) {
+                                    deliveryOrder.setDeliveryLongitude(String.valueOf(quotation.getDelivery().getLongitude().setScale(7, RoundingMode.UP)));
+                                    deliveryOrder.setDeliveryLatitude(String.valueOf(quotation.getDelivery().getLatitude().setScale(7, RoundingMode.UP)));
+                                }
 
-                            deliveryOrder.setDeliveryProviderId(0);
-                            deliveryOrder.setAmount(Double.parseDouble(price));
-                            deliveryOrder.setValidationPeriod(currentDate);
-                            deliveryOrder.setServiceFee(0.00);
-                            deliveryOrder.setCombinedDelivery(quotation.isMainCombinedShip());
-                            DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
+                                deliveryOrder.setVehicleType(quotation.getPickup().getVehicleType().name());
+                                deliveryOrder.setStatus("PENDING");
+                                deliveryOrder.setCartId(quotation.getCartId());
+                                deliveryOrder.setCreatedDate(new Date());
+                                deliveryOrder.setStoreId(quotation.getStoreId());
 
-                            double dPrice = Double.parseDouble(price);
-                            BigDecimal bd = new BigDecimal(dPrice);
-                            bd = bd.setScale(2, RoundingMode.HALF_UP);
-                            priceResult.deliveryType = quotation.getDeliveryType();
-                            priceResult.providerName = "";
-                            priceResult.price = bd;
-                            priceResult.message = "";
-                            priceResult.isError = false;
-                            priceResult.refId = res.getId();
-                            priceResult.validUpTo = currentTimeStamp;
-                            priceResultList.add(priceResult);
+                                deliveryOrder.setDeliveryProviderId(0);
+                                deliveryOrder.setAmount(Double.parseDouble(price));
+                                deliveryOrder.setValidationPeriod(currentDate);
+                                deliveryOrder.setServiceFee(0.00);
+                                deliveryOrder.setCombinedDelivery(quotation.isMainCombinedShip());
+                                DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
+
+                                double dPrice = Double.parseDouble(price);
+                                BigDecimal bd = new BigDecimal(dPrice);
+                                bd = bd.setScale(2, RoundingMode.HALF_UP);
+                                priceResult.deliveryType = quotation.getDeliveryType();
+                                priceResult.providerName = "";
+                                priceResult.price = bd;
+                                priceResult.message = "";
+                                priceResult.isError = false;
+                                priceResult.refId = res.getId();
+                                priceResult.validUpTo = currentTimeStamp;
+                                priceResultList.add(priceResult);
+                            }
+                            else{
+                                priceResult.deliveryType = quotation.getDeliveryType();
+                                priceResult.providerName = "";
+                                priceResult.price = BigDecimal.valueOf(0.00);
+                                priceResult.message = "Coordinates Not Found";
+                                priceResult.isError = false;
+                                priceResultList.add(priceResult);
+                            }
 
                             byCartId.setCartId(quotation.getCartId());
                             byCartId.setQuotation(priceResultList);
@@ -1940,10 +1953,7 @@ public class DeliveryService {
                     List<StoreDeliverySp> storeDeliverySp = storeDeliverySpRepository.findByStoreId(quotation.getStoreId());
                     if (!storeDeliverySp.isEmpty()) {
                         quotation.setDeliveryProviderId(storeDeliverySp.get(0).getProvider().getId());
-//                    List<String> periods = new ArrayList<>();
-//                    for (StoreDeliverySp s : storeDeliverySp) {
-//                        periods.add(s.getFulfilment());
-//                    }
+
                     }
                     ProcessRequest process = new ProcessRequest(systemTransactionId, quotation, providerRatePlanRepository, providerConfigurationRepository, providerRepository, sequenceNumberRepository, deliverySpTypeRepository, storeDeliverySpRepository, fulfillments, deliveryZonePriceRepository, deliveryStoreCenterRepository);
                     processResult = process.GetPrice();
@@ -1983,9 +1993,9 @@ public class DeliveryService {
                             deliveryOrder.setSystemTransactionId(systemTransactionId);
                             deliveryOrder.setFulfillmentType(list.fulfillment);
                             deliveryOrder.setSignature(list.signature);
-                            deliveryOrder.setQuotationId(list.quotationId); //FIXME : ALTER TABLE symplified.delivery_quotation ADD quotationId varchar(500) NULL;
-                            deliveryOrder.setPickupStopId(list.pickupStopId);//  FIXME :    ALTER TABLE symplified.delivery_quotation ADD pickupStopId varchar(100) NULL;
-                            deliveryOrder.setDeliveryStopId(list.deliveryStopId); //  FIXME :   ALTER TABLE symplified.delivery_quotation ADD deliveryStopId varchar(100) NULL;
+                            deliveryOrder.setQuotationId(list.quotationId);
+                            deliveryOrder.setPickupStopId(list.pickupStopId);
+                            deliveryOrder.setDeliveryStopId(list.deliveryStopId);
 
                             if (list.interval != null) {
                                 deliveryOrder.setIntervalTime(list.interval);
