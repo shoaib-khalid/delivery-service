@@ -1417,6 +1417,31 @@ public class DeliveryService {
                             LogUtil.info(systemTransactionId, location, "Response Update Status :" + ex.getMessage(), "");
                         }
                     }
+
+
+                    try {
+                        LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", orderFound.getDriverId() + " " + orderFound.getRiderName() + " " + orderFound.getRiderPhoneNo() + " " + orderFound.getCustomerTrackingUrl());
+                    } catch (Exception e) {
+                        LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", e.getMessage());
+                    }
+                    if (orderDetails.get().getRiderCarPlateNo() == null || orderDetails.get().getRiderCarPlateNo().isEmpty()) {
+                        LogUtil.info(systemTransactionId, location, "Delivery Rider PLATE ", orderFound.getRiderCarPlateNo());
+                        orderDetails.get().setRiderCarPlateNo(orderFound.getRiderCarPlateNo());
+                    }
+                    if (orderDetails.get().getRiderName() == null || orderDetails.get().getRiderName().isEmpty()) {
+                        LogUtil.info(systemTransactionId, location, "Delivery Rider Name ", orderFound.getRiderName());
+                        orderDetails.get().setRiderName(orderFound.getRiderName());
+                    }
+                    if (orderDetails.get().getRiderPhoneNo() == null || orderDetails.get().getRiderPhoneNo().isEmpty()) {
+                        LogUtil.info(systemTransactionId, location, "Delivery Rider Phone No ", orderFound.getRiderPhoneNo());
+                        orderDetails.get().setRiderPhoneNo(orderFound.getRiderPhoneNo());
+                    }
+                    LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", orderDetails.get().getCustomerTrackingUrl());
+
+                    if (orderDetails.get().getCustomerTrackingUrl() == null || orderDetails.get().getCustomerTrackingUrl().isEmpty()) {
+                        LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", orderFound.getCustomerTrackingUrl());
+                        orderDetails.get().setCustomerTrackingUrl(orderFound.getCustomerTrackingUrl());
+                    }
                     DeliveryOrder o = deliveryOrdersRepository.save(orderDetails.get());
 
                     Optional<DeliveryOrderStatus> notExistStatus = orderStatusRepository.findByOrderAndStatusAndDeliveryCompletionStatus(o, o.getStatus(), o.getSystemStatus());

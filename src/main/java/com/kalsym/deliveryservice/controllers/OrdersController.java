@@ -550,10 +550,8 @@ public class OrdersController {
                     deliveryOrder.setUpdatedDate(DateTimeUtil.currentTimestamp());
                     try {
                         LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", spCallbackResult.driveNoPlate + " " + spCallbackResult.riderName + " " + spCallbackResult.riderPhone + " " + spCallbackResult.trackingUrl);
-
                     } catch (Exception e) {
                         LogUtil.info(systemTransactionId, location, "Delivery Rider Details ", e.getMessage());
-
                     }
                     if (deliveryOrder.getRiderCarPlateNo() == null || deliveryOrder.getRiderCarPlateNo().isEmpty()) {
                         LogUtil.info(systemTransactionId, location, "Delivery Rider PLATE ", spCallbackResult.driveNoPlate);
