@@ -1876,16 +1876,18 @@ public class DeliveryService {
                                 byCartId.setStoreId(quotation.getStoreId());
                                 qetQuotationPriceList.add(byCartId);
                             } else {
-                                DeliveryErrorDescription message = errorDescriptionRepository.getOne("ERR_OUT_OF_SERVICE_AREA");
-                                priceResult.message = message.getErrorDescription();
+                                Optional<DeliveryErrorDescription> message = errorDescriptionRepository.findByError("ERR_OUT_OF_SERVICE_AREA");
+                                priceResult.message = message.get().getErrorDescription();
 //                                priceResult.message = "ERR_OUT_OF_SERVICE_AREA";
                                 BigDecimal bd = new BigDecimal("0.00");
                                 bd = bd.setScale(2, RoundingMode.HALF_UP);
                                 priceResult.price = bd;
                                 priceResult.isError = true;
                                 priceResult.deliveryType = quotation.getDeliveryType();
+                                priceResultList.add(priceResult);
                                 byCartId.setCartId(quotation.getCartId());
                                 byCartId.setQuotation(priceResultList);
+                                byCartId.setStoreId(quotation.getStoreId());
                                 qetQuotationPriceList.add(byCartId);
                             }
 
@@ -1963,6 +1965,8 @@ public class DeliveryService {
                     }
 
                 } else {
+                    System.err.println("::::::::Provider:::::DELIVERY");
+
                     List<Fulfillment> fulfillments = new ArrayList<>();
                     for (StoreDeliveryPeriod storeDeliveryPeriod : stores.getStoreDeliveryPeriodList()) {
                         if (storeDeliveryPeriod.isEnabled()) {
