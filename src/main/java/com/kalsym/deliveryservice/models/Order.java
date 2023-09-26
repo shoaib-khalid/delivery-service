@@ -65,6 +65,7 @@ public class Order {
     String combinedShippingStoreId;
     List<Store> storeList;
     boolean mainCombinedShip;
+    Boolean allDigital;
     public String toString() {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         return gson.toJson(this);
