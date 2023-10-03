@@ -1763,14 +1763,17 @@ public class DeliveryService {
             order1.setPickup(pickup);
             order1.setDeliveryType(stores.getType());
             // Check store location is same between multiple carts
-            Optional<Order> exist = orders.stream().filter(quote -> quote.getPickup().getLatitude().equals(BigDecimal.valueOf(Double.parseDouble(store.getLatitude())))).findAny();
+//            Optional<Order> exist = orders.stream().filter(quote -> quote.getPickup().getLatitude().equals(BigDecimal.valueOf(Double.parseDouble(store.getLatitude())))).findAny();
+            Optional<Order> exist = orders.stream().filter(quote -> quote.getPickup().getLatitude().equals(BigDecimal.valueOf(Double.parseDouble(store.getLatitude()))) && !quote.getAllDigital()).findAny();
             if (exist.isPresent()) {
-                order1.setCombinedShip(true);
-                exist.ifPresent(order -> order.setMainCombinedShip(true));
-                if (exist.get().getVehicleType().number < (order1.getVehicleType().number)) {
-                    exist.ifPresent(order -> order.setVehicleType(cartDetails.getVehicleType()));
+                if (!exist.get().getAllDigital()) {
+                    order1.setCombinedShip(true);
+                    exist.ifPresent(order -> order.setMainCombinedShip(true));
+                    if (exist.get().getVehicleType().number < (order1.getVehicleType().number)) {
+                        exist.ifPresent(order -> order.setVehicleType(cartDetails.getVehicleType()));
+                    }
+                    order1.setCombinedShippingStoreId(exist.get().getStoreId());
                 }
-                order1.setCombinedShippingStoreId(exist.get().getStoreId());
             }
             orders.add(order1);
         }
@@ -1782,21 +1785,8 @@ public class DeliveryService {
         for (Order quotation : orders) { // Start Loop
             GetQuotationPriceList byCartId = new GetQuotationPriceList(); // Add Multiple Quotation
 
-            //TODO : Get product type from get weight service
-            System.out.println("Order : " + quotation.toString());
-
             // If All Digital, set delivery price to 0, and continue the loop
             if (quotation.getAllDigital()) {
-                Calendar date = Calendar.getInstance();
-                long t = date.getTimeInMillis();
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                Date currentDate = new Date((t + (10 * 60000)));
-                String currentTimeStamp = sdf.format(currentDate);
-
-//                final DeliveryQuotation deliveryOrder = getDeliveryQuotationForDigital(quotation, currentDate);
-//                DeliveryQuotation res = deliveryQuotationRepository.save(deliveryOrder);
-
-//                System.out.println("Delivery Quotation : " + res);
 
                 PriceResult priceResult = new PriceResult();
                 Set<PriceResult> priceResultList = new HashSet<>();
@@ -2004,7 +1994,7 @@ public class DeliveryService {
                     }
 
                 } else {
-                    System.err.println("::::::::Provider:::::DELIVERY");
+                    // System.err.println("::::::::Provider:::::DELIVERY");
 
                     List<Fulfillment> fulfillments = new ArrayList<>();
                     for (StoreDeliveryPeriod storeDeliveryPeriod : stores.getStoreDeliveryPeriodList()) {
