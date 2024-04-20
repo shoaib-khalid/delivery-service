@@ -1,6 +1,7 @@
 package com.kalsym.deliveryservice.service;
 
 import com.kalsym.deliveryservice.controllers.DeliveryService;
+import com.kalsym.deliveryservice.controllers.GenerateCodeController;
 import com.kalsym.deliveryservice.models.Delivery;
 import com.kalsym.deliveryservice.models.HttpReponse;
 import com.kalsym.deliveryservice.models.Order;
@@ -8,6 +9,7 @@ import com.kalsym.deliveryservice.models.SubmitDelivery;
 import com.kalsym.deliveryservice.models.daos.DeliveryOrder;
 import com.kalsym.deliveryservice.models.daos.DeliveryQuotation;
 import com.kalsym.deliveryservice.models.daos.Provider;
+import com.kalsym.deliveryservice.models.daos.Store;
 import com.kalsym.deliveryservice.models.enums.DeliveryCompletionStatus;
 import com.kalsym.deliveryservice.models.enums.VehicleType;
 import com.kalsym.deliveryservice.provider.PriceResult;
@@ -15,6 +17,7 @@ import com.kalsym.deliveryservice.provider.SubmitOrderResult;
 import com.kalsym.deliveryservice.repositories.DeliveryOrdersRepository;
 import com.kalsym.deliveryservice.repositories.DeliveryQuotationRepository;
 import com.kalsym.deliveryservice.repositories.ProviderRepository;
+import com.kalsym.deliveryservice.repositories.StoreRepository;
 import com.kalsym.deliveryservice.service.utility.SymplifiedService;
 import com.kalsym.deliveryservice.utils.LogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +41,12 @@ public class QueryPendingDeliveryTXN {
     @Autowired
     ProviderRepository providerRepository;
     @Autowired
-    SymplifiedService symplifiedService;
+    GenerateCodeController generateCodeController;
 
-        @Scheduled(cron = "${delivery-service:0 0/05 * * * ?}")
+    @Autowired
+    StoreRepository storeRepository;
+
+    //    @Scheduled(cron = "${delivery-service:0 0/05 * * * ?}")
     public void dailyScheduler() throws ParseException {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 
@@ -64,6 +70,8 @@ public class QueryPendingDeliveryTXN {
                     LogUtil.info("QueryPendingDeliveryTXN", location, "Exception = " + e.getMessage(), "");
                 }
                 assert parsedDate != null;
+                LogUtil.info("QueryPendingDeliveryTXN", location, "QuotationID = " + o.getId(), "");
+
                 long searchTimestamp = parsedDate.getTime();// this also gives me back timestamp in 13 digit (1425506040493)
 
                 long difference = Math.abs(currentTimestamp - searchTimestamp);
@@ -111,7 +119,7 @@ public class QueryPendingDeliveryTXN {
     }
 
 
-        @Scheduled(cron = "${pending-transaction:0 0/05 * * * ?}")
+    @Scheduled(cron = "${pending-transaction:0 0/15 * * * ?}")
     public void QueryPendingTransaction() throws ParseException {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 
@@ -121,6 +129,7 @@ public class QueryPendingDeliveryTXN {
         status.add(DeliveryCompletionStatus.CANCELED.name());
         status.add(DeliveryCompletionStatus.EXPIRED.name());
         status.add(DeliveryCompletionStatus.REJECTED.name());
+        status.add(DeliveryCompletionStatus.FAILED.name());
 
         List<DeliveryOrder> deliveryOrders = deliveryOrdersRepository.findByStatusNotIn(status);
         for (DeliveryOrder order : deliveryOrders) {
@@ -133,7 +142,7 @@ public class QueryPendingDeliveryTXN {
     }
 
 
-    @Scheduled(cron = "${pending-transaction:0 0 23 * * ?}")
+    //    @Scheduled(cron = "${pending-transaction:0 0 23 * * ?}")
     public void RemovePendingQuotation() throws ParseException {
         String location = Thread.currentThread().getStackTrace()[1].getMethodName();
 
@@ -151,6 +160,20 @@ public class QueryPendingDeliveryTXN {
 
 //            deliveryQuotationRepository.delete(deliveryQuotation);
         }
+    }
+
+//        @Scheduled(cron = "${generate-vendor-id:0 0 00 02 * ?}")
+
+    public void GenerateClientVendorId() throws ParseException {
+        String location = Thread.currentThread().getStackTrace()[1].getMethodName();
+
+        LogUtil.info("QueryPendingTXN", location, "GenerateClientVendorId", "");
+        List<Store> storeList = storeRepository.findAllByRegionCountryId("PAK");
+        for (Store s : storeList) {
+            generateCodeController.createCentreCode(null, s.getId());
+
+        }
+
     }
 
 }

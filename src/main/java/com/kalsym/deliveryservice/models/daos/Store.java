@@ -3,6 +3,8 @@ package com.kalsym.deliveryservice.models.daos;
 import java.io.Serializable;
 import javax.persistence.*;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -15,7 +17,6 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 @Getter
 @Setter
-@ToString
 @Table(name = "store")
 public class Store implements Serializable {
 
@@ -47,4 +48,8 @@ public class Store implements Serializable {
 
     @Transient
     int providerId;
+    public String toString() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(this);
+    }
 }

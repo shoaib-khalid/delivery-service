@@ -64,7 +64,7 @@ public class CostCenterCode extends SyncDispatcher {
             String requestBody = generateBody(city);
             String url = this.baseUrl + vendorId + createCostUrl;
             HttpResult httpResult = HttpsPostConn.SendHttpsRequest("POST", this.systemTransactionId, url, httpHeader, requestBody, this.connectTimeout, this.waitTimeout);
-            if (httpResult.resultCode == 201) {
+            if (httpResult.httpResponseCode == 201) {
                 response.resultCode = 0;
                 LogUtil.info(logprefix, location, "Swyft Response for Create Center Code: " + httpResult.responseString, "");
                 response.returnObject = extractResponseBody(httpResult.responseString);
