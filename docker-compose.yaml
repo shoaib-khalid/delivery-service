@@ -1,0 +1,28 @@
+version: '3.7'
+
+services:
+  dev:
+    profiles: [dev]
+    container_name: delivery-service
+    image: kalsym/delivery-service:$APP_VERSION
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./src/main/resources/application-dev.properties:/home/docker/Software/application-dev.properties
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: "linux/amd64"
+
+  prod:
+    profiles: [prod]
+    container_name: delivery-service
+    image: kalsym/delivery-service:$APP_VERSION
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./src/main/resources/application-prod.properties:/home/docker/Software/application-prod.properties
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: "linux/amd64"

@@ -2,7 +2,7 @@ affinity: {}
 applicationProdProperties:
   configmap:
     application-prod.properties: >-
-      server.port=1001
+      server.port=3001
 
       server.servlet.context-path=/delivery-service/v1
 
@@ -183,7 +183,7 @@ replicaCount: 1
 resources: {}
 securityContext: {}
 service:
-  port: 1001
+  port: 3001
   type: ClusterIP
 serviceAccount:
   annotations: {}
